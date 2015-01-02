@@ -5,7 +5,7 @@ set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
 set(PROJECT_TITLE "MazeRun")
 set(PROJECT_AUTHOR "Matthew Chandler <tardarsauce@gmail.com>")
-set(PROJECT_SUMMARY "A maze adventure game")
+set(PROJECT_SUMMARY "A 3D maze adventure game")
 set(PROJECT_WEBSITE "http://github.com/mattvchandler/mazerun")
 
 #flags
@@ -25,11 +25,11 @@ endif()
 # libraries
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 
-# find_package(PkgConfig REQUIRED)
-# find_package(SFML 2 COMPONENTS window system REQUIRED)
-# find_package(OpenGL REQUIRED)
-# find_package(GLEW REQUIRED)
-# find_package(GLM REQUIRED)
+find_package(PkgConfig REQUIRED)
+find_package(SFML 2 COMPONENTS window system REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(GLM REQUIRED)
 
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
@@ -49,16 +49,17 @@ include_directories(
 link_directories()
 
 # main compilation
-# add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
     # src/config.cpp
-    # )
+    src/window.cpp
+    )
 
-# target_link_libraries(${PROJECT_NAME}
-    # ${SFML_LIBRARIES}
-    # ${OPENGL_LIBRARIES}
-    # ${GLEW_LIBRARIES}
-    # )
+target_link_libraries(${PROJECT_NAME}
+    ${SFML_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${GLEW_LIBRARIES}
+    )
 
 # install targets
 # install(TARGETS "${PROJECT_NAME}" DESTINATION "bin")
