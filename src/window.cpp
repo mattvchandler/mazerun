@@ -57,24 +57,49 @@ class Entity
 public:
     Entity();
 
-// set / reset pos / orientation
-// default args put at origin looking down Y axis with Z axis up
-void set(const glm::vec3 & pos = glm::vec3(0.0f),
-    const glm::vec3 & forward = glm::vec3(0.0f, 1.0f, 0.0f),
-    const glm::vec3 & up = glm::vec3(0.0f, 0.0f, 1.0f));
+    // set / reset pos / orientation
+    // default args put at origin looking down Y axis with Z axis up
+    void set(const glm::vec3 & pos = glm::vec3(0.0f),
+        const glm::vec3 & forward = glm::vec3(0.0f, 1.0f, 0.0f),
+        const glm::vec3 & up = glm::vec3(0.0f, 0.0f, 1.0f));
 
-// move the position acoording to a vector
-void translate(const glm::vec3 & translation);
+    // move the position acoording to a vector
+    void translate(const glm::vec3 & translation);
 
-// rotate around an axis
-// angles in radians
-void rotate(const float angle, const glm::vec3 & axis);
+    // rotate around an axis
+    // angles in radians
+    void rotate(const float angle, const glm::vec3 & axis);
 
+    glm::vec3 pos() const;
+    glm::vec3 forward() const;
+    glm::vec3 up() const;
+    glm::vec3 right() const;
 protected:
     glm::vec3 _pos;
     glm::vec3 _forward; // TODO: store as matrix and calc vectors as needed?
     glm::vec3 _up;
 };
+
+
+glm::vec3 Entity::pos() const
+{
+    return _pos;
+}
+
+glm::vec3 Entity::forward() const
+{
+    return _forward;
+}
+
+glm::vec3 Entity::up() const
+{
+    return _up;
+}
+
+glm::vec3 Entity::right() const
+{
+    return glm::cross(_forward, _up);
+}
 
 Entity::Entity()
 {
@@ -108,7 +133,7 @@ void Entity::rotate(const float angle, const glm::vec3 & axis)
         + axis * glm::dot(axis, _up) * (1.0f - cosf(angle)));
 }
 
-class Camera: public Entity
+class Camera: public Entity // TODO: is this class needed?
 {
 public:
     glm::mat4 view_mat();
@@ -121,7 +146,68 @@ glm::mat4 Camera::view_mat()
 
 class Player: public Camera
 {
+public:
+    void handle_input(const sf::Window & win, const float dt);
 };
+
+void Player::handle_input(const sf::Window & win, const float dt)
+{
+    static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
+    static sf::Vector2i old_mouse_pos = sf::Mouse::getPosition(win);
+
+    float mov_scale = 0.1f;
+    sf::Vector2i new_mouse_pos = sf::Mouse::getPosition(win);
+    // TODO: invalidate signal somehow
+
+    // move forward
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+    {
+        translate(mov_scale * forward() * dt);
+    }
+
+    // move backwards
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+    {
+        translate(-mov_scale * forward() * dt);
+    }
+
+    // move left
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    {
+        translate(-mov_scale * right() * dt);
+    }
+
+    // move right
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    {
+        translate(mov_scale * right() * dt);
+    }
+
+    // TODO: replace with jump?
+    // move up
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+    {
+        translate(mov_scale * glm::vec3(0.0f, 0.0f, 1.0f) * dt);
+    }
+
+    // move down
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+    {
+        translate(-mov_scale * glm::vec3(0.0f, 0.0f, 1.0f) * dt);
+    }
+
+    // rotate view with mouse click & drag
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    {
+        int d_x = new_mouse_pos.x - old_mouse_pos.x;
+        int d_y = new_mouse_pos.y - old_mouse_pos.y;
+
+        rotate(0.001f * d_y, right());
+        rotate(0.001f * d_x, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+
+    old_mouse_pos = new_mouse_pos;
+}
 
 class Texture
 {
@@ -401,7 +487,9 @@ bool World::init()
         std::cerr<<"Error loading glew"<<std::endl;
         return false; // TODO: exception? at least be consistent w/ other inits
     }
+    _win.setKeyRepeatEnabled(false);
 
+    // TODO: move this to resize method
     // projection matrix setup
     _proj = glm::perspective((float)M_PI / 6.0f,
         (float)_win.getSize().x / (float)_win.getSize().y, 0.1f, 1000.0f);
@@ -426,22 +514,43 @@ void World::draw()
 
 void World::game_loop()
 {
+    bool running = true;
+    bool focused = true;
     while(true)
     {
-        draw();
-        sf::Event ev; // TODO: move to world
-        while(_win.pollEvent(ev))
+        // handle events
+        sf::Event ev;
+        while(_win.pollEvent(ev)) // TODO: wow is this slow (seperate thread?)
         {
             // TODO: have events trigger signals that listeners can recieve?
             switch(ev.type)
             {
             case sf::Event::Closed:
                 _win.close();
-                return;
+                running = false;
+                break;
+            case sf::Event::GainedFocus:
+                focused = true;
+                break;
+            case sf::Event::LostFocus:
+                focused = false;
+                break;
+            // TODO: resize event
             default:
                 break;
             }
         }
+        if(!running)
+            break;
+
+        // std::cerr<<"("<<_player.pos().x<<","<<_player.pos().y<<","<<_player.pos().z<<")"<<std::endl;
+
+        if(focused)
+        {
+            _player.handle_input(_win, 1.0f);
+        }
+        // TODO: physics / AI updates
+        draw();
         // TODO sleep
     }
 }
