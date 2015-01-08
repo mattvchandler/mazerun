@@ -30,8 +30,12 @@
 #include <utility>
 #include <vector>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <GL/glew.h>
 
@@ -68,7 +72,7 @@ void rotate(const float angle, const glm::vec3 & axis);
 
 protected:
     glm::vec3 _pos;
-    glm::vec3 _forward;
+    glm::vec3 _forward; // TODO: store as matrix and calc vectors as needed?
     glm::vec3 _up;
 };
 
@@ -107,19 +111,12 @@ void Entity::rotate(const float angle, const glm::vec3 & axis)
 class Camera: public Entity
 {
 public:
-    Camera(); // probably add pos and orientation?
     glm::mat4 view_mat();
-protected:
-    float _fov;
 };
-
-Camera::Camera():_fov(0)
-{
-}
 
 glm::mat4 Camera::view_mat()
 {
-    return glm::mat4(); // TODO: actually calculate this
+    return glm::lookAt(_pos, _pos + _forward, _up);
 }
 
 class Player: public Camera
@@ -355,14 +352,14 @@ void Skybox::init()
     check_error("Skybox::init");
 
     _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)}, {std::make_pair("vert_pos", 0)});
-    _prog.add_uniform("model_view_proj");
+    _prog.add_uniform("model_view_proj"); // TODO: is there actually a model transform needed?
 }
 
 void Skybox::draw(const glm::mat4 & view, const glm::mat4 & proj)
 {
     glUseProgram(_prog());
 
-    glm::mat4 model_view_proj = view * proj;
+    glm::mat4 model_view_proj = proj * view;
 
     glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
 
@@ -394,7 +391,6 @@ World::World():
     std::cout<<"D: "<<_win.getSettings().depthBits<<std::endl;
     std::cout<<"S: "<<_win.getSettings().stencilBits<<std::endl;
     std::cout<<"A: "<<_win.getSettings().antialiasingLevel<<std::endl;
-
 }
 
 bool World::init()
@@ -402,8 +398,15 @@ bool World::init()
     if(glewInit() != GLEW_OK)
     {
         std::cerr<<"Error loading glew"<<std::endl;
-        return false;
+        return false; // TODO: exception? at least be consistent w/ other inits
     }
+
+    // projection matrix setup
+    _proj = glm::perspective((float)M_PI / 6.0f,
+        (float)_win.getSize().x / (float)_win.getSize().y, 0.1f, 1000.0f);
+
+    // set camera initial position / orientation
+    _player.set(glm::vec3(1.0f, -10.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // set clear color
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
