@@ -373,11 +373,12 @@ void Skybox::draw(const glm::mat4 & view, const glm::mat4 & proj)
 class World
 {
 public:
-    World();
+    World(); // TODO should we take default args?
     bool init();
     void draw();
-    sf::Window _win; // TODO: make protected
+    void game_loop();
 protected:
+    sf::Window _win;
     glm::mat4 _proj;
     Skybox _skybox;
     Player _player;
@@ -423,6 +424,28 @@ void World::draw()
     _win.display();
 }
 
+void World::game_loop()
+{
+    while(true)
+    {
+        draw();
+        sf::Event ev; // TODO: move to world
+        while(_win.pollEvent(ev))
+        {
+            // TODO: have events trigger signals that listeners can recieve?
+            switch(ev.type)
+            {
+            case sf::Event::Closed:
+                _win.close();
+                return;
+            default:
+                break;
+            }
+        }
+        // TODO sleep
+    }
+}
+
 int main(int argc, char * argv[])
 {
     // initialize glew
@@ -432,26 +455,7 @@ int main(int argc, char * argv[])
         return EXIT_FAILURE;
     }
 
-    bool running = true;
-    while(running)
-    {
-        world.draw();
+    world.game_loop();
 
-        sf::Event ev;
-        while(world._win.pollEvent(ev))
-        {
-            switch(ev.type)
-            {
-            case sf::Event::Closed:
-                world._win.close();
-                running = false;
-                break;
-            default:
-                break;
-            }
-        }
-        // TODO sleep
-    }
-
-    return 0;
+    return EXIT_SUCCESS;
 }
