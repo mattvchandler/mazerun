@@ -106,11 +106,21 @@ void Entity::rotate(const float angle, const glm::vec3 & axis)
 
 class Camera: public Entity
 {
+public:
+    Camera(); // probably add pos and orientation?
+    glm::mat4 view_mat();
 protected:
     float _fov;
-    glm::mat4 _perspective;
-    glm::mat4 _view; // maybe have this be a method
 };
+
+Camera::Camera():_fov(0)
+{
+}
+
+glm::mat4 Camera::view_mat()
+{
+    return glm::mat4(); // TODO: actually calculate this
+}
 
 class Player: public Camera
 {
@@ -137,7 +147,7 @@ public:
     GLuint operator()() const;
     // TODO: probably my own exceptions, rather than use system exceptions
 
-    std::unordered_map<std::string, GLuint> uniforms; // convenience storage for uniform values
+    std::unordered_map<std::string, GLuint> uniforms; // convenience storage for uniform values // TODO: maybe make private and add get method?
 protected:
     GLuint _prog;
 };
@@ -266,7 +276,7 @@ public:
     Skybox();
     ~Skybox();
     void init();
-    void draw();
+    void draw(const glm::mat4 & view, const glm::mat4 & proj);
 protected:
     GLuint _vao, _vbo, _ebo;
     Cubemap_texture _tex;
@@ -345,76 +355,92 @@ void Skybox::init()
     check_error("Skybox::init");
 
     _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)}, {std::make_pair("vert_pos", 0)});
+    _prog.add_uniform("model_view_proj");
 }
 
-void Skybox::draw() // TODO: pass wvm matrix and set to shader uniform
+void Skybox::draw(const glm::mat4 & view, const glm::mat4 & proj)
 {
     glUseProgram(_prog());
+
+    glm::mat4 model_view_proj = view * proj;
+
+    glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+
     glBindVertexArray(_vao);
     glDrawElements(GL_TRIANGLES, _num_indexes, GL_UNSIGNED_INT, (GLvoid *)0);
-    glBindVertexArray(0);
-    glUseProgram(0);
+    glBindVertexArray(0); // get prev val?
+    glUseProgram(0); // get prev val?
     check_error("Skybox::draw");
 }
 
 class World
 {
 public:
-    void init();
+    World();
+    bool init();
     void draw();
+    sf::Window _win; // TODO: make protected
 protected:
+    glm::mat4 _proj;
     Skybox _skybox;
     Player _player;
     std::vector<std::unique_ptr<Entity>> _entities;
 };
 
-void World::init()
+World::World():
+    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0))
 {
-    _skybox.init();
-    // _player.init();
+    std::cout<<"V: "<<_win.getSettings().majorVersion<<"."<<_win.getSettings().minorVersion<<std::endl;
+    std::cout<<"D: "<<_win.getSettings().depthBits<<std::endl;
+    std::cout<<"S: "<<_win.getSettings().stencilBits<<std::endl;
+    std::cout<<"A: "<<_win.getSettings().antialiasingLevel<<std::endl;
+
 }
 
-void World::draw()
+bool World::init()
 {
-    _skybox.draw();
-}
-
-int main(int argc, char * argv[])
-{
-    sf::Window win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0));
-
-    std::cout<<"V: "<<win.getSettings().majorVersion<<"."<<win.getSettings().minorVersion<<std::endl;
-    std::cout<<"D: "<<win.getSettings().depthBits<<std::endl;
-    std::cout<<"S: "<<win.getSettings().stencilBits<<std::endl;
-    std::cout<<"A: "<<win.getSettings().antialiasingLevel<<std::endl;
-
-    // initialize glew
     if(glewInit() != GLEW_OK)
     {
         std::cerr<<"Error loading glew"<<std::endl;
-        return EXIT_FAILURE;
+        return false;
     }
-
-    World world;
-    world.init();
 
     // set clear color
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+    _skybox.init();
+    // _player.init();
+    return true;
+}
+
+void World::draw()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    _skybox.draw(_player.view_mat(), _proj);
+    _win.display();
+}
+
+int main(int argc, char * argv[])
+{
+    // initialize glew
+    World world;
+    if(!world.init())
+    {
+        return EXIT_FAILURE;
+    }
+
     bool running = true;
     while(running)
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         world.draw();
-        win.display();
 
         sf::Event ev;
-        while(win.pollEvent(ev))
+        while(world._win.pollEvent(ev))
         {
             switch(ev.type)
             {
             case sf::Event::Closed:
-                win.close();
+                world._win.close();
                 running = false;
                 break;
             default:

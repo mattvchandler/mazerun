@@ -25,10 +25,12 @@
 
 in vec3 vert_pos;
 
+uniform mat4 model_view_proj;
+
 out vec3 color;
 
 void main()
 {
     color = vert_pos * .5 + vec3(0.5, 0.5, 0.5);
-    gl_Position = vec4(vert_pos, 1.0);
+    gl_Position = model_view_proj * vec4(vert_pos, 1.0);
 }
