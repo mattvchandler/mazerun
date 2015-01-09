@@ -480,6 +480,8 @@ protected:
     bool _running;
     bool _focused;
 
+    sf::Mutex _lock; // TODO more descriptive name
+
     sf::Window _win;
     glm::mat4 _proj;
     Skybox _skybox;
@@ -517,7 +519,7 @@ bool World::init()
     glBlendColor(1.0f, 1.0f, 1.0f, 0.1f);
     glEnable(GL_BLEND);
 
-    // TODO: move this to resize method
+    // TODO: move this to a resize method
     // projection matrix setup
     _proj = glm::perspective((float)M_PI / 6.0f,
         (float)_win.getSize().x / (float)_win.getSize().y, 0.1f, 1000.0f);
@@ -564,6 +566,7 @@ void World::event_loop()
         sf::Event ev;
         if(_win.waitEvent(ev)) // blocking call
         {
+            _lock.lock();
             // TODO: have events trigger signals that listeners can recieve?
             switch(ev.type)
             {
@@ -582,16 +585,27 @@ void World::event_loop()
             }
         }
         if(!_running)
+        {
+            _lock.unlock();
             break;
+        }
+        _lock.unlock();
     }
 }
 
-// runs in a thread
+// runs in a new thread
 void World::main_loop()
 {
     _win.setActive(true); // set render context active for this thread
     while(true)
     {
+        _lock.lock();
+
+        if(!_running)
+        {
+            _lock.unlock();
+            break;
+        }
         // std::cerr<<"("<<_player.pos().x<<","<<_player.pos().y<<","<<_player.pos().z<<")"<<std::endl;
         if(_focused)
         {
@@ -600,12 +614,8 @@ void World::main_loop()
         // TODO should we make more threads for input, physics, messages, etc?
         // TODO: physics / AI updates
         draw();
+        _lock.unlock();
         // TODO sleep
-
-        if(!_running)
-        {
-            break;
-        }
     }
 }
 
