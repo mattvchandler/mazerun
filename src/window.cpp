@@ -489,6 +489,18 @@ bool World::init()
     }
     _win.setKeyRepeatEnabled(false);
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthRangef(0.0f, 1.0f);
+    glLineWidth(5.0f);
+
+    glEnable(GL_POLYGON_SMOOTH);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    glEnable(GL_LINE_SMOOTH);
+    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendColor(1.0f, 1.0f, 1.0f, 0.1f);
+    glEnable(GL_BLEND);
+
     // TODO: move this to resize method
     // projection matrix setup
     _proj = glm::perspective((float)M_PI / 6.0f,
@@ -520,7 +532,7 @@ void World::game_loop()
     {
         // handle events
         sf::Event ev;
-        while(_win.pollEvent(ev)) // TODO: wow is this slow (seperate thread?)
+        while(_win.pollEvent(ev)) // TODO: wow is this slow (seperate thread: yes - accelerometer joystick bug. use same method as 2048)
         {
             // TODO: have events trigger signals that listeners can recieve?
             switch(ev.type)
