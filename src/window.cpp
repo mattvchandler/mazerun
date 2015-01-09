@@ -472,6 +472,7 @@ public:
     World(); // TODO should we take default args?
     bool init();
     void draw();
+    void resize();
     void game_loop();
 protected:
     void event_loop();
@@ -479,6 +480,7 @@ protected:
 
     bool _running;
     bool _focused;
+    bool _do_resize; // TODO: find a better way (prob. messages/signals)
 
     sf::Mutex _lock; // TODO more descriptive name
 
@@ -489,7 +491,7 @@ protected:
     std::vector<std::unique_ptr<Entity>> _entities;
 };
 
-World::World(): _running(true), _focused(true),
+World::World(): _running(true), _focused(true), _do_resize(false),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0))
 {
     std::cout<<"V: "<<_win.getSettings().majorVersion<<"."<<_win.getSettings().minorVersion<<std::endl;
@@ -505,7 +507,10 @@ bool World::init()
         std::cerr<<"Error loading glew"<<std::endl;
         return false; // TODO: exception? at least be consistent w/ other inits
     }
+
     _win.setKeyRepeatEnabled(false);
+    _win.setFramerateLimit(60);
+    // TODO _win.setIcon
 
     glEnable(GL_DEPTH_TEST);
     glDepthRangef(0.0f, 1.0f);
@@ -519,10 +524,7 @@ bool World::init()
     glBlendColor(1.0f, 1.0f, 1.0f, 0.1f);
     glEnable(GL_BLEND);
 
-    // TODO: move this to a resize method
-    // projection matrix setup
-    _proj = glm::perspective((float)M_PI / 6.0f,
-        (float)_win.getSize().x / (float)_win.getSize().y, 0.1f, 1000.0f);
+    resize();
 
     // set camera initial position / orientation
     _player.set(glm::vec3(1.0f, -10.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -540,6 +542,15 @@ void World::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _skybox.draw(_player.view_mat(), _proj);
     _win.display();
+}
+
+void World::resize()
+{
+    // projection matrix setup
+    glViewport(0, 0, _win.getSize().x, _win.getSize().y);
+    _proj = glm::perspective((float)M_PI / 6.0f,
+        (float)_win.getSize().x / (float)_win.getSize().y, 0.1f, 1000.0f);
+    // TODO: request redraw
 }
 
 void World::game_loop()
@@ -579,7 +590,10 @@ void World::event_loop()
                 case sf::Event::LostFocus:
                     _focused = false;
                     break;
-                    // TODO: resize event
+                case sf::Event::Resized:
+                    resize();
+                    _do_resize = true;
+                    break;
                 default:
                     break;
             }
@@ -600,6 +614,11 @@ void World::main_loop()
     while(true)
     {
         _lock.lock();
+        if(_do_resize)
+        {
+            resize();
+            _do_resize = false;
+        }
 
         if(!_running)
         {
