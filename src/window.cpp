@@ -43,6 +43,16 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/System.hpp>
 
+#ifdef __linux
+#include <X11/Xlib.h>
+#endif
+
+// random floating point number
+float randf()
+{
+    return (float)(rand()) / RAND_MAX;
+}
+
 // check for OpenGL error and print message
 void check_error(const char * at)
 {
@@ -569,6 +579,10 @@ void World::game_loop()
 
 int main(int argc, char * argv[])
 {
+    #ifdef __linux
+    // XInitThreads(); // needed for multithreaded window access on Linux
+    #endif
+
     // initialize glew
     World world;
     if(!world.init())
