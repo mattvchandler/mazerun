@@ -474,6 +474,12 @@ public:
     void draw();
     void game_loop();
 protected:
+    void event_loop();
+    void main_loop();
+
+    bool _running;
+    bool _focused;
+
     sf::Window _win;
     glm::mat4 _proj;
     Skybox _skybox;
@@ -481,7 +487,7 @@ protected:
     std::vector<std::unique_ptr<Entity>> _entities;
 };
 
-World::World():
+World::World(): _running(true), _focused(true),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0))
 {
     std::cout<<"V: "<<_win.getSettings().majorVersion<<"."<<_win.getSettings().minorVersion<<std::endl;
@@ -536,51 +542,77 @@ void World::draw()
 
 void World::game_loop()
 {
-    bool running = true;
-    bool focused = true;
+    // due to quirk of SFML event handling needs to be in main thread
+    _win.setActive(false); // decativate rendering context for main thread
+
+    // rendering, physics, input, etc to be handled in this thread
+    sf::Thread main_loop_t(&World::main_loop, this);
+    main_loop_t.launch();
+
+    event_loop(); // handle events
+
+    main_loop_t.wait();
+    _win.close();
+}
+
+void World::event_loop()
+{
+    // TODO mutex
     while(true)
     {
         // handle events
         sf::Event ev;
-        while(_win.pollEvent(ev)) // TODO: wow is this slow (seperate thread: yes - accelerometer joystick bug. use same method as 2048)
+        if(_win.waitEvent(ev)) // blocking call
         {
             // TODO: have events trigger signals that listeners can recieve?
             switch(ev.type)
             {
-            case sf::Event::Closed:
-                _win.close();
-                running = false;
-                break;
-            case sf::Event::GainedFocus:
-                focused = true;
-                break;
-            case sf::Event::LostFocus:
-                focused = false;
-                break;
-            // TODO: resize event
-            default:
-                break;
+                case sf::Event::Closed:
+                    _running = false;
+                    break;
+                case sf::Event::GainedFocus:
+                    _focused = true;
+                    break;
+                case sf::Event::LostFocus:
+                    _focused = false;
+                    break;
+                    // TODO: resize event
+                default:
+                    break;
             }
         }
-        if(!running)
+        if(!_running)
             break;
+    }
+}
 
+// runs in a thread
+void World::main_loop()
+{
+    _win.setActive(true); // set render context active for this thread
+    while(true)
+    {
         // std::cerr<<"("<<_player.pos().x<<","<<_player.pos().y<<","<<_player.pos().z<<")"<<std::endl;
-
-        if(focused)
+        if(_focused)
         {
             _player.handle_input(_win, 1.0f);
         }
+        // TODO should we make more threads for input, physics, messages, etc?
         // TODO: physics / AI updates
         draw();
         // TODO sleep
+
+        if(!_running)
+        {
+            break;
+        }
     }
 }
 
 int main(int argc, char * argv[])
 {
     #ifdef __linux
-    // XInitThreads(); // needed for multithreaded window access on Linux
+    XInitThreads(); // needed for multithreaded window access on Linux
     #endif
 
     // initialize glew
