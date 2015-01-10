@@ -33,10 +33,10 @@ find_package(GLM REQUIRED)
 
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
-set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazegen)
+set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazerun)
 
-# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
-#     ${PROJECT_BINARY_DIR}/src/config.hpp)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
+    ${PROJECT_BINARY_DIR}/src/config.hpp)
 # configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazerun.desktop.in
 #     ${PROJECT_BINARY_DIR}/mazerun.desktop)
 # configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazerun.rc.in
@@ -51,8 +51,15 @@ link_directories()
 # main compilation
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
-    # src/config.cpp
-    src/window.cpp
+    src/config.cpp
+    src/entity.cpp
+    src/gl_helpers.cpp
+    src/main.cpp
+    src/player.cpp
+    src/shader_prog.cpp
+    src/skybox.cpp
+    src/texture.cpp
+    src/world.cpp
     )
 
 target_link_libraries(${PROJECT_NAME}
