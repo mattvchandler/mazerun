@@ -27,10 +27,10 @@ in vec3 vert_pos;
 
 uniform mat4 model_view_proj;
 
-out vec3 color;
+out vec3 tex_coords;
 
 void main()
 {
-    color = vert_pos * .5 + vec3(0.5, 0.5, 0.5);
-    gl_Position = model_view_proj * vec4(vert_pos, 1.0);
+    tex_coords = vert_pos.xzy; // swizzle to convert from cartesian to OpenGL coords
+    gl_Position = (model_view_proj * vec4(vert_pos, 1.0)).xyww; // keep at far plane
 }

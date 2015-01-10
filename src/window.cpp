@@ -152,10 +152,10 @@ void Entity::rotate(const float angle, const glm::vec3 & axis)
 class Camera: public Entity // TODO: is this class needed?
 {
 public:
-    glm::mat4 view_mat();
+    glm::mat4 view_mat() const;
 };
 
-glm::mat4 Camera::view_mat()
+glm::mat4 Camera::view_mat() const
 {
     return glm::lookAt(_pos, _pos + _forward, _up);
 }
@@ -267,10 +267,10 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
     {
         std::make_pair(left_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_X),
         std::make_pair(right_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_X),
-        std::make_pair(back_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y),
-        std::make_pair(front_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Y),
-        std::make_pair(down_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z),
-        std::make_pair(up_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)
+        std::make_pair(back_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z),
+        std::make_pair(front_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Z),
+        std::make_pair(down_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y),
+        std::make_pair(up_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)
     };
 
     glGenTextures(1, &_texid);
@@ -443,7 +443,7 @@ public:
     Skybox();
     ~Skybox();
     void init();
-    void draw(const glm::mat4 & view, const glm::mat4 & proj);
+    void draw(const Camera & cam, const glm::mat4 & proj);
 protected:
     GLuint _vao, _vbo, _ebo;
     Texture_cubemap _tex;
@@ -467,7 +467,8 @@ Skybox::~Skybox()
 
 void Skybox::init()
 {
-    std::vector<glm::vec3> coords =
+    // TODO: a sphere might look better
+    std::vector<glm::vec3> vert_pos =
     {
         glm::vec3(-1.0f, -1.0f, -1.0f), // 0
         glm::vec3(1.0f, -1.0f, -1.0f), // 1
@@ -507,39 +508,49 @@ void Skybox::init()
 
     glGenBuffers(1, &_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * coords.size(), coords.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
 
     glGenBuffers(1, &_ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * index.size(), index.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    glEnableVertexAttribArray(0);
-
-    _num_indexes = index.size();
     glBindVertexArray(0);
+    _num_indexes = index.size();
 
     check_error("Skybox::init");
 
-    _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)}, {std::make_pair("vert_pos", 0)});
-    _prog.add_uniform("model_view_proj"); // TODO: is there actually a model transform needed?
+    _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)});
+    _prog.add_uniform("model_view_proj");
 
     _tex.init("img/left.png", "img/right.png", "img/back.png", "img/front.png", "img/down.png", "img/up.png");
 }
 
-void Skybox::draw(const glm::mat4 & view, const glm::mat4 & proj)
+void Skybox::draw(const Camera & cam, const glm::mat4 & proj)
 {
+    GLint depth_func_old;
+    glGetIntegerv(GL_DEPTH_FUNC, &depth_func_old);
+
+    glDepthFunc(GL_LEQUAL);
+
     glUseProgram(_prog()); // TODO: make this a use, or make the bind method below a operator(). be consistent
     _tex.bind();
 
-    glm::mat4 model_view_proj = proj * view;
+    glm::mat4 model_view_proj = proj * glm::translate(cam.view_mat(), cam.pos());
 
     glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
 
     glBindVertexArray(_vao);
     glDrawElements(GL_TRIANGLES, _num_indexes, GL_UNSIGNED_INT, (GLvoid *)0);
+
     glBindVertexArray(0); // get prev val?
     glUseProgram(0); // get prev val?
+
+    glDepthFunc(depth_func_old);
+
     check_error("Skybox::draw");
 }
 
@@ -607,7 +618,7 @@ bool World::init()
     _player.set(glm::vec3(1.0f, -10.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // set clear color
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
     _skybox.init();
     // _player.init();
@@ -617,7 +628,7 @@ bool World::init()
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    _skybox.draw(_player.view_mat(), _proj);
+    _skybox.draw(_player, _proj);
     _win.display();
 }
 

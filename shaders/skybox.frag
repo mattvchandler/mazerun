@@ -23,11 +23,13 @@
 
 #version 130
 
-in vec3 color;
+in vec3 tex_coords;
 
 out vec4 frag_color;
 
+uniform samplerCube cubemap;
+
 void main()
 {
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(texture(cubemap, tex_coords).rgb, 1.0);
 }
