@@ -526,7 +526,7 @@ void Skybox::init()
         {std::make_pair("vert_pos", 0)});
     _prog.add_uniform("model_view_proj");
 
-    _tex.init("img/left.png", "img/right.png", "img/back.png", "img/front.png", "img/down.png", "img/up.png");
+    _tex.init("img/bluecloud_lf.jpg", "img/bluecloud_rt.jpg", "img/bluecloud_bk.jpg", "img/bluecloud_ft.jpg", "img/bluecloud_dn.jpg", "img/bluecloud_up.jpg");
 }
 
 void Skybox::draw(const Camera & cam, const glm::mat4 & proj)
