@@ -42,13 +42,16 @@
 
 #include <GL/glew.h>
 
-#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 #include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 
 #ifdef __linux
 #include <X11/Xlib.h>
 #endif
+
+// TODO: split this file (many times)
 
 // random floating point number
 float randf()
@@ -224,13 +227,81 @@ void Player::handle_input(const sf::Window & win, const float dt)
 
 class Texture
 {
+public:
+    Texture();
+    ~Texture();
+    virtual void bind() = 0;
 protected:
     GLuint _texid;
 };
 
-class Cubemap_texture: public Texture
+Texture::Texture(): _texid(0)
 {
+}
+
+Texture::~Texture()
+{
+    if(_texid)
+    {
+        glDeleteTextures(1, &_texid);
+    }
+}
+
+class Texture_cubemap: public Texture
+{
+public:
+    void init(const std::string & left_fname, const std::string & right_fname,
+    const std::string & back_fname, const std::string & front_fname,
+    const std::string & down_fname, const std::string & up_fname);
+    void bind();
 };
+
+// TODO should all inits should return bool OR throw (pick one)
+// create a cubemap texture from 6 filenames
+void Texture_cubemap::init(const std::string & left_fname, const std::string & right_fname,
+    const std::string & back_fname, const std::string & front_fname,
+    const std::string & down_fname, const std::string & up_fname)
+{
+    // create array of pairs: filename with type enum
+    std::vector<std::pair<std::string, GLenum>> filenames =
+    {
+        std::make_pair(left_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_X),
+        std::make_pair(right_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_X),
+        std::make_pair(back_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y),
+        std::make_pair(front_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Y),
+        std::make_pair(down_fname, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z),
+        std::make_pair(up_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)
+    };
+
+    glGenTextures(1, &_texid);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
+
+    for(const auto & filename: filenames)
+    {
+        // load each file
+        sf::Image img;
+        if(!img.loadFromFile(filename.first))
+        {
+            throw std::ios_base::failure(std::string("Error reading image file: ") + filename.first);
+        }
+
+        // send data to OpenGL
+        glTexImage2D(filename.second, 0, GL_RGBA, img.getSize().x, img.getSize().y,
+            0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
+    }
+
+    // set params
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+void Texture_cubemap::bind()
+{
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
+}
 
 class Shader_prog
 {
@@ -259,7 +330,7 @@ Shader_prog::~Shader_prog()
 }
 
 void Shader_prog::init(const std::vector<std::pair<std::string, GLenum>> & sources,
-    const std::vector<std::pair<std::string, GLuint>> & attribs) // will need args?
+    const std::vector<std::pair<std::string, GLuint>> & attribs)
 {
     std::vector<GLuint> shaders;
     for(const auto & source: sources)
@@ -375,7 +446,7 @@ public:
     void draw(const glm::mat4 & view, const glm::mat4 & proj);
 protected:
     GLuint _vao, _vbo, _ebo;
-    Cubemap_texture _tex;
+    Texture_cubemap _tex;
     GLuint _num_indexes;
     Shader_prog _prog;
 };
@@ -452,11 +523,14 @@ void Skybox::init()
 
     _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)}, {std::make_pair("vert_pos", 0)});
     _prog.add_uniform("model_view_proj"); // TODO: is there actually a model transform needed?
+
+    _tex.init("img/left.png", "img/right.png", "img/back.png", "img/front.png", "img/down.png", "img/up.png");
 }
 
 void Skybox::draw(const glm::mat4 & view, const glm::mat4 & proj)
 {
-    glUseProgram(_prog());
+    glUseProgram(_prog()); // TODO: make this a use, or make the bind method below a operator(). be consistent
+    _tex.bind();
 
     glm::mat4 model_view_proj = proj * view;
 
