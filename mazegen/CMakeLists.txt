@@ -1,12 +1,11 @@
 cmake_minimum_required (VERSION 2.6)
-project(mazerun)
-add_subdirectory(mazegen)
+project(mazegen)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
-set(PROJECT_TITLE "MazeRun")
+set(PROJECT_TITLE "MazeGen")
 set(PROJECT_AUTHOR "Matthew Chandler <tardarsauce@gmail.com>")
-set(PROJECT_SUMMARY "A 3D maze adventure game")
+set(PROJECT_SUMMARY "2D maze generation")
 set(PROJECT_WEBSITE "http://github.com/mattvchandler/mazerun")
 
 #flags
@@ -24,24 +23,24 @@ if(MSYS AND CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # libraries
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 find_package(PkgConfig REQUIRED)
-find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
+find_package(SFML 2 COMPONENTS graphics window system REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
 
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
-set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazerun)
+set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazegen/)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
-    ${PROJECT_BINARY_DIR}/src/config.hpp)
-# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazerun.desktop.in
-#     ${PROJECT_BINARY_DIR}/mazerun.desktop)
-# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazerun.rc.in
-#     ${PROJECT_BINARY_DIR}/mazerun.rc)
+# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
+#     ${PROJECT_BINARY_DIR}/src/config.hpp)
+# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazegen.desktop.in
+#     ${PROJECT_BINARY_DIR}/mazegen.desktop)
+# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazegen.rc.in
+#     ${PROJECT_BINARY_DIR}/mazegen.rc)
 
 # directories
 include_directories(
@@ -51,16 +50,9 @@ link_directories()
 
 # main compilation
 add_executable(${PROJECT_NAME}
-    # ${PROJECT_BINARY_DIR}/mazerun.rc
-    src/config.cpp
-    src/entity.cpp
-    src/gl_helpers.cpp
+    # ${PROJECT_BINARY_DIR}/mazegen.rc
+    # src/config.cpp
     src/main.cpp
-    src/player.cpp
-    src/shader_prog.cpp
-    src/skybox.cpp
-    src/texture.cpp
-    src/world.cpp
     )
 
 target_link_libraries(${PROJECT_NAME}
@@ -71,14 +63,14 @@ target_link_libraries(${PROJECT_NAME}
 
 # install targets
 # install(TARGETS "${PROJECT_NAME}" DESTINATION "bin")
-# install(FILES "img/cursor.png" DESTINATION "share/mazerun/img")
-# install(DIRECTORY "shaders" "examples" DESTINATION "share/mazerun")
-# install(FILES "icons/icon.svg" DESTINATION "share/mazerun/icons")
+# install(FILES "img/cursor.png" DESTINATION "share/mazegen/img")
+# install(DIRECTORY "shaders" "examples" DESTINATION "share/mazegen")
+# install(FILES "icons/icon.svg" DESTINATION "share/mazegen/icons")
 
 # if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-#     install(FILES "icons/icon.svg" DESTINATION "share/icons/hicolor/scalable/apps" RENAME "mazerun.svg")
-#     install(FILES "icons/icon_128.png" DESTINATION "share/icons/hicolor/128x128/apps" RENAME "mazerun.png")
-#     install(FILES "${PROJECT_BINARY_DIR}/mazerun.desktop" DESTINATION "share/applications")
+#     install(FILES "icons/icon.svg" DESTINATION "share/icons/hicolor/scalable/apps" RENAME "mazegen.svg")
+#     install(FILES "icons/icon_128.png" DESTINATION "share/icons/hicolor/128x128/apps" RENAME "mazegen.png")
+#     install(FILES "${PROJECT_BINARY_DIR}/mazegen.desktop" DESTINATION "share/applications")
 # endif()
 
 # CPack vars
