@@ -43,6 +43,7 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname)
 {
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
     // create array of pairs: filename with type enum
     std::vector<std::pair<std::string, GLenum>> filenames =
     {
@@ -67,11 +68,13 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
         }
 
         // send data to OpenGL
-        glTexImage2D(filename.second, 0, GL_RGBA, img.getSize().x, img.getSize().y,
+        glTexImage2D(filename.second, 0, GL_RGBA8, img.getSize().x, img.getSize().y,
             0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
     }
 
     // set params
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

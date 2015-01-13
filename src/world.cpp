@@ -21,6 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// TODO: window is owned here. can we ensure that all openGL objects are constructed after the window (so that GL context is valid)
+//       If so, move inits to ctors
+
+// TODO: we've got a lot of state saving & restoring already. after code works, do performance sweep and clean these up when possible
+
 #include <iostream>
 
 #define GLM_FORCE_RADIANS
@@ -52,8 +57,6 @@ bool World::init()
 
     glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
-    glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendColor(1.0f, 1.0f, 1.0f, 0.1f);
     glEnable(GL_BLEND);
