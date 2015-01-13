@@ -56,6 +56,7 @@ public:
     Grid_cell operator[](const sf::Vector2u & cell) const;
 private:
     void mazegen_dfs(const sf::Vector2u & start);
+    void mazegen_prim(const sf::Vector2u & start);
     std::vector<std::vector<Grid_cell>> _grid;
 };
 
@@ -74,7 +75,7 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    mazegen_dfs(sf::Vector2u(0, 0));
+    mazegen_prim(sf::Vector2u(0, 0));
 }
 
 sf::Vector2u Maze_grid::size() const
@@ -139,6 +140,110 @@ void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
             }
             break;
         }
+    }
+}
+
+void Maze_grid::mazegen_prim(const sf::Vector2u & start)
+{
+    std::vector<std::pair<sf::Vector2u, Direction>> walls;
+
+    auto add_cell = [& walls, this](const sf::Vector2u & cell)
+    {
+        for(size_t i = 0; i < 4; ++i)
+        {
+            switch(i)
+            {
+            case UP:
+                if(cell.y > 0 && !_grid[cell.y - 1][cell.x].visited)
+                {
+                    walls.push_back(std::make_pair(cell, UP));
+                }
+                break;
+            case DOWN:
+                if(cell.y < _grid.size() - 1 && !_grid[cell.y + 1][cell.x].visited)
+                {
+                    walls.push_back(std::make_pair(cell, DOWN));
+                }
+                break;
+            case LEFT:
+                if(cell.x > 0 && !_grid[cell.y][cell.x - 1].visited)
+                {
+                    walls.push_back(std::make_pair(cell, LEFT));
+                }
+                break;
+            case RIGHT:
+                if(cell.x < _grid[cell.y].size() - 1 && !_grid[cell.y][cell.x + 1].visited)
+                {
+                    walls.push_back(std::make_pair(cell, RIGHT));
+                }
+                break;
+            }
+        }
+    };
+
+    add_cell(start);
+
+    _grid[start.y][start.x].visited = true;
+
+    while(walls.size() > 0)
+    {
+        size_t curr_ind = rand() % walls.size();
+        auto curr_it = walls.begin() + curr_ind;
+
+        sf::Vector2u curr = curr_it->first, next;
+        Direction dir = curr_it->second;
+        bool next_found = false;
+
+        switch(dir)
+        {
+            case UP:
+                if(curr.y > 0 && !_grid[curr.y - 1][curr.x].visited)
+                {
+                    _grid[curr.y][curr.x].walls[UP] = false;
+                    _grid[curr.y - 1][curr.x].walls[DOWN] = false;
+                    _grid[curr.y - 1][curr.x].visited = true;
+                    next = sf::Vector2u(curr.x, curr.y - 1);
+                    next_found = true;
+                }
+                break;
+            case DOWN:
+                if(curr.y < _grid.size() - 1 && !_grid[curr.y + 1][curr.x].visited)
+                {
+                    _grid[curr.y][curr.x].walls[DOWN] = false;
+                    _grid[curr.y + 1][curr.x].walls[UP] = false;
+                    _grid[curr.y + 1][curr.x].visited = true;
+                    next = sf::Vector2u(curr.x, curr.y + 1);
+                    next_found = true;
+                }
+                break;
+            case LEFT:
+                if(curr.x > 0 && !_grid[curr.y][curr.x - 1].visited)
+                {
+                    _grid[curr.y][curr.x].walls[LEFT] = false;
+                    _grid[curr.y][curr.x - 1].walls[RIGHT] = false;
+                    _grid[curr.y][curr.x - 1].visited = true;
+                    next = sf::Vector2u(curr.x - 1, curr.y);
+                    next_found = true;
+                }
+                break;
+            case RIGHT:
+                if(curr.x < _grid[curr.y].size() - 1 && !_grid[curr.y][curr.x + 1].visited)
+                {
+                    _grid[curr.y][curr.x].walls[RIGHT] = false;
+                    _grid[curr.y][curr.x + 1].walls[LEFT] = false;
+                    _grid[curr.y][curr.x + 1].visited = true;
+                    next = sf::Vector2u(curr.x + 1, curr.y);
+                    next_found = true;
+                }
+                break;
+        }
+
+        if(next_found)
+        {
+            add_cell(next);
+        }
+
+        walls.erase(curr_it);
     }
 }
 
