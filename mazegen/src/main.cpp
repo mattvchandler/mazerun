@@ -22,8 +22,125 @@
 // SOFTWARE.
 
 #include <iostream>
+#include <stdexcept>
+#include <vector>
+
+#include <cstdlib>
+#include <ctime>
 
 #include <SFML/Graphics.hpp>
+
+enum Direction {UP = 0, DOWN, LEFT, RIGHT};
+
+class Grid_cell
+{
+public:
+    Grid_cell();
+    bool walls[4];
+    bool visited;
+};
+
+Grid_cell::Grid_cell(): visited(false)
+{
+    for(size_t i = 0; i < 4; ++i)
+        walls[i] = true;
+}
+
+class Maze_grid
+{
+public:
+    Maze_grid(const sf::Vector2u & grid_size);
+    void init();
+    sf::Vector2u size() const;
+    Grid_cell & operator[](const sf::Vector2u & cell);
+    Grid_cell operator[](const sf::Vector2u & cell) const;
+private:
+    void mazegen_dfs(const sf::Vector2u & start);
+    std::vector<std::vector<Grid_cell>> _grid;
+};
+
+Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
+    :_grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
+{
+    if(grid_size.y == 0)
+    {
+        throw std::invalid_argument("grid_size.y == 0");
+    }
+    if(grid_size.x == 0)
+    {
+        throw std::invalid_argument("grid_size.x == 0");
+    }
+}
+
+void Maze_grid::init()
+{
+    mazegen_dfs(sf::Vector2u(0, 0));
+}
+
+sf::Vector2u Maze_grid::size() const
+{
+    return sf::Vector2u(_grid.size(), _grid[0].size());
+}
+
+Grid_cell & Maze_grid::operator[](const sf::Vector2u & cell)
+{
+    return _grid[cell.y][cell.x];
+}
+Grid_cell Maze_grid::operator[](const sf::Vector2u & cell) const
+{
+    return _grid[cell.y][cell.x];
+}
+
+void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
+{
+    _grid[start.y][start.x].visited = true;
+
+    // shuffle directions list
+    Direction dirs[4] = {UP, DOWN, LEFT, RIGHT};
+    for(size_t i = 0; i < 4; ++i)
+    {
+        std::swap(dirs[i], dirs[rand() % 4]);
+    }
+
+    for(size_t i = 0; i < 4; ++i)
+    {
+        switch(dirs[i])
+        {
+        case UP:
+            if(start.y > 0 && !_grid[start.y - 1][start.x].visited)
+            {
+                _grid[start.y][start.x].walls[UP] = false;
+                _grid[start.y - 1][start.x].walls[DOWN] = false;
+                mazegen_dfs(sf::Vector2u(start.x, start.y - 1));
+            }
+            break;
+        case DOWN:
+            if(start.y < _grid.size() - 1 && !_grid[start.y + 1][start.x].visited)
+            {
+                _grid[start.y][start.x].walls[DOWN] = false;
+                _grid[start.y + 1][start.x].walls[UP] = false;
+                mazegen_dfs(sf::Vector2u(start.x, start.y + 1));
+            }
+            break;
+        case LEFT:
+            if(start.x > 0 && !_grid[start.y][start.x - 1].visited)
+            {
+                _grid[start.y][start.x].walls[LEFT] = false;
+                _grid[start.y][start.x - 1].walls[RIGHT] = false;
+                mazegen_dfs(sf::Vector2u(start.x - 1, start.y));
+            }
+            break;
+        case RIGHT:
+            if(start.x < _grid[start.y].size() - 1 && !_grid[start.y][start.x + 1].visited)
+            {
+                _grid[start.y][start.x].walls[RIGHT] = false;
+                _grid[start.y][start.x + 1].walls[LEFT] = false;
+                mazegen_dfs(sf::Vector2u(start.x + 1, start.y));
+            }
+            break;
+        }
+    }
+}
 
 class Maze
 {
@@ -34,21 +151,67 @@ public:
     void set_grid_size(const sf::Vector2u & grid_size);
     sf::Vector2u get_grid_size() const;
 private:
+    Maze_grid _grid;
     sf::RenderWindow & _win;
     sf::VertexArray _lines;
-
-    sf::Vector2u _grid_size;
 };
 
 Maze::Maze(sf::RenderWindow & win, const sf::Vector2u & grid_size):
+    _grid(grid_size),
     _win(win),
-    _lines(sf::Lines),
-    _grid_size(grid_size)
+    _lines(sf::Lines)
 {
 }
 
 void Maze::init()
 {
+    _grid.init();
+
+    sf::Vector2u _grid_size = _grid.size();
+    sf::Vector2f cell_scale((float)_win.getSize().x / (float)_grid_size.x, (float)_win.getSize().y / (float)_grid_size.y);
+
+    // draw border
+    _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
+    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, 0.0f), sf::Color::Black));
+
+    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, 0.0f), sf::Color::Black));
+    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, (float)_win.getSize().y), sf::Color::Black));
+
+    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, (float)_win.getSize().y), sf::Color::Black));
+    _lines.append(sf::Vertex(sf::Vector2f(0.0f, (float)_win.getSize().y), sf::Color::Black));
+
+    _lines.append(sf::Vertex(sf::Vector2f(0.0f, (float)_win.getSize().y), sf::Color::Black));
+    _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
+
+    // draw maze cells
+    for(size_t row = 0; row < _grid_size.y; ++row)
+    {
+        for(size_t col = 0; col < _grid_size.x; ++col)
+        {
+            sf::Vector2f ul(cell_scale.x * (float)col, cell_scale.y * (float)row);
+
+            if(_grid[sf::Vector2u(col, row)].walls[UP])
+            {
+                _lines.append(sf::Vertex(ul, sf::Color::Black));
+                _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y), sf::Color::Black));
+            }
+            // if(_grid[sf::Vector2u(col, row)].walls[DOWN])
+            // {
+            //     _lines.append(sf::Vertex(sf::Vector2f(ul.x, ul.y + cell_scale.y), sf::Color::Black));
+            //     _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y + cell_scale.y), sf::Color::Black));
+            // }
+            if(_grid[sf::Vector2u(col, row)].walls[LEFT])
+            {
+                _lines.append(sf::Vertex(ul, sf::Color::Black));
+                _lines.append(sf::Vertex(sf::Vector2f(ul.x, ul.y + cell_scale.y), sf::Color::Black));
+            }
+            // if(_grid[sf::Vector2u(col, row)].walls[RIGHT])
+            // {
+            //     _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y), sf::Color::Black));
+            //     _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y + cell_scale.y), sf::Color::Black));
+            // }
+        }
+    }
 }
 
 void Maze::draw()
@@ -58,9 +221,11 @@ void Maze::draw()
 
 int main(int argc, char * argv[])
 {
+    srand(time(NULL));
     sf::RenderWindow win(sf::VideoMode(800, 600), "mazegen", sf::Style::Default);
 
     Maze maze(win, sf::Vector2u(32, 32));
+    maze.init();
 
     while(win.isOpen())
     {
