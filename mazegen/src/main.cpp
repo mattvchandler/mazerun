@@ -196,54 +196,55 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
 
         switch(dir)
         {
-            case UP:
-                if(curr.y > 0 && !_grid[curr.y - 1][curr.x].visited)
-                {
-                    _grid[curr.y][curr.x].walls[UP] = false;
-                    _grid[curr.y - 1][curr.x].walls[DOWN] = false;
-                    _grid[curr.y - 1][curr.x].visited = true;
-                    next = sf::Vector2u(curr.x, curr.y - 1);
-                    next_found = true;
-                }
-                break;
-            case DOWN:
-                if(curr.y < _grid.size() - 1 && !_grid[curr.y + 1][curr.x].visited)
-                {
-                    _grid[curr.y][curr.x].walls[DOWN] = false;
-                    _grid[curr.y + 1][curr.x].walls[UP] = false;
-                    _grid[curr.y + 1][curr.x].visited = true;
-                    next = sf::Vector2u(curr.x, curr.y + 1);
-                    next_found = true;
-                }
-                break;
-            case LEFT:
-                if(curr.x > 0 && !_grid[curr.y][curr.x - 1].visited)
-                {
-                    _grid[curr.y][curr.x].walls[LEFT] = false;
-                    _grid[curr.y][curr.x - 1].walls[RIGHT] = false;
-                    _grid[curr.y][curr.x - 1].visited = true;
-                    next = sf::Vector2u(curr.x - 1, curr.y);
-                    next_found = true;
-                }
-                break;
-            case RIGHT:
-                if(curr.x < _grid[curr.y].size() - 1 && !_grid[curr.y][curr.x + 1].visited)
-                {
-                    _grid[curr.y][curr.x].walls[RIGHT] = false;
-                    _grid[curr.y][curr.x + 1].walls[LEFT] = false;
-                    _grid[curr.y][curr.x + 1].visited = true;
-                    next = sf::Vector2u(curr.x + 1, curr.y);
-                    next_found = true;
-                }
-                break;
+        case UP:
+            if(curr.y > 0 && !_grid[curr.y - 1][curr.x].visited)
+            {
+                _grid[curr.y][curr.x].walls[UP] = false;
+                _grid[curr.y - 1][curr.x].walls[DOWN] = false;
+                _grid[curr.y - 1][curr.x].visited = true;
+                next = sf::Vector2u(curr.x, curr.y - 1);
+                next_found = true;
+            }
+            break;
+        case DOWN:
+            if(curr.y < _grid.size() - 1 && !_grid[curr.y + 1][curr.x].visited)
+            {
+                _grid[curr.y][curr.x].walls[DOWN] = false;
+                _grid[curr.y + 1][curr.x].walls[UP] = false;
+                _grid[curr.y + 1][curr.x].visited = true;
+                next = sf::Vector2u(curr.x, curr.y + 1);
+                next_found = true;
+            }
+            break;
+        case LEFT:
+            if(curr.x > 0 && !_grid[curr.y][curr.x - 1].visited)
+            {
+                _grid[curr.y][curr.x].walls[LEFT] = false;
+                _grid[curr.y][curr.x - 1].walls[RIGHT] = false;
+                _grid[curr.y][curr.x - 1].visited = true;
+                next = sf::Vector2u(curr.x - 1, curr.y);
+                next_found = true;
+            }
+            break;
+        case RIGHT:
+            if(curr.x < _grid[curr.y].size() - 1 && !_grid[curr.y][curr.x + 1].visited)
+            {
+                _grid[curr.y][curr.x].walls[RIGHT] = false;
+                _grid[curr.y][curr.x + 1].walls[LEFT] = false;
+                _grid[curr.y][curr.x + 1].visited = true;
+                next = sf::Vector2u(curr.x + 1, curr.y);
+                next_found = true;
+            }
+            break;
         }
+
+        walls.erase(curr_it);
 
         if(next_found)
         {
             add_cell(next);
         }
 
-        walls.erase(curr_it);
     }
 }
 

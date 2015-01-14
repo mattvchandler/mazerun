@@ -26,7 +26,7 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 find_package(PkgConfig REQUIRED)
-find_package(SFML 2 COMPONENTS graphics window system REQUIRED)
+find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
