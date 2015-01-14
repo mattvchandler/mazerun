@@ -51,17 +51,15 @@ class Maze_grid
 public:
     Maze_grid(const sf::Vector2u & grid_size);
     void init();
-    sf::Vector2u size() const;
-    Grid_cell & operator[](const sf::Vector2u & cell);
-    Grid_cell operator[](const sf::Vector2u & cell) const;
+
+    std::vector<std::vector<Grid_cell>> grid;
 private:
     void mazegen_dfs(const sf::Vector2u & start);
     void mazegen_prim(const sf::Vector2u & start);
-    std::vector<std::vector<Grid_cell>> _grid;
 };
 
 Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
-    :_grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
+    :grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
 {
     if(grid_size.y == 0)
     {
@@ -75,26 +73,12 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    mazegen_prim(sf::Vector2u(0, 0));
-}
-
-sf::Vector2u Maze_grid::size() const
-{
-    return sf::Vector2u(_grid.size(), _grid[0].size());
-}
-
-Grid_cell & Maze_grid::operator[](const sf::Vector2u & cell)
-{
-    return _grid[cell.y][cell.x];
-}
-Grid_cell Maze_grid::operator[](const sf::Vector2u & cell) const
-{
-    return _grid[cell.y][cell.x];
+    mazegen_dfs(sf::Vector2u(0, 0));
 }
 
 void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
 {
-    _grid[start.y][start.x].visited = true;
+    grid[start.y][start.x].visited = true;
 
     // shuffle directions list
     Direction dirs[4] = {UP, DOWN, LEFT, RIGHT};
@@ -108,34 +92,34 @@ void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
         switch(dirs[i])
         {
         case UP:
-            if(start.y > 0 && !_grid[start.y - 1][start.x].visited)
+            if(start.y > 0 && !grid[start.y - 1][start.x].visited)
             {
-                _grid[start.y][start.x].walls[UP] = false;
-                _grid[start.y - 1][start.x].walls[DOWN] = false;
+                grid[start.y][start.x].walls[UP] = false;
+                grid[start.y - 1][start.x].walls[DOWN] = false;
                 mazegen_dfs(sf::Vector2u(start.x, start.y - 1));
             }
             break;
         case DOWN:
-            if(start.y < _grid.size() - 1 && !_grid[start.y + 1][start.x].visited)
+            if(start.y < grid.size() - 1 && !grid[start.y + 1][start.x].visited)
             {
-                _grid[start.y][start.x].walls[DOWN] = false;
-                _grid[start.y + 1][start.x].walls[UP] = false;
+                grid[start.y][start.x].walls[DOWN] = false;
+                grid[start.y + 1][start.x].walls[UP] = false;
                 mazegen_dfs(sf::Vector2u(start.x, start.y + 1));
             }
             break;
         case LEFT:
-            if(start.x > 0 && !_grid[start.y][start.x - 1].visited)
+            if(start.x > 0 && !grid[start.y][start.x - 1].visited)
             {
-                _grid[start.y][start.x].walls[LEFT] = false;
-                _grid[start.y][start.x - 1].walls[RIGHT] = false;
+                grid[start.y][start.x].walls[LEFT] = false;
+                grid[start.y][start.x - 1].walls[RIGHT] = false;
                 mazegen_dfs(sf::Vector2u(start.x - 1, start.y));
             }
             break;
         case RIGHT:
-            if(start.x < _grid[start.y].size() - 1 && !_grid[start.y][start.x + 1].visited)
+            if(start.x < grid[start.y].size() - 1 && !grid[start.y][start.x + 1].visited)
             {
-                _grid[start.y][start.x].walls[RIGHT] = false;
-                _grid[start.y][start.x + 1].walls[LEFT] = false;
+                grid[start.y][start.x].walls[RIGHT] = false;
+                grid[start.y][start.x + 1].walls[LEFT] = false;
                 mazegen_dfs(sf::Vector2u(start.x + 1, start.y));
             }
             break;
@@ -154,25 +138,25 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
             switch(i)
             {
             case UP:
-                if(cell.y > 0 && !_grid[cell.y - 1][cell.x].visited)
+                if(cell.y > 0 && !grid[cell.y - 1][cell.x].visited)
                 {
                     walls.push_back(std::make_pair(cell, UP));
                 }
                 break;
             case DOWN:
-                if(cell.y < _grid.size() - 1 && !_grid[cell.y + 1][cell.x].visited)
+                if(cell.y < grid.size() - 1 && !grid[cell.y + 1][cell.x].visited)
                 {
                     walls.push_back(std::make_pair(cell, DOWN));
                 }
                 break;
             case LEFT:
-                if(cell.x > 0 && !_grid[cell.y][cell.x - 1].visited)
+                if(cell.x > 0 && !grid[cell.y][cell.x - 1].visited)
                 {
                     walls.push_back(std::make_pair(cell, LEFT));
                 }
                 break;
             case RIGHT:
-                if(cell.x < _grid[cell.y].size() - 1 && !_grid[cell.y][cell.x + 1].visited)
+                if(cell.x < grid[cell.y].size() - 1 && !grid[cell.y][cell.x + 1].visited)
                 {
                     walls.push_back(std::make_pair(cell, RIGHT));
                 }
@@ -183,7 +167,7 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
 
     add_cell(start);
 
-    _grid[start.y][start.x].visited = true;
+    grid[start.y][start.x].visited = true;
 
     while(walls.size() > 0)
     {
@@ -197,42 +181,42 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
         switch(dir)
         {
         case UP:
-            if(curr.y > 0 && !_grid[curr.y - 1][curr.x].visited)
+            if(curr.y > 0 && !grid[curr.y - 1][curr.x].visited)
             {
-                _grid[curr.y][curr.x].walls[UP] = false;
-                _grid[curr.y - 1][curr.x].walls[DOWN] = false;
-                _grid[curr.y - 1][curr.x].visited = true;
                 next = sf::Vector2u(curr.x, curr.y - 1);
+                grid[curr.y][curr.x].walls[UP] = false;
+                grid[next.y][next.x].walls[DOWN] = false;
+                grid[next.y][next.x].visited = true;
                 next_found = true;
             }
             break;
         case DOWN:
-            if(curr.y < _grid.size() - 1 && !_grid[curr.y + 1][curr.x].visited)
+            if(curr.y < grid.size() - 1 && !grid[curr.y + 1][curr.x].visited)
             {
-                _grid[curr.y][curr.x].walls[DOWN] = false;
-                _grid[curr.y + 1][curr.x].walls[UP] = false;
-                _grid[curr.y + 1][curr.x].visited = true;
                 next = sf::Vector2u(curr.x, curr.y + 1);
+                grid[curr.y][curr.x].walls[DOWN] = false;
+                grid[next.y][next.x].walls[UP] = false;
+                grid[next.y][next.x].visited = true;
                 next_found = true;
             }
             break;
         case LEFT:
-            if(curr.x > 0 && !_grid[curr.y][curr.x - 1].visited)
+            if(curr.x > 0 && !grid[curr.y][curr.x - 1].visited)
             {
-                _grid[curr.y][curr.x].walls[LEFT] = false;
-                _grid[curr.y][curr.x - 1].walls[RIGHT] = false;
-                _grid[curr.y][curr.x - 1].visited = true;
                 next = sf::Vector2u(curr.x - 1, curr.y);
+                grid[curr.y][curr.x].walls[LEFT] = false;
+                grid[next.y][next.x].walls[RIGHT] = false;
+                grid[next.y][next.x].visited = true;
                 next_found = true;
             }
             break;
         case RIGHT:
-            if(curr.x < _grid[curr.y].size() - 1 && !_grid[curr.y][curr.x + 1].visited)
+            if(curr.x < grid[curr.y].size() - 1 && !grid[curr.y][curr.x + 1].visited)
             {
-                _grid[curr.y][curr.x].walls[RIGHT] = false;
-                _grid[curr.y][curr.x + 1].walls[LEFT] = false;
-                _grid[curr.y][curr.x + 1].visited = true;
                 next = sf::Vector2u(curr.x + 1, curr.y);
+                grid[curr.y][curr.x].walls[RIGHT] = false;
+                grid[next.y][next.x].walls[LEFT] = false;
+                grid[next.y][next.x].visited = true;
                 next_found = true;
             }
             break;
@@ -244,7 +228,6 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
         {
             add_cell(next);
         }
-
     }
 }
 
@@ -273,8 +256,8 @@ void Maze::init()
 {
     _grid.init();
 
-    sf::Vector2u _grid_size = _grid.size();
-    sf::Vector2f cell_scale((float)_win.getSize().x / (float)_grid_size.x, (float)_win.getSize().y / (float)_grid_size.y);
+    sf::Vector2u grid_size(_grid.grid[0].size(), _grid.grid.size());
+    sf::Vector2f cell_scale((float)_win.getSize().x / (float)grid_size.x, (float)_win.getSize().y / (float)grid_size.y);
 
     // draw border
     _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
@@ -290,28 +273,28 @@ void Maze::init()
     _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
 
     // draw maze cells
-    for(size_t row = 0; row < _grid_size.y; ++row)
+    for(size_t row = 0; row < grid_size.y; ++row)
     {
-        for(size_t col = 0; col < _grid_size.x; ++col)
+        for(size_t col = 0; col < grid_size.x; ++col)
         {
             sf::Vector2f ul(cell_scale.x * (float)col, cell_scale.y * (float)row);
 
-            if(_grid[sf::Vector2u(col, row)].walls[UP])
+            if(_grid.grid[row][col].walls[UP])
             {
                 _lines.append(sf::Vertex(ul, sf::Color::Black));
                 _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y), sf::Color::Black));
             }
-            // if(_grid[sf::Vector2u(col, row)].walls[DOWN])
+            // if(_grid.grid[row][col].walls[DOWN])
             // {
             //     _lines.append(sf::Vertex(sf::Vector2f(ul.x, ul.y + cell_scale.y), sf::Color::Black));
             //     _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y + cell_scale.y), sf::Color::Black));
             // }
-            if(_grid[sf::Vector2u(col, row)].walls[LEFT])
+            if(_grid.grid[row][col].walls[LEFT])
             {
                 _lines.append(sf::Vertex(ul, sf::Color::Black));
                 _lines.append(sf::Vertex(sf::Vector2f(ul.x, ul.y + cell_scale.y), sf::Color::Black));
             }
-            // if(_grid[sf::Vector2u(col, row)].walls[RIGHT])
+            // if(_grid.grid[row][col].walls[RIGHT])
             // {
             //     _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y), sf::Color::Black));
             //     _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y + cell_scale.y), sf::Color::Black));
