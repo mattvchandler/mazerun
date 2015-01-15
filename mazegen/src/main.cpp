@@ -23,12 +23,17 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <unordered_map>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include <cstdlib>
 #include <ctime>
 
 #include <SFML/Graphics.hpp>
+
+// TODO: replace rand with C++ random lib, cuse stl shuffle instead of writing my own
 
 enum Direction {UP = 0, DOWN, LEFT, RIGHT};
 
@@ -42,7 +47,7 @@ public:
 
 Grid_cell::Grid_cell(): visited(false)
 {
-    for(size_t i = 0; i < 4; ++i)
+    for(int i = 0; i < 4; ++i)
         walls[i] = true;
 }
 
@@ -56,6 +61,7 @@ public:
 private:
     void mazegen_dfs(const sf::Vector2u & start);
     void mazegen_prim(const sf::Vector2u & start);
+    void mazegen_kruskal(const sf::Vector2u & start);
 };
 
 Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
@@ -78,16 +84,19 @@ void Maze_grid::init()
 
 void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
 {
+    if(grid[start.y][start.x].visited)
+        return;
+
     grid[start.y][start.x].visited = true;
 
     // shuffle directions list
     Direction dirs[4] = {UP, DOWN, LEFT, RIGHT};
-    for(size_t i = 0; i < 4; ++i)
+    for(int i = 0; i < 4; ++i) // TODO: stl shuffle?
     {
         std::swap(dirs[i], dirs[rand() % 4]);
     }
 
-    for(size_t i = 0; i < 4; ++i)
+    for(int i = 0; i < 4; ++i)
     {
         switch(dirs[i])
         {
@@ -129,11 +138,14 @@ void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
 
 void Maze_grid::mazegen_prim(const sf::Vector2u & start)
 {
+    if(grid[start.y][start.x].visited)
+        return;
+
     std::vector<std::pair<sf::Vector2u, Direction>> walls;
 
     auto add_cell = [& walls, this](const sf::Vector2u & cell)
     {
-        for(size_t i = 0; i < 4; ++i)
+        for(int i = 0; i < 4; ++i)
         {
             switch(i)
             {
@@ -227,6 +239,163 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
         if(next_found)
         {
             add_cell(next);
+        }
+    }
+}
+
+template <typename T>
+class Disjoint_set
+{
+public:
+    Disjoint_set(const std::vector<T> & items);
+    T find_rep(const T & a) const;
+    void union_reps(const T & a, const T & b);
+private:
+    std::unordered_map<T, std::pair<T, unsigned int>> _set;
+};
+
+template <typename T>
+Disjoint_set<T>::Disjoint_set(const std::vector<T> & items)
+{
+    for(const auto & i: items)
+    {
+        _set[i] = std::make_pair(i, 0);
+    }
+}
+
+template <typename T>
+T Disjoint_set<T>::find_rep(const T & a) const
+{
+    T x = _set.at(a).first;
+
+    if(a != x)
+        x = find_rep(x);
+
+    return x;
+}
+
+template <typename T>
+void Disjoint_set<T>::union_reps(const T & a, const T & b)
+{
+    T a_root = find_rep(a);
+    T b_root = find_rep(b);
+
+    if(a_root == b_root)
+        return;
+
+    // compare ranks
+    if(_set[a_root].second < _set[b_root].second)
+        _set[a_root].first = b_root;
+    else if(_set[a_root].second > _set[b_root].second)
+        _set[b_root].first = a_root;
+    else // equal ranks
+    {
+        _set[b_root].first = a_root;
+        ++_set[a_root].second;
+    }
+}
+
+// make sf::Vector2u hashable
+namespace std
+{
+    template <>
+    struct hash<sf::Vector2u>
+    {
+    public:
+        size_t operator()(const sf::Vector2u & a) const
+        {
+            return hash<unsigned int>()(a.x) ^ hash<unsigned int>()(a.y);
+        }
+    };
+};
+
+void Maze_grid::mazegen_kruskal(const sf::Vector2u & start)
+{
+    if(grid[start.y][start.x].visited)
+        return;
+
+    // floodfill to get all cells connected, add walls to list, cells to disjoint set, mark cell visited
+    std::vector<std::tuple<sf::Vector2u, sf::Vector2u, Direction, Direction>> walls;
+    std::vector<sf::Vector2u> cells;
+    std::vector<sf::Vector2u> to_add = {start};
+
+    while(to_add.size() > 0)
+    {
+        sf::Vector2u curr = to_add.back();
+        to_add.pop_back();
+
+        if(grid[curr.y][curr.x].visited)
+            continue;
+
+        grid[curr.y][curr.x].visited = true;
+        cells.push_back(curr);
+
+        for(int i = 0; i < 4; ++i)
+        {
+            switch(i)
+            {
+            case UP:
+                if(curr.y > 0 && !grid[curr.y - 1][curr.x].visited)
+                {
+                    sf::Vector2u next(curr.x, curr.y - 1);
+                    walls.push_back(std::make_tuple(curr, next, UP, DOWN));
+                    to_add.push_back(next);
+                }
+                break;
+            case DOWN:
+                if(curr.y < grid.size() - 1 && !grid[curr.y + 1][curr.x].visited)
+                {
+                    sf::Vector2u next(curr.x, curr.y + 1);
+                    walls.push_back(std::make_tuple(curr, next, DOWN, UP));
+                    to_add.push_back(next);
+                }
+                break;
+            case LEFT:
+                if(curr.x > 0 && !grid[curr.y][curr.x - 1].visited)
+                {
+                    sf::Vector2u next(curr.x - 1, curr.y);
+                    walls.push_back(std::make_tuple(curr, next, LEFT, RIGHT));
+                    to_add.push_back(next);
+                }
+                break;
+            case RIGHT:
+                if(curr.x < grid[curr.y].size() - 1 && !grid[curr.y][curr.x + 1].visited)
+                {
+                    sf::Vector2u next(curr.x + 1, curr.y);
+                    walls.push_back(std::make_tuple(curr, next, RIGHT, LEFT));
+                    to_add.push_back(next);
+                }
+                break;
+            }
+        }
+    }
+
+    Disjoint_set<sf::Vector2u> cell_set(cells);
+
+    // shuffle walls
+    for(size_t i = 0; i < walls.size(); ++i)
+    {
+        std::swap(walls[i], walls[rand() % walls.size()]);
+    }
+
+    // for wall in walls, and while # sets > 1
+    size_t num_sets = cells.size();
+    for(const auto & wall: walls)
+    {
+        sf::Vector2u a, b;
+        Direction a_dir, b_dir;
+        std::tie(a, b, a_dir, b_dir) = wall;
+
+        sf::Vector2u set_a = cell_set.find_rep(a);
+        sf::Vector2u set_b = cell_set.find_rep(b);
+
+        if(set_a != set_b)
+        {
+            cell_set.union_reps(set_a, set_b);
+            grid[a.y][a.x].walls[a_dir] = false;
+            grid[b.y][b.x].walls[b_dir] = false;
+            if(--num_sets == 1)
+                break;
         }
     }
 }
