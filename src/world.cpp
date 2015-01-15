@@ -26,6 +26,9 @@
 
 // TODO: we've got a lot of state saving & restoring already. after code works, do performance sweep and clean these up when possible
 
+// TODO: test thread_local with SFML threads, if not, sf::ThreadLocalPtr? (seems to on linux gcc)
+//      we really need to be able to use stl threads on windows...
+
 #include <iostream>
 
 #define GLM_FORCE_RADIANS

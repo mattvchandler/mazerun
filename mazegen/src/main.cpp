@@ -24,16 +24,16 @@
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include <cstdlib>
-#include <ctime>
-
 #include <SFML/Graphics.hpp>
 
-// TODO: replace rand with C++ random lib, cuse stl shuffle instead of writing my own
+// global prng
+std::random_device rng;
+std::mt19937 prng;
 
 enum Direction {UP = 0, DOWN, LEFT, RIGHT};
 
@@ -91,10 +91,7 @@ void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
 
     // shuffle directions list
     Direction dirs[4] = {UP, DOWN, LEFT, RIGHT};
-    for(int i = 0; i < 4; ++i) // TODO: stl shuffle?
-    {
-        std::swap(dirs[i], dirs[rand() % 4]);
-    }
+    std::shuffle(std::begin(dirs), std::end(dirs), prng);
 
     for(int i = 0; i < 4; ++i)
     {
@@ -183,7 +180,8 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start)
 
     while(walls.size() > 0)
     {
-        size_t curr_ind = rand() % walls.size();
+        std::uniform_int_distribution<size_t> rand_wall(walls.size());
+        size_t curr_ind = rand_wall(prng);
         auto curr_it = walls.begin() + curr_ind;
 
         sf::Vector2u curr = curr_it->first, next;
@@ -373,10 +371,7 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start)
     Disjoint_set<sf::Vector2u> cell_set(cells);
 
     // shuffle walls
-    for(size_t i = 0; i < walls.size(); ++i)
-    {
-        std::swap(walls[i], walls[rand() % walls.size()]);
-    }
+    std::shuffle(walls.begin(), walls.end(), prng);
 
     // for wall in walls, and while # sets > 1
     size_t num_sets = cells.size();
@@ -479,7 +474,7 @@ void Maze::draw()
 
 int main(int argc, char * argv[])
 {
-    srand(time(NULL));
+    prng.seed(rng());
     sf::RenderWindow win(sf::VideoMode(800, 600), "mazegen", sf::Style::Default);
 
     Maze maze(win, sf::Vector2u(32, 32));
