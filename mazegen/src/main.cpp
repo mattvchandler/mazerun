@@ -248,7 +248,7 @@ class Disjoint_set
 {
 public:
     Disjoint_set(const std::vector<T> & items);
-    T find_rep(const T & a) const;
+    const T & find_rep(const T & a) const;
     void union_reps(const T & a, const T & b);
 private:
     std::unordered_map<T, std::pair<T, unsigned int>> _set;
@@ -264,14 +264,14 @@ Disjoint_set<T>::Disjoint_set(const std::vector<T> & items)
 }
 
 template <typename T>
-T Disjoint_set<T>::find_rep(const T & a) const
+const T & Disjoint_set<T>::find_rep(const T & a) const
 {
-    T x = _set.at(a).first;
+    const T * x = &_set.at(a).first;
 
-    if(a != x)
-        x = find_rep(x);
-
-    return x;
+    if(a != *x)
+        return find_rep(*x);
+    else
+        return a;
 }
 
 template <typename T>
