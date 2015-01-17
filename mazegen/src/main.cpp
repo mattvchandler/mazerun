@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
@@ -59,6 +60,7 @@ public:
 
     std::vector<std::vector<Grid_cell>> grid;
 private:
+    void gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &)> & mazegen, const unsigned int attempts);
     void mazegen_dfs(const sf::Vector2u & start);
     void mazegen_prim(const sf::Vector2u & start);
     void mazegen_kruskal(const sf::Vector2u & start);
@@ -79,11 +81,89 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    mazegen_dfs(sf::Vector2u(0, 0));
+    gen_rooms(&Maze_grid::mazegen_dfs, 25);
+}
+
+void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &)> & mazegen, const unsigned int attempts)
+{
+    // place some random rooms
+    for(unsigned int i = 0; i  < attempts; ++i)
+    {
+        sf::Vector2u size(std::binomial_distribution<unsigned int>(10, 0.5)(prng),
+           std::binomial_distribution<unsigned int>(10, 0.5)(prng));
+
+        // discard skinny rooms
+        if((float)size.x / (float)size.y > 5 || (float)size.y / (float)size.x > 5)
+            continue;
+
+        sf::Vector2u pos(std::uniform_int_distribution<unsigned int>(0, grid[0].size() - size.x - 1)(prng),
+           std::uniform_int_distribution<unsigned int>(0, grid.size() - size.y - 1)(prng));
+
+        // std::cout<<"pos:("<<pos.x<<","<<pos.y<<") size:("<<size.x<<","<<size.y<<")"<<std::endl;
+
+        // check if overlapping
+        bool overlapped = false;
+        for(size_t row = pos.y; row < pos.y +size.y; ++row)
+        {
+            for(size_t col = pos.x; col < pos.x +size.x; ++col)
+            {
+                if(grid[row][col].visited)
+                {
+                    overlapped = true;
+                    goto overlap;
+                }
+            }
+        }
+        overlap:
+        // discard if overlapping
+        if(overlapped)
+            continue;
+
+        // mark visited
+        // destroy walls, excepting borders
+        for(size_t row = pos.y; row < pos.y + size.y; ++row)
+        {
+            for(size_t col = pos.x; col < pos.x + size.x; ++col)
+            {
+                grid[row][col].visited = true;
+
+                if(row > pos.y)
+                    grid[row][col].walls[UP] = false;
+                if(row < pos.y + size.y - 1)
+                    grid[row][col].walls[DOWN] = false;
+                if(col > pos.x)
+                    grid[row][col].walls[LEFT] = false;
+                if(col < pos.x + size.x - 1)
+                    grid[row][col].walls[RIGHT] = false;
+            }
+        }
+
+        // track as region (add region to Grid_cell? map of regions to set of cells, or mlutimap)
+    }
+
+    // fill in remaining areas with mazes
+    for(size_t row = 0; row < grid.size(); ++row)
+    {
+        for(size_t col = 0; col < grid[0].size(); ++col)
+        {
+            if(!grid[row][col].visited)
+            {
+                mazegen(*this, sf::Vector2u(col, row));
+            }
+        }
+    }
+    // find connectors, build graph (regions as verticies, connectors as edges)
+    // Either
+    //  kruskals alg to find min spanning tree
+    //  randomly open other connecters / destroy random walls
+    // OR
+    //  find relative neighboorhood graph or urquhat graph
+
 }
 
 void Maze_grid::mazegen_dfs(const sf::Vector2u & start)
 {
+    // TODO: make non recursive?
     if(grid[start.y][start.x].visited)
         return;
 
