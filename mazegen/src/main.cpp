@@ -82,7 +82,7 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    gen_rooms(&Maze_grid::mazegen_dfs, 1000);
+    gen_rooms(&Maze_grid::mazegen_prim, 10000);
 }
 
 void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen, const unsigned int attempts)
@@ -267,12 +267,14 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
 
     while(walls.size() > 0)
     {
-        std::uniform_int_distribution<size_t> rand_wall(walls.size());
+        std::uniform_int_distribution<size_t> rand_wall(0, walls.size() - 1);
         size_t curr_ind = rand_wall(prng);
         auto curr_it = walls.begin() + curr_ind;
 
-        sf::Vector2u curr = curr_it->first, next;
+        sf::Vector2u curr = curr_it->first;
         Direction dir = curr_it->second;
+
+        sf::Vector2u next;
         bool next_found = false;
 
         switch(dir)
