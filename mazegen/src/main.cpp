@@ -45,9 +45,10 @@ public:
     bool walls[4];
     bool visited;
     int region;
+    bool room;
 };
 
-Grid_cell::Grid_cell(): visited(false), region(-1)
+Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
 {
     for(int i = 0; i < 4; ++i)
         walls[i] = true;
@@ -95,7 +96,7 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
            std::binomial_distribution<unsigned int>(10, 0.5)(prng));
 
         // discard skinny rooms
-        if((float)size.x / (float)size.y > 5 || (float)size.y / (float)size.x > 5)
+        if((float)size.x / (float)size.y > 4 || (float)size.y / (float)size.x > 4)
             continue;
 
         sf::Vector2u pos(std::uniform_int_distribution<unsigned int>(0, grid[0].size() - size.x - 1)(prng),
@@ -129,6 +130,7 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
             {
                 grid[row][col].visited = true;
                 grid[row][col].region = region;
+                grid[row][col].room = true;
 
                 if(row > pos.y)
                     grid[row][col].walls[UP] = false;
@@ -286,7 +288,7 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
                 grid[curr.y][curr.x].walls[UP] = false;
                 grid[next.y][next.x].walls[DOWN] = false;
                 grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = true;
+                grid[next.y][next.x].region = region;
                 next_found = true;
             }
             break;
@@ -297,7 +299,7 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
                 grid[curr.y][curr.x].walls[DOWN] = false;
                 grid[next.y][next.x].walls[UP] = false;
                 grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = true;
+                grid[next.y][next.x].region = region;
                 next_found = true;
             }
             break;
@@ -308,7 +310,7 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
                 grid[curr.y][curr.x].walls[LEFT] = false;
                 grid[next.y][next.x].walls[RIGHT] = false;
                 grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = true;
+                grid[next.y][next.x].region = region;
                 next_found = true;
             }
             break;
@@ -319,7 +321,7 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
                 grid[curr.y][curr.x].walls[RIGHT] = false;
                 grid[next.y][next.x].walls[LEFT] = false;
                 grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = true;
+                grid[next.y][next.x].region = region;
                 next_found = true;
             }
             break;
@@ -501,12 +503,14 @@ private:
     Maze_grid _grid;
     sf::RenderWindow & _win;
     sf::VertexArray _lines;
+    std::vector<std::vector<sf::RectangleShape>> _cells;
 };
 
 Maze::Maze(sf::RenderWindow & win, const sf::Vector2u & grid_size):
     _grid(grid_size),
     _win(win),
-    _lines(sf::Lines)
+    _lines(sf::Lines),
+    _cells(grid_size.y, std::vector<sf::RectangleShape>(grid_size.x))
 {
 }
 
@@ -530,12 +534,32 @@ void Maze::init()
     _lines.append(sf::Vertex(sf::Vector2f(0.0f, (float)_win.getSize().y), sf::Color::Black));
     _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
 
+    std::unordered_map <int, sf::Color> colors;
+
     // draw maze cells
     for(size_t row = 0; row < grid_size.y; ++row)
     {
         for(size_t col = 0; col < grid_size.x; ++col)
         {
             sf::Vector2f ul(cell_scale.x * (float)col, cell_scale.y * (float)row);
+
+            // if region not in colors, add new random color to region
+            if(colors.find(_grid.grid[row][col].region) == colors.end())
+            {
+                std::uniform_int_distribution<sf::Uint8> color_dist(0, 127);
+                colors[_grid.grid[row][col].region] = sf::Color(color_dist(prng), color_dist(prng), color_dist(prng), 255);
+
+                if(!_grid.grid[row][col].room)
+                {
+                    colors[_grid.grid[row][col].region] += sf::Color(128, 128, 128, 0);
+                }
+
+            }
+
+            // create cell
+            _cells[row][col].setSize(cell_scale);
+            _cells[row][col].setPosition(ul);
+            _cells[row][col].setFillColor(colors[_grid.grid[row][col].region]);
 
             if(_grid.grid[row][col].walls[UP])
             {
@@ -563,6 +587,13 @@ void Maze::init()
 
 void Maze::draw()
 {
+    for(const auto & row: _cells)
+    {
+        for(const auto & cell: row)
+        {
+            _win.draw(cell);
+        }
+    }
     _win.draw(_lines);
 }
 
