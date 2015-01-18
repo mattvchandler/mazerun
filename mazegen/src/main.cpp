@@ -27,7 +27,6 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <random>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -108,8 +107,8 @@ namespace std
 struct Wall
 {
     sf::Vector2u cell_1, cell_2;
+    Direction dir_1, dir_2;
     int region_1, region_2;
-    Direction wall_1, wall_2;
 };
 
 class Grid_cell
@@ -157,7 +156,7 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    gen_rooms(&Maze_grid::mazegen_prim, 25);
+    gen_rooms(&Maze_grid::mazegen_dfs, 25);
 }
 
 void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen, const unsigned int attempts)
@@ -246,7 +245,7 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
                 int region_1 = grid[row][col].region;
                 int region_2 = grid[row][col + 1].region;
 
-                connectors.push_back({cell_1, cell_2, region_1, region_2, RIGHT, LEFT});
+                connectors.push_back({cell_1, cell_2, RIGHT, LEFT, region_1, region_2});
             }
             if(grid[row][col].region != grid[row + 1][col].region)
             {
@@ -255,7 +254,7 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
                 int region_1 = grid[row][col].region;
                 int region_2 = grid[row + 1][col].region;
 
-                connectors.push_back({cell_1, cell_2, region_1, region_2, DOWN, UP});
+                connectors.push_back({cell_1, cell_2, DOWN, UP, region_1, region_2});
             }
         }
     }
@@ -263,7 +262,7 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
     // shuffle connectors
     std::shuffle(connectors.begin(), connectors.end(), prng);
 
-    //  use kruskals alg to find min spanning tree
+    //  use kruskals alg to find min spanning tree of region graph
     std::vector<int> regions_vec(region);
     for(size_t i = 0; i < regions_vec.size(); ++i)
         regions_vec[i] = i;
@@ -274,12 +273,17 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
     {
         int set_1 = regions.find_rep(conn.region_1);
         int set_2 = regions.find_rep(conn.region_2);
+
         if(set_1 != set_2)
         {
             regions.union_reps(set_1, set_2);
 
-            grid[conn.cell_1.y][conn.cell_1.x].walls[conn.wall_1] = false;
-            grid[conn.cell_2.y][conn.cell_2.x].walls[conn.wall_2] = false;
+            // destroy walls joining regions
+            grid[conn.cell_1.y][conn.cell_1.x].walls[conn.dir_1] = false;
+            grid[conn.cell_2.y][conn.cell_2.x].walls[conn.dir_2] = false;
+
+            if(--region == 1)
+                break;
         }
     }
 
@@ -345,7 +349,7 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
     if(grid[start.y][start.x].visited)
         return;
 
-    std::vector<std::pair<sf::Vector2u, Direction>> walls;
+    std::vector<Wall> walls;
 
     auto add_cell = [& walls, this](const sf::Vector2u & cell)
     {
@@ -356,25 +360,25 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
             case UP:
                 if(cell.y > 0 && !grid[cell.y - 1][cell.x].visited)
                 {
-                    walls.push_back(std::make_pair(cell, UP));
+                    walls.push_back({cell, sf::Vector2u(cell.x, cell.y - 1), UP, DOWN});
                 }
                 break;
             case DOWN:
                 if(cell.y < grid.size() - 1 && !grid[cell.y + 1][cell.x].visited)
                 {
-                    walls.push_back(std::make_pair(cell, DOWN));
+                    walls.push_back({cell, sf::Vector2u(cell.x, cell.y + 1), DOWN, UP});
                 }
                 break;
             case LEFT:
                 if(cell.x > 0 && !grid[cell.y][cell.x - 1].visited)
                 {
-                    walls.push_back(std::make_pair(cell, LEFT));
+                    walls.push_back({cell, sf::Vector2u(cell.x - 1, cell.y), LEFT, RIGHT});
                 }
                 break;
             case RIGHT:
                 if(cell.x < grid[cell.y].size() - 1 && !grid[cell.y][cell.x + 1].visited)
                 {
-                    walls.push_back(std::make_pair(cell, RIGHT));
+                    walls.push_back({cell, sf::Vector2u(cell.x + 1, cell.y), RIGHT, LEFT});
                 }
                 break;
             }
@@ -392,64 +396,22 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
         size_t curr_ind = rand_wall(prng);
         auto curr_it = walls.begin() + curr_ind;
 
-        sf::Vector2u curr = curr_it->first;
-        Direction dir = curr_it->second;
+        sf::Vector2u curr = curr_it->cell_1;
+        Direction curr_dir = curr_it->dir_1;
 
-        sf::Vector2u next;
-        bool next_found = false;
-
-        switch(dir)
-        {
-        case UP:
-            if(curr.y > 0 && !grid[curr.y - 1][curr.x].visited)
-            {
-                next = sf::Vector2u(curr.x, curr.y - 1);
-                grid[curr.y][curr.x].walls[UP] = false;
-                grid[next.y][next.x].walls[DOWN] = false;
-                grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = region;
-                next_found = true;
-            }
-            break;
-        case DOWN:
-            if(curr.y < grid.size() - 1 && !grid[curr.y + 1][curr.x].visited)
-            {
-                next = sf::Vector2u(curr.x, curr.y + 1);
-                grid[curr.y][curr.x].walls[DOWN] = false;
-                grid[next.y][next.x].walls[UP] = false;
-                grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = region;
-                next_found = true;
-            }
-            break;
-        case LEFT:
-            if(curr.x > 0 && !grid[curr.y][curr.x - 1].visited)
-            {
-                next = sf::Vector2u(curr.x - 1, curr.y);
-                grid[curr.y][curr.x].walls[LEFT] = false;
-                grid[next.y][next.x].walls[RIGHT] = false;
-                grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = region;
-                next_found = true;
-            }
-            break;
-        case RIGHT:
-            if(curr.x < grid[curr.y].size() - 1 && !grid[curr.y][curr.x + 1].visited)
-            {
-                next = sf::Vector2u(curr.x + 1, curr.y);
-                grid[curr.y][curr.x].walls[RIGHT] = false;
-                grid[next.y][next.x].walls[LEFT] = false;
-                grid[next.y][next.x].visited = true;
-                grid[next.y][next.x].region = region;
-                next_found = true;
-            }
-            break;
-        }
+        sf::Vector2u next = curr_it->cell_2;
+        Direction next_dir = curr_it->dir_2;
 
         walls.erase(curr_it);
 
-        if(next_found)
+        if(!grid[next.y][next.x].visited)
         {
+            grid[next.y][next.x].visited = true;
+            grid[next.y][next.x].region = region;
+
+            grid[curr.y][curr.x].walls[curr_dir] = false;
+            grid[next.y][next.x].walls[next_dir] = false;
+
             add_cell(next);
         }
     }
@@ -461,7 +423,7 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
         return;
 
     // floodfill to get all cells connected, add walls to list, cells to disjoint set, mark cell visited
-    std::vector<std::tuple<sf::Vector2u, sf::Vector2u, Direction, Direction>> walls;
+    std::vector<Wall> walls;
     std::vector<sf::Vector2u> cells;
     std::vector<sf::Vector2u> to_add = {start};
 
@@ -485,7 +447,7 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
                 if(curr.y > 0 && !grid[curr.y - 1][curr.x].visited)
                 {
                     sf::Vector2u next(curr.x, curr.y - 1);
-                    walls.push_back(std::make_tuple(curr, next, UP, DOWN));
+                    walls.push_back({curr, next, UP, DOWN});
                     to_add.push_back(next);
                 }
                 break;
@@ -493,7 +455,7 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
                 if(curr.y < grid.size() - 1 && !grid[curr.y + 1][curr.x].visited)
                 {
                     sf::Vector2u next(curr.x, curr.y + 1);
-                    walls.push_back(std::make_tuple(curr, next, DOWN, UP));
+                    walls.push_back({curr, next, DOWN, UP});
                     to_add.push_back(next);
                 }
                 break;
@@ -501,7 +463,7 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
                 if(curr.x > 0 && !grid[curr.y][curr.x - 1].visited)
                 {
                     sf::Vector2u next(curr.x - 1, curr.y);
-                    walls.push_back(std::make_tuple(curr, next, LEFT, RIGHT));
+                    walls.push_back({curr, next, LEFT, RIGHT});
                     to_add.push_back(next);
                 }
                 break;
@@ -509,7 +471,7 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
                 if(curr.x < grid[curr.y].size() - 1 && !grid[curr.y][curr.x + 1].visited)
                 {
                     sf::Vector2u next(curr.x + 1, curr.y);
-                    walls.push_back(std::make_tuple(curr, next, RIGHT, LEFT));
+                    walls.push_back({curr, next, RIGHT, LEFT});
                     to_add.push_back(next);
                 }
                 break;
@@ -526,18 +488,17 @@ void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
     size_t num_sets = cells.size();
     for(const auto & wall: walls)
     {
-        sf::Vector2u a, b;
-        Direction a_dir, b_dir;
-        std::tie(a, b, a_dir, b_dir) = wall;
+        sf::Vector2u set_1 = cell_set.find_rep(wall.cell_1);
+        sf::Vector2u set_2 = cell_set.find_rep(wall.cell_2);
 
-        sf::Vector2u set_a = cell_set.find_rep(a);
-        sf::Vector2u set_b = cell_set.find_rep(b);
-
-        if(set_a != set_b)
+        if(set_1 != set_2)
         {
-            cell_set.union_reps(set_a, set_b);
-            grid[a.y][a.x].walls[a_dir] = false;
-            grid[b.y][b.x].walls[b_dir] = false;
+            cell_set.union_reps(set_1, set_2);
+
+            // destroy walls
+            grid[wall.cell_1.y][wall.cell_1.x].walls[wall.dir_1] = false;
+            grid[wall.cell_2.y][wall.cell_2.x].walls[wall.dir_2] = false;
+
             if(--num_sets == 1)
                 break;
         }
