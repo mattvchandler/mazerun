@@ -334,53 +334,83 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
 
 void Maze_grid::mazegen_dfs(const sf::Vector2u & start, const int region)
 {
-    // TODO: make non recursive?
     if(grid[start.y][start.x].visited)
         return;
+
+    // to avoid stack overflow, maintain our own heap-allocated stack instead of
+    //  recursing
+    struct State
+    {
+        sf::Vector2u pos;
+        Direction dirs[4];
+        unsigned short dir_i;
+    };
+    std::vector<State> state_stack;
+
+    state_stack.push_back({start, {UP, DOWN, LEFT, RIGHT}, 0});
+    std::shuffle(std::begin(state_stack.back().dirs), std::end(state_stack.back().dirs), prng);
 
     grid[start.y][start.x].visited = true;
     grid[start.y][start.x].region = region;
 
-    // shuffle directions list
-    Direction dirs[4] = {UP, DOWN, LEFT, RIGHT};
-    std::shuffle(std::begin(dirs), std::end(dirs), prng);
-
-    for(int i = 0; i < 4; ++i)
+    while(state_stack.size() > 0)
     {
-        switch(dirs[i])
+        State & state = state_stack.back();
+        if(state.dir_i >= 4)
+        {
+            state_stack.pop_back();
+            continue;
+        }
+
+        sf::Vector2u next;
+        bool found_next = false;
+
+        switch(state.dirs[state.dir_i++])
         {
         case UP:
-            if(start.y > 0 && !grid[start.y - 1][start.x].visited)
+            if(state.pos.y > 0 && !grid[state.pos.y - 1][state.pos.x].visited)
             {
-                grid[start.y][start.x].walls[UP] = false;
-                grid[start.y - 1][start.x].walls[DOWN] = false;
-                mazegen_dfs(sf::Vector2u(start.x, start.y - 1), region);
+                next = sf::Vector2u(state.pos.x, state.pos.y - 1);
+                grid[state.pos.y][state.pos.x].walls[UP] = false;
+                grid[next.y][next.x].walls[DOWN] = false;
+                found_next = true;
             }
             break;
         case DOWN:
-            if(start.y < grid.size() - 1 && !grid[start.y + 1][start.x].visited)
+            if(state.pos.y < grid.size() - 1 && !grid[state.pos.y + 1][state.pos.x].visited)
             {
-                grid[start.y][start.x].walls[DOWN] = false;
-                grid[start.y + 1][start.x].walls[UP] = false;
-                mazegen_dfs(sf::Vector2u(start.x, start.y + 1), region);
+                next = sf::Vector2u(state.pos.x, state.pos.y + 1);
+                grid[state.pos.y][state.pos.x].walls[DOWN] = false;
+                grid[next.y][next.x].walls[UP] = false;
+                found_next = true;
             }
             break;
         case LEFT:
-            if(start.x > 0 && !grid[start.y][start.x - 1].visited)
+            if(state.pos.x > 0 && !grid[state.pos.y][state.pos.x - 1].visited)
             {
-                grid[start.y][start.x].walls[LEFT] = false;
-                grid[start.y][start.x - 1].walls[RIGHT] = false;
-                mazegen_dfs(sf::Vector2u(start.x - 1, start.y), region);
+                next = sf::Vector2u(state.pos.x - 1, state.pos.y);
+                grid[state.pos.y][state.pos.x].walls[LEFT] = false;
+                grid[next.y][next.x].walls[RIGHT] = false;
+                found_next = true;
             }
             break;
         case RIGHT:
-            if(start.x < grid[start.y].size() - 1 && !grid[start.y][start.x + 1].visited)
+            if(state.pos.x < grid[state.pos.y].size() - 1 && !grid[state.pos.y][state.pos.x + 1].visited)
             {
-                grid[start.y][start.x].walls[RIGHT] = false;
-                grid[start.y][start.x + 1].walls[LEFT] = false;
-                mazegen_dfs(sf::Vector2u(start.x + 1, start.y), region);
+                next = sf::Vector2u(state.pos.x + 1, state.pos.y);
+                grid[state.pos.y][state.pos.x].walls[RIGHT] = false;
+                grid[next.y][next.x].walls[LEFT] = false;
+                found_next = true;
             }
             break;
+        }
+
+        if(found_next)
+        {
+            grid[next.y][next.x].visited = true;
+            grid[next.y][next.x].region = region;
+            state_stack.push_back({next, {UP, DOWN, LEFT, RIGHT}, 0});
+            std::shuffle(std::begin(state_stack.back().dirs), std::end(state_stack.back().dirs), prng);
         }
     }
 }
