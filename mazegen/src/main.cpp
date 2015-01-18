@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -37,6 +38,79 @@ std::random_device rng;
 std::mt19937 prng;
 
 enum Direction {UP = 0, DOWN, LEFT, RIGHT};
+
+template <typename T>
+class Disjoint_set
+{
+public:
+    Disjoint_set(const std::vector<T> & items);
+    const T & find_rep(const T & a) const;
+    void union_reps(const T & a, const T & b);
+private:
+    std::unordered_map<T, std::pair<T, unsigned int>> _set;
+};
+
+template <typename T>
+Disjoint_set<T>::Disjoint_set(const std::vector<T> & items)
+{
+    for(const auto & i: items)
+    {
+        _set[i] = std::make_pair(i, 0);
+    }
+}
+
+template <typename T>
+const T & Disjoint_set<T>::find_rep(const T & a) const
+{
+    const T * x = &_set.at(a).first;
+
+    if(a != *x)
+        return find_rep(*x);
+    else
+        return a;
+}
+
+template <typename T>
+void Disjoint_set<T>::union_reps(const T & a, const T & b)
+{
+    T a_root = find_rep(a);
+    T b_root = find_rep(b);
+
+    if(a_root == b_root)
+        return;
+
+    // compare ranks
+    if(_set[a_root].second < _set[b_root].second)
+        _set[a_root].first = b_root;
+    else if(_set[a_root].second > _set[b_root].second)
+        _set[b_root].first = a_root;
+    else // equal ranks
+    {
+        _set[b_root].first = a_root;
+        ++_set[a_root].second;
+    }
+}
+
+// make sf::Vector2u hashable
+namespace std
+{
+    template <>
+    struct hash<sf::Vector2u>
+    {
+    public:
+        size_t operator()(const sf::Vector2u & a) const
+        {
+            return hash<unsigned int>()(a.x) ^ hash<unsigned int>()(a.y);
+        }
+    };
+};
+
+struct Wall
+{
+    sf::Vector2u cell_1, cell_2;
+    int region_1, region_2;
+    Direction wall_1, wall_2;
+};
 
 class Grid_cell
 {
@@ -83,7 +157,7 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    gen_rooms(&Maze_grid::mazegen_prim, 10000);
+    gen_rooms(&Maze_grid::mazegen_prim, 25);
 }
 
 void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen, const unsigned int attempts)
@@ -92,15 +166,15 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
     // place some random rooms
     for(unsigned int i = 0; i  < attempts; ++i)
     {
-        sf::Vector2u size(std::binomial_distribution<unsigned int>(10, 0.5)(prng),
-           std::binomial_distribution<unsigned int>(10, 0.5)(prng));
+        sf::Vector2u size(std::binomial_distribution<unsigned int>(std::min(9u, (unsigned int)(grid[0].size() - 1)), 0.5)(prng) + 1,
+           std::binomial_distribution<unsigned int>(std::min(9u, (unsigned int)(grid.size() - 1)), 0.5)(prng) + 1);
 
         // discard skinny rooms
         if((float)size.x / (float)size.y > 4 || (float)size.y / (float)size.x > 4)
             continue;
 
-        sf::Vector2u pos(std::uniform_int_distribution<unsigned int>(0, grid[0].size() - size.x - 1)(prng),
-           std::uniform_int_distribution<unsigned int>(0, grid.size() - size.y - 1)(prng));
+        sf::Vector2u pos(std::uniform_int_distribution<unsigned int>(0, std::max(0, (int)grid[0].size() - (int)size.x - 1))(prng),
+           std::uniform_int_distribution<unsigned int>(0, std::max(0, (int)grid.size() - (int)size.y - 1))(prng));
 
         // std::cout<<"pos:("<<pos.x<<","<<pos.y<<") size:("<<size.x<<","<<size.y<<")"<<std::endl;
 
@@ -142,9 +216,7 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
                     grid[row][col].walls[RIGHT] = false;
             }
         }
-
         ++region;
-        // TODO track as region (add region to Grid_cell? map of regions to set of cells, or mlutimap)
     }
 
     // fill in remaining areas with mazes
@@ -155,16 +227,63 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
             if(!grid[row][col].visited)
             {
                 mazegen(*this, sf::Vector2u(col, row), region);
+                ++region;
             }
-            ++region;
         }
     }
-    // find connectors, build graph (regions as verticies, connectors as edges)
-    // Either
-    //  kruskals alg to find min spanning tree
+
+    // find connectors, build graph
+    std::vector<Wall> connectors;
+
+    for(size_t row = 0; row < grid.size() - 1; ++row)
+    {
+        for(size_t col = 0; col < grid[0].size() - 1; ++col)
+        {
+            if(grid[row][col].region != grid[row][col + 1].region)
+            {
+                sf::Vector2u cell_1(col, row);
+                sf::Vector2u cell_2(col + 1, row);
+                int region_1 = grid[row][col].region;
+                int region_2 = grid[row][col + 1].region;
+
+                connectors.push_back({cell_1, cell_2, region_1, region_2, RIGHT, LEFT});
+            }
+            if(grid[row][col].region != grid[row + 1][col].region)
+            {
+                sf::Vector2u cell_1(col, row);
+                sf::Vector2u cell_2(col, row + 1);
+                int region_1 = grid[row][col].region;
+                int region_2 = grid[row + 1][col].region;
+
+                connectors.push_back({cell_1, cell_2, region_1, region_2, DOWN, UP});
+            }
+        }
+    }
+
+    // shuffle connectors
+    std::shuffle(connectors.begin(), connectors.end(), prng);
+
+    //  use kruskals alg to find min spanning tree
+    std::vector<int> regions_vec(region);
+    for(size_t i = 0; i < regions_vec.size(); ++i)
+        regions_vec[i] = i;
+
+    Disjoint_set<int>regions(regions_vec);
+
+    for(const auto & conn: connectors)
+    {
+        int set_1 = regions.find_rep(conn.region_1);
+        int set_2 = regions.find_rep(conn.region_2);
+        if(set_1 != set_2)
+        {
+            regions.union_reps(set_1, set_2);
+
+            grid[conn.cell_1.y][conn.cell_1.x].walls[conn.wall_1] = false;
+            grid[conn.cell_2.y][conn.cell_2.x].walls[conn.wall_2] = false;
+        }
+    }
+
     //  randomly open other connecters / destroy random walls
-    // OR
-    //  find relative neighboorhood graph or urquhat graph
 
 }
 
@@ -336,72 +455,6 @@ void Maze_grid::mazegen_prim(const sf::Vector2u & start, const int region)
     }
 }
 
-template <typename T>
-class Disjoint_set
-{
-public:
-    Disjoint_set(const std::vector<T> & items);
-    const T & find_rep(const T & a) const;
-    void union_reps(const T & a, const T & b);
-private:
-    std::unordered_map<T, std::pair<T, unsigned int>> _set;
-};
-
-template <typename T>
-Disjoint_set<T>::Disjoint_set(const std::vector<T> & items)
-{
-    for(const auto & i: items)
-    {
-        _set[i] = std::make_pair(i, 0);
-    }
-}
-
-template <typename T>
-const T & Disjoint_set<T>::find_rep(const T & a) const
-{
-    const T * x = &_set.at(a).first;
-
-    if(a != *x)
-        return find_rep(*x);
-    else
-        return a;
-}
-
-template <typename T>
-void Disjoint_set<T>::union_reps(const T & a, const T & b)
-{
-    T a_root = find_rep(a);
-    T b_root = find_rep(b);
-
-    if(a_root == b_root)
-        return;
-
-    // compare ranks
-    if(_set[a_root].second < _set[b_root].second)
-        _set[a_root].first = b_root;
-    else if(_set[a_root].second > _set[b_root].second)
-        _set[b_root].first = a_root;
-    else // equal ranks
-    {
-        _set[b_root].first = a_root;
-        ++_set[a_root].second;
-    }
-}
-
-// make sf::Vector2u hashable
-namespace std
-{
-    template <>
-    struct hash<sf::Vector2u>
-    {
-    public:
-        size_t operator()(const sf::Vector2u & a) const
-        {
-            return hash<unsigned int>()(a.x) ^ hash<unsigned int>()(a.y);
-        }
-    };
-};
-
 void Maze_grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
 {
     if(grid[start.y][start.x].visited)
@@ -503,14 +556,12 @@ private:
     Maze_grid _grid;
     sf::RenderWindow & _win;
     sf::VertexArray _lines;
-    std::vector<std::vector<sf::RectangleShape>> _cells;
 };
 
 Maze::Maze(sf::RenderWindow & win, const sf::Vector2u & grid_size):
     _grid(grid_size),
     _win(win),
-    _lines(sf::Lines),
-    _cells(grid_size.y, std::vector<sf::RectangleShape>(grid_size.x))
+    _lines(sf::Lines)
 {
 }
 
@@ -534,32 +585,12 @@ void Maze::init()
     _lines.append(sf::Vertex(sf::Vector2f(0.0f, (float)_win.getSize().y), sf::Color::Black));
     _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
 
-    std::unordered_map <int, sf::Color> colors;
-
     // draw maze cells
     for(size_t row = 0; row < grid_size.y; ++row)
     {
         for(size_t col = 0; col < grid_size.x; ++col)
         {
             sf::Vector2f ul(cell_scale.x * (float)col, cell_scale.y * (float)row);
-
-            // if region not in colors, add new random color to region
-            if(colors.find(_grid.grid[row][col].region) == colors.end())
-            {
-                std::uniform_int_distribution<sf::Uint8> color_dist(0, 127);
-                colors[_grid.grid[row][col].region] = sf::Color(color_dist(prng), color_dist(prng), color_dist(prng), 255);
-
-                if(!_grid.grid[row][col].room)
-                {
-                    colors[_grid.grid[row][col].region] += sf::Color(128, 128, 128, 0);
-                }
-
-            }
-
-            // create cell
-            _cells[row][col].setSize(cell_scale);
-            _cells[row][col].setPosition(ul);
-            _cells[row][col].setFillColor(colors[_grid.grid[row][col].region]);
 
             if(_grid.grid[row][col].walls[UP])
             {
@@ -587,13 +618,6 @@ void Maze::init()
 
 void Maze::draw()
 {
-    for(const auto & row: _cells)
-    {
-        for(const auto & cell: row)
-        {
-            _win.draw(cell);
-        }
-    }
     _win.draw(_lines);
 }
 
@@ -620,7 +644,6 @@ int main(int argc, char * argv[])
                     win.close();
                     break;
                 case sf::Event::Resized:
-                    // resize();
                     break;
                 default:
                     break;
