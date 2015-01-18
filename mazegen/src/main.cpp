@@ -135,7 +135,8 @@ public:
 
     std::vector<std::vector<Grid_cell>> grid;
 private:
-    void gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen, const unsigned int attempts);
+    void gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen,
+        const unsigned int room_attempts, const unsigned int wall_rm_attempts);
     void mazegen_dfs(const sf::Vector2u & start, const int region);
     void mazegen_prim(const sf::Vector2u & start, const int region);
     void mazegen_kruskal(const sf::Vector2u & start, const int region);
@@ -156,14 +157,15 @@ Maze_grid::Maze_grid(const sf::Vector2u & grid_size)
 
 void Maze_grid::init()
 {
-    gen_rooms(&Maze_grid::mazegen_dfs, 25);
+    gen_rooms(&Maze_grid::mazegen_dfs, 25, 100);
 }
 
-void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen, const unsigned int attempts)
+void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector2u &, const int)> & mazegen,
+    const unsigned int room_attempts, const unsigned int wall_rm_attempts)
 {
     int region = 0;
     // place some random rooms
-    for(unsigned int i = 0; i  < attempts; ++i)
+    for(unsigned int i = 0; i  < room_attempts; ++i)
     {
         sf::Vector2u size(std::binomial_distribution<unsigned int>(std::min(9u, (unsigned int)(grid[0].size() - 1)), 0.5)(prng) + 1,
            std::binomial_distribution<unsigned int>(std::min(9u, (unsigned int)(grid.size() - 1)), 0.5)(prng) + 1);
@@ -262,13 +264,14 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
     // shuffle connectors
     std::shuffle(connectors.begin(), connectors.end(), prng);
 
-    //  use kruskals alg to find min spanning tree of region graph
+    // use kruskals alg to find min spanning tree of region graph
     std::vector<int> regions_vec(region);
     for(size_t i = 0; i < regions_vec.size(); ++i)
         regions_vec[i] = i;
 
     Disjoint_set<int>regions(regions_vec);
 
+    int sets = region;
     for(const auto & conn: connectors)
     {
         int set_1 = regions.find_rep(conn.region_1);
@@ -282,13 +285,51 @@ void Maze_grid::gen_rooms(const std::function<void(Maze_grid &, const sf::Vector
             grid[conn.cell_1.y][conn.cell_1.x].walls[conn.dir_1] = false;
             grid[conn.cell_2.y][conn.cell_2.x].walls[conn.dir_2] = false;
 
-            if(--region == 1)
+            if(--sets == 1)
                 break;
         }
     }
 
-    //  randomly open other connecters / destroy random walls
+    //  randomly destroy random walls
+    for(unsigned int i = 0; i  < wall_rm_attempts; ++i)
+    {
+        sf::Vector2u cell(std::uniform_int_distribution<unsigned int>(0, grid[0].size() - 1)(prng),
+            std::uniform_int_distribution<unsigned int>(0, grid[0].size() - 1)(prng));
 
+        Direction wall = (Direction)std::uniform_int_distribution<int>(0, 3)(prng);
+
+        switch(wall)
+        {
+        case UP:
+            if(cell.y > 0)
+            {
+                grid[cell.y][cell.x].walls[UP] = false;
+                grid[cell.y - 1][cell.x].walls[DOWN] = false;
+            }
+            break;
+        case DOWN:
+            if(cell.y < grid.size() - 1)
+            {
+                grid[cell.y][cell.x].walls[DOWN] = false;
+                grid[cell.y + 1][cell.x].walls[UP] = false;
+            }
+            break;
+        case LEFT:
+            if(cell.x > 0)
+            {
+                grid[cell.y][cell.x].walls[LEFT] = false;
+                grid[cell.y][cell.x - 1].walls[RIGHT] = false;
+            }
+            break;
+        case RIGHT:
+            if(cell.x < grid[0].size() - 1)
+            {
+                grid[cell.y][cell.x].walls[RIGHT] = false;
+                grid[cell.y][cell.x + 1].walls[LEFT] = false;
+            }
+            break;
+        }
+    }
 }
 
 void Maze_grid::mazegen_dfs(const sf::Vector2u & start, const int region)
