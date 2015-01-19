@@ -24,12 +24,13 @@
 #ifndef WORLD_HPP
 #define WORLD_HPP
 
+#include <mutex>
+
 #include <glm/glm.hpp>
 
 #include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
-#include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 
 #include "player.hpp"
@@ -51,7 +52,7 @@ protected:
     bool _focused;
     bool _do_resize; // TODO: find a better way (prob. messages/signals)
 
-    sf::Mutex _lock; // TODO more descriptive name
+    std::mutex _lock; // TODO more descriptive name
 
     sf::Window _win;
     glm::mat4 _proj;

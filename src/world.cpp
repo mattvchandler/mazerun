@@ -26,12 +26,9 @@
 
 // TODO: we've got a lot of state saving & restoring already. after code works, do performance sweep and clean these up when possible
 
-// TODO: test thread_local with SFML threads, if not, sf::ThreadLocalPtr? (seems to on linux gcc)
-//      we really need to be able to use stl threads on windows...
-
 #include <iostream>
 #include <random>
-// #include <thread>
+#include <thread>
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -104,19 +101,17 @@ void World::game_loop()
     _win.setActive(false); // decativate rendering context for main thread
 
     // rendering, physics, input, etc to be handled in this thread
-    sf::Thread main_loop_t(&World::main_loop, this);
-    main_loop_t.launch();
+    std::thread main_loop_t(&World::main_loop, this);
 
     event_loop(); // handle events
 
-    main_loop_t.wait();
+    main_loop_t.join();
     _win.close();
 }
 
 void World::event_loop()
 {
     prng.seed(rng());
-    // TODO mutex
     while(true)
     {
         // handle events

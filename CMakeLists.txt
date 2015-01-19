@@ -30,6 +30,7 @@ find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
+find_package(Threads)
 
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
@@ -75,6 +76,7 @@ target_link_libraries(${PROJECT_NAME}
     ${SFML_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
     )
 
 # install targets
