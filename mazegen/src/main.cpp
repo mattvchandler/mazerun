@@ -28,7 +28,7 @@
 #include "maze.hpp"
 
 // global prng
-std::random_device rng;
+thread_local std::random_device rng;
 thread_local std::mt19937 prng;
 
 int main(int argc, char * argv[])

@@ -30,11 +30,16 @@
 //      we really need to be able to use stl threads on windows...
 
 #include <iostream>
+#include <random>
+// #include <thread>
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "world.hpp"
+
+thread_local std::mt19937 prng;
+thread_local std::random_device rng;
 
 World::World(): _running(true), _focused(true), _do_resize(false),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0))
@@ -110,6 +115,7 @@ void World::game_loop()
 
 void World::event_loop()
 {
+    prng.seed(rng());
     // TODO mutex
     while(true)
     {
@@ -150,6 +156,7 @@ void World::event_loop()
 // runs in a new thread
 void World::main_loop()
 {
+    prng.seed(rng());
     _win.setActive(true); // set render context active for this thread
     while(true)
     {

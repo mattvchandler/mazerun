@@ -1,6 +1,5 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.8)
 project(mazerun)
-add_subdirectory(mazegen)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
@@ -50,6 +49,14 @@ include_directories(
 link_directories()
 
 # main compilation
+add_library(mazegen_shared OBJECT
+    src/gen_rooms.cpp
+    src/grid.cpp
+    src/mazegen.cpp
+    )
+
+add_subdirectory(mazegen)
+
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
     src/config.cpp
@@ -61,6 +68,7 @@ add_executable(${PROJECT_NAME}
     src/skybox.cpp
     src/texture.cpp
     src/world.cpp
+    $<TARGET_OBJECTS:mazegen_shared>
     )
 
 target_link_libraries(${PROJECT_NAME}

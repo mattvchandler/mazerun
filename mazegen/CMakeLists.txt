@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.8)
 project(mazegen)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
@@ -45,18 +45,18 @@ set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazegen/)
 # directories
 include_directories(
     ${PROJECT_BINARY_DIR}/src/
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/
+    )
 link_directories()
 
 # main compilation
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazegen.rc
     # src/config.cpp
-    src/gen_rooms.cpp
-    src/grid.cpp
     src/main.cpp
     src/maze.cpp
-    src/mazegen.cpp
+    $<TARGET_OBJECTS:mazegen_shared>
     )
 
 target_link_libraries(${PROJECT_NAME}
