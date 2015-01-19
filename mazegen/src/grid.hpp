@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// grid.hpp
+// maze grid representation and algs
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,45 +21,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#ifndef GRID_HPP
+#define GRID_HPP
 
-#include <SFML/Graphics.hpp>
+#include <functional>
 
-#include "maze.hpp"
+#include <SFML/System.hpp>
 
-// global prng
-std::random_device rng;
-thread_local std::mt19937 prng;
+enum Direction {UP = 0, DOWN, LEFT, RIGHT};
 
-int main(int argc, char * argv[])
+class Grid_cell
 {
-    prng.seed(rng());
-    sf::RenderWindow win(sf::VideoMode(800, 600), "mazegen", sf::Style::Default);
+public:
+    Grid_cell();
+    bool walls[4];
+    bool visited;
+    int region;
+    bool room;
+};
 
-    Maze maze(win, sf::Vector2u(32, 32));
-    maze.init();
+struct Wall
+{
+    sf::Vector2u cell_1, cell_2;
+    Direction dir_1, dir_2;
+    int region_1, region_2;
+};
 
-    while(win.isOpen())
-    {
-        win.clear(sf::Color(255, 255, 255, 255));
-        maze.draw();
-        win.display();
-        sf::Event ev;
+class Grid
+{
+public:
+    Grid(const sf::Vector2u & grid_size);
+    void init();
 
-        if(win.waitEvent(ev))
-        {
-            switch(ev.type)
-            {
-                case sf::Event::Closed:
-                    win.close();
-                    break;
-                case sf::Event::Resized:
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+    std::vector<std::vector<Grid_cell>> grid;
+private:
+    void gen_rooms(const std::function<void(Grid &, const sf::Vector2u &, const int)> & mazegen,
+        const unsigned int room_attempts, const unsigned int wall_rm_attempts);
+    void mazegen_dfs(const sf::Vector2u & start, const int region);
+    void mazegen_prim(const sf::Vector2u & start, const int region);
+    void mazegen_kruskal(const sf::Vector2u & start, const int region);
+};
 
-    return EXIT_SUCCESS;
-}
+#endif // GRID_HPP

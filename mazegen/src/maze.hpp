@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// maze.hpp
+// 2D maze data & routines
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,45 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#ifndef MAZE_HPP
+#define MAZE_HPP
 
 #include <SFML/Graphics.hpp>
 
-#include "maze.hpp"
+#include "grid.hpp"
 
-// global prng
-std::random_device rng;
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+class Maze
 {
-    prng.seed(rng());
-    sf::RenderWindow win(sf::VideoMode(800, 600), "mazegen", sf::Style::Default);
+public:
+    Maze(sf::RenderWindow & win, const sf::Vector2u & grid_size);
+    void init();
+    void draw();
+    void set_grid_size(const sf::Vector2u & grid_size);
+    sf::Vector2u get_grid_size() const;
+private:
+    Grid _grid;
+    sf::RenderWindow & _win;
+    sf::VertexArray _lines;
+};
 
-    Maze maze(win, sf::Vector2u(32, 32));
-    maze.init();
-
-    while(win.isOpen())
-    {
-        win.clear(sf::Color(255, 255, 255, 255));
-        maze.draw();
-        win.display();
-        sf::Event ev;
-
-        if(win.waitEvent(ev))
-        {
-            switch(ev.type)
-            {
-                case sf::Event::Closed:
-                    win.close();
-                    break;
-                case sf::Event::Resized:
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    return EXIT_SUCCESS;
-}
+#endif // MAZE_HPP

@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// grid.cpp
+// maze grid representation and algs
 
 // Copyright 2015 Matthew Chandler
 
@@ -20,46 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+#include <stdexcept>
 
-#include <random>
+#include "grid.hpp"
 
-#include <SFML/Graphics.hpp>
-
-#include "maze.hpp"
-
-// global prng
-std::random_device rng;
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
 {
-    prng.seed(rng());
-    sf::RenderWindow win(sf::VideoMode(800, 600), "mazegen", sf::Style::Default);
+    for(int i = 0; i < 4; ++i)
+        walls[i] = true;
+}
 
-    Maze maze(win, sf::Vector2u(32, 32));
-    maze.init();
-
-    while(win.isOpen())
+Grid::Grid(const sf::Vector2u & grid_size)
+    :grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
+{
+    if(grid_size.y == 0)
     {
-        win.clear(sf::Color(255, 255, 255, 255));
-        maze.draw();
-        win.display();
-        sf::Event ev;
-
-        if(win.waitEvent(ev))
-        {
-            switch(ev.type)
-            {
-                case sf::Event::Closed:
-                    win.close();
-                    break;
-                case sf::Event::Resized:
-                    break;
-                default:
-                    break;
-            }
-        }
+        throw std::invalid_argument("grid_size.y == 0");
     }
+    if(grid_size.x == 0)
+    {
+        throw std::invalid_argument("grid_size.x == 0");
+    }
+}
 
-    return EXIT_SUCCESS;
+void Grid::init()
+{
+    gen_rooms(&Grid::mazegen_dfs, 25, 100);
 }

@@ -52,7 +52,11 @@ link_directories()
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazegen.rc
     # src/config.cpp
+    src/gen_rooms.cpp
+    src/grid.cpp
     src/main.cpp
+    src/maze.cpp
+    src/mazegen.cpp
     )
 
 target_link_libraries(${PROJECT_NAME}
