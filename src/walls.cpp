@@ -63,9 +63,9 @@ void Walls::init()
     }
 
     // draw cell walls
-    for(size_t row = 0; row < grid.grid.size() + 1; ++row)
+    for(size_t row = 0; row < grid.grid.size(); ++row)
     {
-        for(size_t col = 0; col < grid.grid[row].size() + 1; ++col)
+        for(size_t col = 0; col < grid.grid[row].size(); ++col)
         {
             glm::vec3 origin(cell_scale.x * (float)col, cell_scale.y * (float)row, cell_scale.z);
 

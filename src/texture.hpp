@@ -44,7 +44,7 @@ public:
     void init(const std::string & left_fname, const std::string & right_fname,
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname);
-    void bind();
+    void bind() override;
 };
 
 #endif // TEXTURE_HPP

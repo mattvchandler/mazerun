@@ -47,8 +47,12 @@ include_directories(
     ${PROJECT_BINARY_DIR}/src/
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/
+    ${GLM_INCLUDE_DIRS}
+    ${SFML_INCLUDE_DIRS}
     )
-link_directories()
+link_directories(
+    ${SFML_LIBRARY_DIRS}
+    )
 
 # main compilation
 add_executable(${PROJECT_NAME}

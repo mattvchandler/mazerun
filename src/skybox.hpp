@@ -37,7 +37,7 @@ public:
     Skybox();
     ~Skybox();
     void init();
-    void draw(const Entity & cam, const glm::mat4 & proj);
+    void draw(const Entity & cam, const glm::mat4 & proj) override;
 protected:
     GLuint _ebo;
     Texture_cubemap _tex; // TODO: may want to expose this for environment mapping

@@ -46,8 +46,14 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
 # directories
 include_directories(
     ${PROJECT_BINARY_DIR}/src/
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/)
-link_directories()
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    ${GLM_INCLUDE_DIRS}
+    ${SFML_INCLUDE_DIRS}
+    )
+link_directories(
+    ${SFML_LIBRART_DIRS}
+    ${GLEW_LIBRARIES_DIRS}
+    )
 
 # main compilation
 add_library(mazegen_shared OBJECT
@@ -76,8 +82,8 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     ${SFML_LIBRARIES}
-    ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARIES}
+    ${OPENGL_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     )
 

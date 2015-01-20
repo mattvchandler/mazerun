@@ -37,7 +37,7 @@ class Renderable: public sf::NonCopyable
 public:
     Renderable();
     ~Renderable();
-    void draw(const Entity & cam, const glm::mat4 & proj) = delete;
+    virtual void draw(const Entity & cam, const glm::mat4 & proj) = 0;
 protected:
     GLuint _vao, _vbo, _ebo;
     Shader_prog _prog;

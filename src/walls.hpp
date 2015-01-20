@@ -30,7 +30,7 @@ class Walls: public Renderable
 {
 public:
     void init();
-    void draw(const Entity & cam, const glm::mat4 & proj);
+    void draw(const Entity & cam, const glm::mat4 & proj) override;
 protected:
     GLsizei _num_verts;
 };
