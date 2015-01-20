@@ -37,23 +37,47 @@ void Walls::init()
 
     glm::vec3 cell_scale(1.0f, 1.0f, 1.0f);
 
-    // TODO: border
+    // draw border walls
     for(size_t row = 0; row < grid.grid.size(); ++row)
     {
-        for(size_t col = 0; col < grid.grid[row].size(); ++col)
+        glm::vec3 origin(cell_scale.x * (float)grid.grid[row].size(), cell_scale.y * (float)row, cell_scale.z);
+
+        vert_pos.push_back(origin);
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+
+        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
+    }
+    for(size_t col = 0; col < grid.grid[0].size(); ++col)
+    {
+        glm::vec3 origin(cell_scale.x * (float)col, cell_scale.y * (float)grid.grid.size(), cell_scale.z);
+        vert_pos.push_back(origin);
+        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+
+        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, cell_scale.z));
+    }
+
+    // draw cell walls
+    for(size_t row = 0; row < grid.grid.size() + 1; ++row)
+    {
+        for(size_t col = 0; col < grid.grid[row].size() + 1; ++col)
         {
             glm::vec3 origin(cell_scale.x * (float)col, cell_scale.y * (float)row, cell_scale.z);
 
-            // TODO: don't draw border walls
             if(grid.grid[row][col].walls[UP])
             {
-                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
-                vert_pos.push_back(origin + glm::vec3(cell_scale.x, cell_scale.y, 0.0f));
-                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
+                vert_pos.push_back(origin);
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
 
-                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
-                vert_pos.push_back(origin + glm::vec3(cell_scale.x, cell_scale.y, 0.0f));
-                vert_pos.push_back(origin + glm::vec3(cell_scale.x, cell_scale.y, cell_scale.z));
+                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, cell_scale.z));
             }
 
             if(grid.grid[row][col].walls[LEFT])
@@ -100,8 +124,8 @@ void Walls::draw(const Entity & cam, const glm::mat4 & proj)
     glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLES, 0, _num_verts);
 
-    glBindVertexArray(0); // get prev val?
-    glUseProgram(0); // get prev val?
+    glBindVertexArray(0); // TODO: get prev val?
+    glUseProgram(0); // TODO: get prev val?
 
     check_error("Walls::Draw");
 }
