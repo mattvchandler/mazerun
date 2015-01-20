@@ -32,16 +32,12 @@
 
 // TODO: replace bottom half of skybox with ground (if doing environment mapping)
 
-Skybox::Skybox(): _vao(0), _vbo(0), _ebo(0), _prog()
+Skybox::Skybox(): _ebo(0)
 {
 }
 
 Skybox::~Skybox()
 {
-    if(_vao)
-        glDeleteVertexArrays(1, &_vao);
-    if(_vbo)
-        glDeleteBuffers(1, &_vbo);
     if(_ebo)
         glDeleteBuffers(1, &_ebo);
 }

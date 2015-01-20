@@ -34,6 +34,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "world.hpp"
+#include "gl_helpers.hpp" // TODO: move w/ walls decl
 
 thread_local std::mt19937 prng;
 thread_local std::random_device rng;
@@ -76,6 +77,7 @@ bool World::init()
 
     _skybox.init();
     // _player.init();
+    _walls.init();
     return true;
 }
 
@@ -83,6 +85,7 @@ void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _skybox.draw(_player, _proj);
+    _walls.draw(_player, _proj);
     _win.display();
 }
 

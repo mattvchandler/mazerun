@@ -27,10 +27,11 @@
 #include <SFML/OpenGL.hpp>
 
 #include "entity.hpp"
+#include "renderable.hpp"
 #include "shader_prog.hpp"
 #include "texture.hpp"
 
-class Skybox // TODO: will probably inherit from some generic "renderable" class
+class Skybox: public Renderable
 {
 public:
     Skybox();
@@ -38,10 +39,9 @@ public:
     void init();
     void draw(const Entity & cam, const glm::mat4 & proj);
 protected:
-    GLuint _vao, _vbo, _ebo;
+    GLuint _ebo;
     Texture_cubemap _tex; // TODO: may want to expose this for environment mapping
     GLuint _num_indexes;
-    Shader_prog _prog;
 };
 
 #endif // SKYBOX_HPP

@@ -65,9 +65,11 @@ add_executable(${PROJECT_NAME}
     src/gl_helpers.cpp
     src/main.cpp
     src/player.cpp
+    src/renderable.cpp
     src/shader_prog.cpp
     src/skybox.cpp
     src/texture.cpp
+    src/walls.cpp
     src/world.cpp
     $<TARGET_OBJECTS:mazegen_shared>
     )

@@ -1,5 +1,5 @@
-// grid.cpp
-// maze grid representation and algs
+// walls.vert
+// vertex shader for maze walls
 
 // Copyright 2015 Matthew Chandler
 
@@ -20,43 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#include <stdexcept>
 
-#include "grid.hpp"
+#version 130
 
-Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
+in vec3 vert_pos;
+
+uniform mat4 model_view_proj;
+
+void main()
 {
-    for(int i = 0; i < 4; ++i)
-        walls[i] = true;
-}
-
-Grid::Grid(const sf::Vector2u & grid_size)
-    :grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
-{
-    if(grid_size.y == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(grid_size.x == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-Grid::Grid(const unsigned int width, const unsigned int height)
-    :grid(height, std::vector<Grid_cell>(width))
-{
-    if(height == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(width == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-void Grid::init()
-{
-    gen_rooms(&Grid::mazegen_dfs, 25, 100); // TODO: parameterize
+    gl_Position = model_view_proj * vec4(vert_pos, 1.0);
 }

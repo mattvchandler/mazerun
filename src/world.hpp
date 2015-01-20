@@ -35,6 +35,7 @@
 
 #include "player.hpp"
 #include "skybox.hpp"
+#include "walls.hpp"
 
 class World // TODO: make this a singleton?
 {
@@ -58,6 +59,7 @@ protected:
     glm::mat4 _proj;
     Skybox _skybox;
     Player _player;
+    Walls _walls;
     // TODO: entity table
 };
 

@@ -51,6 +51,7 @@ class Grid
 {
 public:
     Grid(const sf::Vector2u & grid_size);
+    Grid(const unsigned int width, const unsigned int height);
     void init();
 
     std::vector<std::vector<Grid_cell>> grid;

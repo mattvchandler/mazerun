@@ -1,5 +1,5 @@
-// grid.cpp
-// maze grid representation and algs
+// renderable.cpp
+// renderable base class
 
 // Copyright 2015 Matthew Chandler
 
@@ -20,43 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#include <stdexcept>
 
-#include "grid.hpp"
+#include "renderable.hpp"
 
-Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
+Renderable::Renderable(): _vao(0), _vbo(0), _ebo(0)
 {
-    for(int i = 0; i < 4; ++i)
-        walls[i] = true;
 }
 
-Grid::Grid(const sf::Vector2u & grid_size)
-    :grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
+Renderable::~Renderable()
 {
-    if(grid_size.y == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(grid_size.x == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-Grid::Grid(const unsigned int width, const unsigned int height)
-    :grid(height, std::vector<Grid_cell>(width))
-{
-    if(height == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(width == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-void Grid::init()
-{
-    gen_rooms(&Grid::mazegen_dfs, 25, 100); // TODO: parameterize
+    if(_vao)
+        glDeleteVertexArrays(1, &_vao);
+    if(_vbo)
+        glDeleteBuffers(1, &_vbo);
 }

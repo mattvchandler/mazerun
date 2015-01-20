@@ -1,5 +1,5 @@
-// grid.cpp
-// maze grid representation and algs
+// renderable.hpp
+// renderable base class
 
 // Copyright 2015 Matthew Chandler
 
@@ -20,43 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#include <stdexcept>
 
-#include "grid.hpp"
+#ifndef RENDERABLE_HPP
+#define RENDERABLE_HPP
 
-Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
+#include <GL/glew.h>
+
+#include <SFML/OpenGL.hpp>
+#include <SFML/System.hpp>
+
+#include "entity.hpp"
+#include "shader_prog.hpp"
+
+class Renderable: public sf::NonCopyable
 {
-    for(int i = 0; i < 4; ++i)
-        walls[i] = true;
-}
+public:
+    Renderable();
+    ~Renderable();
+    void draw(const Entity & cam, const glm::mat4 & proj) = delete;
+protected:
+    GLuint _vao, _vbo, _ebo;
+    Shader_prog _prog;
+};
 
-Grid::Grid(const sf::Vector2u & grid_size)
-    :grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
-{
-    if(grid_size.y == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(grid_size.x == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-Grid::Grid(const unsigned int width, const unsigned int height)
-    :grid(height, std::vector<Grid_cell>(width))
-{
-    if(height == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(width == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-void Grid::init()
-{
-    gen_rooms(&Grid::mazegen_dfs, 25, 100); // TODO: parameterize
-}
+#endif // RENDERABLE_HPP
