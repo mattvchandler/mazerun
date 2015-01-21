@@ -38,6 +38,13 @@ protected:
     GLuint _texid;
 };
 
+class Texture_2D: public Texture
+{
+public:
+    void init(const std::string & filename);
+    void bind() override;
+};
+
 class Texture_cubemap: public Texture
 {
 public:

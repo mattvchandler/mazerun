@@ -39,7 +39,7 @@ public:
     ~Renderable();
     virtual void draw(const Entity & cam, const glm::mat4 & proj) = 0;
 protected:
-    GLuint _vao, _vbo, _ebo;
+    GLuint _vao, _vbo;
     Shader_prog _prog;
 };
 

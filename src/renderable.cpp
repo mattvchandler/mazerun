@@ -23,7 +23,7 @@
 
 #include "renderable.hpp"
 
-Renderable::Renderable(): _vao(0), _vbo(0), _ebo(0)
+Renderable::Renderable(): _vao(0), _vbo(0)
 {
 }
 

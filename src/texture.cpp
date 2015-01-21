@@ -38,6 +38,34 @@ Texture::~Texture()
     }
 }
 
+void Texture_2D::init(const std::string & filename)
+{
+    glGenTextures(1, &_texid);
+    glBindTexture(GL_TEXTURE_2D, _texid);
+
+    sf::Image img;
+    if(!img.loadFromFile(filename))
+    {
+        throw std::ios_base::failure(std::string("Error reading image file: ") + filename);
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, img.getSize().x, img.getSize().y,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // set params
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+void Texture_2D::bind()
+{
+    glBindTexture(GL_TEXTURE_2D, _texid);
+}
+
 // TODO should all inits should return bool OR throw (pick one)
 // create a cubemap texture from 6 filenames
 void Texture_cubemap::init(const std::string & left_fname, const std::string & right_fname,

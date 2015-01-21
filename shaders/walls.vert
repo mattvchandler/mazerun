@@ -24,10 +24,14 @@
 #version 130
 
 in vec3 vert_pos;
+in vec2 vert_tex_coords;
 
 uniform mat4 model_view_proj;
 
+out vec2 tex_coords;
+
 void main()
 {
+    tex_coords = vert_tex_coords;
     gl_Position = model_view_proj * vec4(vert_pos, 1.0);
 }

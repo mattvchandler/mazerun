@@ -25,6 +25,7 @@
 #define WALLS_HPP
 
 #include "renderable.hpp"
+#include "texture.hpp"
 
 class Walls: public Renderable
 {
@@ -33,6 +34,7 @@ public:
     void draw(const Entity & cam, const glm::mat4 & proj) override;
 protected:
     GLsizei _num_verts;
+    Texture_2D _tex;
 };
 
 #endif // WALLS_HPP
