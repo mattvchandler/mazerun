@@ -26,8 +26,9 @@
 
 // TODO: we've got a lot of state saving & restoring already. after code works, do performance sweep and clean these up when possible
 
-// TODO: why uber-lag when resized?
+// TODO: why uber-lag when resized? I think it's too much geometry... (but it shouldn't be)
 
+#include <chrono>
 #include <iostream>
 #include <random>
 #include <thread>
@@ -62,7 +63,7 @@ bool World::init()
     }
 
     _win.setKeyRepeatEnabled(false);
-    _win.setFramerateLimit(60);
+    // _win.setFramerateLimit(60);
     // TODO _win.setIcon
 
     glEnable(GL_DEPTH_TEST);
@@ -143,7 +144,6 @@ void World::event_loop()
                     _focused = false;
                     break;
                 case sf::Event::Resized:
-                    resize();
                     _do_resize = true;
                     break;
                 default:
@@ -187,6 +187,7 @@ void World::main_loop()
         // TODO: physics / AI updates
         draw();
         _lock.unlock();
-        // TODO sleep? (may not be needed if we use SFML's frame limit)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
+        // TODO: framerate display
     }
 }
