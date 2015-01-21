@@ -32,7 +32,8 @@ class Texture
 {
 public:
     Texture();
-    ~Texture();
+    virtual ~Texture();
+private:
     virtual void bind() = 0;
 protected:
     GLuint _texid;

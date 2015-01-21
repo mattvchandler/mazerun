@@ -26,6 +26,8 @@
 
 // TODO: we've got a lot of state saving & restoring already. after code works, do performance sweep and clean these up when possible
 
+// TODO: why uber-lag when resized?
+
 #include <iostream>
 #include <random>
 #include <thread>

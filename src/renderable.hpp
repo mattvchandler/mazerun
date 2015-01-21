@@ -36,7 +36,8 @@ class Renderable: public sf::NonCopyable
 {
 public:
     Renderable();
-    ~Renderable();
+    virtual ~Renderable();
+private:
     virtual void draw(const Entity & cam, const glm::mat4 & proj) = 0;
 protected:
     GLuint _vao, _vbo;
