@@ -86,7 +86,8 @@ bool World::init()
 
     _skybox.init();
     // _player.init();
-    _walls.init();
+    _walls.init(32, 32);
+    _floor.init(32, 32);
     return true;
 }
 
@@ -95,6 +96,7 @@ void World::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _skybox.draw(_player, _proj);
     _walls.draw(_player, _proj);
+    _floor.draw(_player, _proj);
     _win.display();
 }
 

@@ -60,6 +60,7 @@ protected:
     Skybox _skybox;
     Player _player;
     Walls _walls;
+    Floor _floor;
     // TODO: entity table
 };
 

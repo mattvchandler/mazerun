@@ -30,7 +30,17 @@
 class Walls: public Renderable
 {
 public:
-    void init();
+    void init(const unsigned int width, const unsigned int height);
+    void draw(const Entity & cam, const glm::mat4 & proj) override;
+protected:
+    GLsizei _num_verts;
+    Texture_2D _tex;
+};
+
+class Floor: public Renderable
+{
+public:
+    void init(const unsigned int width, const unsigned int height);
     void draw(const Entity & cam, const glm::mat4 & proj) override;
 protected:
     GLsizei _num_verts;
