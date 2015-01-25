@@ -32,14 +32,8 @@
 
 // TODO: replace bottom half of skybox with ground (if doing environment mapping)
 
-Skybox::Skybox(): _ebo(0)
+Skybox::Skybox(): _vbo(GL_ARRAY_BUFFER), _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
-}
-
-Skybox::~Skybox()
-{
-    if(_ebo)
-        glDeleteBuffers(1, &_ebo);
 }
 
 void Skybox::init()
@@ -80,19 +74,16 @@ void Skybox::init()
     };
 
     // create OpenGL vertex objects
-    glGenVertexArrays(1, &_vao);
-    glBindVertexArray(_vao);
+    _vao.gen(); _vao.bind();
 
-    glGenBuffers(1, &_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data(), GL_STATIC_DRAW);
+    _vbo.gen(); _vbo.bind();
+    glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(), vert_pos.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &_ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * index.size(), index.data(), GL_STATIC_DRAW);
+    _ebo.gen(); _ebo.bind();
+    glBufferData(_ebo.type(), sizeof(GLuint) * index.size(), index.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
     _num_indexes = index.size();
@@ -101,7 +92,7 @@ void Skybox::init()
 
     _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)});
-    _prog.add_uniform("model_view_proj");
+    _prog.add_uniform("model_view_proj"); // TODO: check? exception
 
     _tex.init(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
         check_in_pwd("img/bluecloud_bk.jpg"), check_in_pwd("img/bluecloud_ft.jpg"),
@@ -115,14 +106,14 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 
     glDepthFunc(GL_LEQUAL);
 
-    glUseProgram(_prog()); // TODO: make this a use, or make the bind method below a operator(). be consistent
+    _prog.use();
     _tex.bind();
 
     glm::mat4 model_view_proj = proj * glm::translate(cam.view_mat(), cam.pos());
 
     glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
 
-    glBindVertexArray(_vao);
+    _vao.bind();
     glDrawElements(GL_TRIANGLES, _num_indexes, GL_UNSIGNED_INT, (GLvoid *)0);
 
     glBindVertexArray(0); // get prev val?

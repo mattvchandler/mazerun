@@ -1,5 +1,5 @@
-// walls.frag
-// fragment shader for maze walls
+// ents.vert
+// vertex shader for most entites
 
 // Copyright 2015 Matthew Chandler
 
@@ -23,13 +23,15 @@
 
 #version 130
 
-in vec2 tex_coords;
+in vec3 vert_pos;
+in vec2 vert_tex_coords;
 
-out vec4 frag_color;
+uniform mat4 model_view_proj;
 
-uniform sampler2D tex;
+out vec2 tex_coords;
 
 void main()
 {
-    frag_color = vec4(texture(tex, tex_coords).rgb, 1.0);
+    tex_coords = vert_tex_coords;
+    gl_Position = model_view_proj * vec4(vert_pos, 1.0);
 }

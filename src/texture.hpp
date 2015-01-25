@@ -26,15 +26,19 @@
 
 #include <string>
 
-#include <SFML/OpenGL.hpp>
+#include <GL/glew.h>
 
-class Texture
+#include <SFML/OpenGL.hpp>
+#include <SFML/System.hpp>
+
+class Texture: public sf::NonCopyable
 {
 public:
     Texture();
     virtual ~Texture();
 private:
-    virtual void bind() = 0;
+    virtual void bind() const = 0;
+    GLuint operator()() const;
 protected:
     GLuint _texid;
 };
@@ -43,7 +47,7 @@ class Texture_2D: public Texture
 {
 public:
     void init(const std::string & filename);
-    void bind() override;
+    void bind() const override;
 };
 
 class Texture_cubemap: public Texture
@@ -52,7 +56,7 @@ public:
     void init(const std::string & left_fname, const std::string & right_fname,
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname);
-    void bind() override;
+    void bind() const override;
 };
 
 #endif // TEXTURE_HPP

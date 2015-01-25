@@ -69,9 +69,9 @@ add_executable(${PROJECT_NAME}
     src/config.cpp
     src/entity.cpp
     src/gl_helpers.cpp
+    src/gl_wrappers.cpp
     src/main.cpp
     src/player.cpp
-    src/renderable.cpp
     src/shader_prog.cpp
     src/skybox.cpp
     src/texture.cpp

@@ -33,13 +33,22 @@ Texture::Texture(): _texid(0)
 Texture::~Texture()
 {
     if(_texid)
-    {
         glDeleteTextures(1, &_texid);
-    }
+}
+
+GLuint Texture::operator()() const
+{
+    if(_texid)
+        return  _texid;
+    else
+        throw std::runtime_error(std::string("Attempt to use uninitialized texture"));
 }
 
 void Texture_2D::init(const std::string & filename)
 {
+    if(_texid)
+        throw std::runtime_error(std::string("Attempt to regen initialized texture"));
+
     glGenTextures(1, &_texid);
     glBindTexture(GL_TEXTURE_2D, _texid);
 
@@ -61,9 +70,12 @@ void Texture_2D::init(const std::string & filename)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
-void Texture_2D::bind()
+void Texture_2D::bind() const
 {
-    glBindTexture(GL_TEXTURE_2D, _texid);
+    if(_texid)
+        glBindTexture(GL_TEXTURE_2D, _texid);
+    else
+        throw std::runtime_error(std::string("Attempt to use uninitialized texture"));
 }
 
 // TODO should all inits should return bool OR throw (pick one)
@@ -72,6 +84,9 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname)
 {
+    if(_texid)
+        throw std::runtime_error(std::string("Attempt to regen initialized texture"));
+
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
     // create array of pairs: filename with type enum
     std::vector<std::pair<std::string, GLenum>> filenames =
@@ -111,7 +126,10 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
-void Texture_cubemap::bind()
+void Texture_cubemap::bind() const
 {
-    glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
+    if(_texid)
+        glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
+    else
+        throw std::runtime_error(std::string("Attempt to use uninitialized texture"));
 }

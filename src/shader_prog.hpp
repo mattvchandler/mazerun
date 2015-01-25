@@ -29,9 +29,12 @@
 #include <utility>
 #include <vector>
 
-#include <SFML/OpenGL.hpp>
+#include <GL/glew.h>
 
-class Shader_prog
+#include <SFML/OpenGL.hpp>
+#include <SFML/System.hpp>
+
+class Shader_prog: public sf::NonCopyable
 {
 public:
     Shader_prog();
@@ -39,6 +42,7 @@ public:
     void init(const std::vector<std::pair<std::string, GLenum>> & sources,
         const std::vector<std::pair<std::string, GLuint>> & attribs);
     bool add_uniform(const std::string & uniform);
+    void use() const;
     GLuint operator()() const;
     // TODO: probably my own exceptions, rather than use system exceptions
 

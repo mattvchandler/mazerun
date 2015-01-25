@@ -1,5 +1,5 @@
-// renderable.cpp
-// renderable base class
+// material.hpp
+// material structures
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,16 +21,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "renderable.hpp"
+#ifndef MATERIAL_HPP
+#define MATERIAL_HPP
 
-Renderable::Renderable(): _vao(0), _vbo(0)
-{
-}
+#include <glm/glm.hpp>
 
-Renderable::~Renderable()
+#include "texture.hpp"
+
+struct Material
 {
-    if(_vao)
-        glDeleteVertexArrays(1, &_vao);
-    if(_vbo)
-        glDeleteBuffers(1, &_vbo);
-}
+    float shininess;
+    glm::vec3 specular_color;
+    Texture_2D tex;
+    Texture_2D norm;
+
+    // TODO: ctor w/ tex vars
+    // Material(const float shininess, const glm::vec3 & specular_color, const
+};
+
+#endif // MATERIAL_HPP

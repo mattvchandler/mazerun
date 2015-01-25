@@ -24,27 +24,33 @@
 #ifndef WALLS_HPP
 #define WALLS_HPP
 
-#include "renderable.hpp"
-#include "texture.hpp"
+#include "gl_wrappers.hpp"
+#include "material.hpp"
 
-class Walls: public Renderable
+class Walls
 {
 public:
+    Walls();
     void init(const unsigned int width, const unsigned int height);
-    void draw(const Entity & cam, const glm::mat4 & proj) override;
+    void draw();
 protected:
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
     GLsizei _num_verts;
-    Texture_2D _tex;
+    Material _mat;
 };
 
-class Floor: public Renderable
+class Floor
 {
 public:
+    Floor();
     void init(const unsigned int width, const unsigned int height);
-    void draw(const Entity & cam, const glm::mat4 & proj) override;
+    void draw();
 protected:
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
     GLsizei _num_verts;
-    Texture_2D _tex;
+    Material _mat;
 };
 
 #endif // WALLS_HPP

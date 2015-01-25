@@ -84,6 +84,11 @@ bool World::init()
     _player.set(glm::vec3(1.0f, -10.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
+    _ent_shader.init({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)});
+    _ent_shader.add_uniform("model_view_proj");
+
     _skybox.init();
     // _player.init();
     _walls.init(32, 32);
@@ -94,9 +99,13 @@ bool World::init()
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glm::mat4 model_view_proj = _proj * _player.view_mat();
+
     _skybox.draw(_player, _proj);
-    _walls.draw(_player, _proj);
-    _floor.draw(_player, _proj);
+    _ent_shader.use();
+    glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+    _walls.draw();
+    _floor.draw();
     _win.display();
 }
 

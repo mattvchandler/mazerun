@@ -35,6 +35,7 @@
 
 #include "player.hpp"
 #include "skybox.hpp"
+#include "shader_prog.hpp"
 #include "walls.hpp"
 
 class World // TODO: make this a singleton?
@@ -56,11 +57,14 @@ protected:
     std::mutex _lock; // TODO more descriptive name
 
     sf::Window _win;
+
     glm::mat4 _proj;
+
     Skybox _skybox;
     Player _player;
     Walls _walls;
     Floor _floor;
+    Shader_prog _ent_shader;
     // TODO: entity table
 };
 

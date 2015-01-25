@@ -1,5 +1,5 @@
-// renderable.hpp
-// renderable base class
+// gl_wrappers.hpp
+// RAII wrappers for open GL objects
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,27 +21,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RENDERABLE_HPP
-#define RENDERABLE_HPP
+#ifndef GL_WRAPPERS_HPP
+#define GL_WRAPPERS_HPP
 
 #include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
 #include <SFML/System.hpp>
 
-#include "entity.hpp"
-#include "shader_prog.hpp"
-
-class Renderable: public sf::NonCopyable
+class GL_buffer: public sf::NonCopyable
 {
 public:
-    Renderable();
-    virtual ~Renderable();
+    GL_buffer(const GLenum type);
+    ~GL_buffer();
+    void gen();
+    void bind() const;
+    GLenum type() const;
+    GLuint operator ()() const;
 private:
-    virtual void draw(const Entity & cam, const glm::mat4 & proj) = 0;
-protected:
-    GLuint _vao, _vbo;
-    Shader_prog _prog;
+    GLuint _buf;
+    GLenum _type;
 };
 
-#endif // RENDERABLE_HPP
+class GL_vertex_array: public sf::NonCopyable
+{
+public:
+    GL_vertex_array();
+    ~GL_vertex_array();
+    void gen();
+    void bind() const;
+    GLuint operator ()() const;
+private:
+    GLuint _arr;
+};
+
+#endif // GL_WRAPPERS_HPP

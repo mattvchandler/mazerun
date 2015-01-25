@@ -29,6 +29,10 @@
 #include "grid.hpp"
 #include "walls.hpp"
 
+Walls::Walls(): _vbo(GL_ARRAY_BUFFER)
+{
+}
+
 void Walls::init(const unsigned int width, const unsigned int height)
 {
     Grid grid(width, height);
@@ -115,14 +119,12 @@ void Walls::init(const unsigned int width, const unsigned int height)
     _num_verts = vert_pos.size();
 
     // create OpenGL vertex objects
-    glGenVertexArrays(1, &_vao);
-    glBindVertexArray(_vao);
+    _vao.gen(); _vao.bind();
+    _vbo.gen(); _vbo.bind();
 
-    glGenBuffers(1, &_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vert_pos.size() + sizeof(glm::vec2) * vert_tex_coords.size(), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vert_pos.size(), sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
+    glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() + sizeof(glm::vec2) * vert_tex_coords.size(), NULL, GL_STATIC_DRAW);
+    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(), sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
@@ -134,28 +136,21 @@ void Walls::init(const unsigned int width, const unsigned int height)
 
     check_error("Walls::init");
 
-    _prog.init({std::make_pair("shaders/walls.vert", GL_VERTEX_SHADER), std::make_pair("shaders/walls.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)});
-    _prog.add_uniform("model_view_proj");
-
-    _tex.init(check_in_pwd("img/GroundCover.jpg"));
+    _mat.tex.init(check_in_pwd("img/GroundCover.jpg"));
 }
 
-void Walls::draw(const Entity & cam, const glm::mat4 & proj)
+void Walls::draw()
 {
-    glUseProgram(_prog());
-    _tex.bind();
+    _mat.tex.bind(); _vao.bind();
 
-    glm::mat4 model_view_proj = proj * cam.view_mat();
-    glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
-
-    glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLES, 0, _num_verts);
-
     glBindVertexArray(0); // TODO: get prev val?
-    glUseProgram(0); // TODO: get prev val?
 
     check_error("Walls::Draw");
+}
+
+Floor::Floor(): _vbo(GL_ARRAY_BUFFER)
+{
 }
 
 void Floor::init(const unsigned int width, const unsigned int height)
@@ -182,14 +177,12 @@ void Floor::init(const unsigned int width, const unsigned int height)
     _num_verts = vert_pos.size();
 
     // create OpenGL vertex objects
-    glGenVertexArrays(1, &_vao);
-    glBindVertexArray(_vao);
+    _vao.gen(); _vao.bind();
+    _vbo.gen(); _vbo.bind();
 
-    glGenBuffers(1, &_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vert_pos.size() + sizeof(glm::vec2) * vert_tex_coords.size(), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vert_pos.size(), sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
+    glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() + sizeof(glm::vec2) * vert_tex_coords.size(), NULL, GL_STATIC_DRAW);
+    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(), sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
@@ -201,26 +194,16 @@ void Floor::init(const unsigned int width, const unsigned int height)
 
     check_error("Floor::init");
 
-    _prog.init({std::make_pair("shaders/walls.vert", GL_VERTEX_SHADER), std::make_pair("shaders/walls.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)});
-    _prog.add_uniform("model_view_proj");
-
-    _tex.init(check_in_pwd("img/AncientFlooring.jpg"));
+    _mat.tex.init(check_in_pwd("img/AncientFlooring.jpg"));
 }
 
-void Floor::draw(const Entity & cam, const glm::mat4 & proj)
+void Floor::draw()
 {
-    glUseProgram(_prog());
-    _tex.bind();
+    _mat.tex.bind(); _vao.bind();
 
-    glm::mat4 model_view_proj = proj * cam.view_mat();
-    glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
-
-    glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, _num_verts);
 
     glBindVertexArray(0); // TODO: get prev val?
-    glUseProgram(0); // TODO: get prev val?
 
     check_error("Floor::Draw");
 }

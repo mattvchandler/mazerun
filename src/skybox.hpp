@@ -27,21 +27,23 @@
 #include <SFML/OpenGL.hpp>
 
 #include "entity.hpp"
-#include "renderable.hpp"
+#include "gl_wrappers.hpp"
 #include "shader_prog.hpp"
 #include "texture.hpp"
 
-class Skybox: public Renderable
+class Skybox
 {
 public:
     Skybox();
-    ~Skybox();
     void init();
-    void draw(const Entity & cam, const glm::mat4 & proj) override;
+    void draw(const Entity & cam, const glm::mat4 & proj);
 protected:
-    GLuint _ebo;
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
+    GL_buffer _ebo;
     Texture_cubemap _tex; // TODO: may want to expose this for environment mapping
     GLuint _num_indexes;
+    Shader_prog _prog;
 };
 
 #endif // SKYBOX_HPP
