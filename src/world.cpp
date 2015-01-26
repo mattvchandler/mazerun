@@ -49,7 +49,8 @@ thread_local std::mt19937 prng;
 thread_local std::random_device rng;
 
 World::World(): _running(true), _focused(true), _do_resize(false),
-    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0))
+    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
+    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), .25, glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)))
 {
 }
 
@@ -83,30 +84,76 @@ bool World::init()
     // set camera initial position / orientation
     _player.set(glm::vec3(1.0f, -10.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-
-    _ent_shader.init({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)});
-    _ent_shader.add_uniform("model_view_proj");
-
     _skybox.init();
     // _player.init();
     _walls.init(32, 32);
     _floor.init(32, 32);
+
+    _ent_shader.init({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
+        std::make_pair("vert_normals", 2)});
+
+    _ent_shader.use();
+    _ent_shader.add_uniform("model_view_proj");
+    // _ent_shader.add_uniform("model_view");
+    _ent_shader.add_uniform("normal_transform");
+    _ent_shader.add_uniform("material.specular");
+    _ent_shader.add_uniform("material.shininess");
+    _ent_shader.add_uniform("ambient_color");
+    _ent_shader.add_uniform("dir_light.base.color");
+    _ent_shader.add_uniform("dir_light.base.strength");
+    _ent_shader.add_uniform("dir_light.dir");
+    _ent_shader.add_uniform("dir_light.half_vec");
+    // _ent_shader.add_uniform("cam_light_forward");
+
+    // set up static uniform vals
+    // TODO: sunlight owned by skybox?
+    glm::vec3 ambient_color(0.2f, 0.2f, 0.2f); // TODO: get from skybox?
+    glUniform3fv(_ent_shader.uniforms["ambient_color"], 1, &ambient_color[0]);
+    glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
+    glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
+
+    glUseProgram(0); // TODO get prev val
+    check_error("World::init");
+
     return true;
 }
 
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::mat4 model_view_proj = _proj * _player.view_mat();
+    glm::mat4 model_view = _player.view_mat();
+    glm::mat4 model_view_proj = _proj * model_view;
+    glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+    glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
 
     _skybox.draw(_player, _proj);
+
     _ent_shader.use();
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+    // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
+    glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
+
+    // sunlight vars
+    glm::vec3 sunlight_dir = normal_transform * glm::normalize(-_sunlight.dir);
+    glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
+    glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+
+    _walls.get_material().tex.bind();
+    glUniform3fv(_ent_shader.uniforms["material.specular"], 1, &_walls.get_material().specular_color[0]);
+    glUniform1f(_ent_shader.uniforms["material.shininess"], _walls.get_material().shininess);
     _walls.draw();
+
+    _floor.get_material().tex.bind();
+    glUniform3fv(_ent_shader.uniforms["material.specular"], 1, &_floor.get_material().specular_color[0]);
+    glUniform1f(_ent_shader.uniforms["material.shininess"], _floor.get_material().shininess);
     _floor.draw();
+
     _win.display();
+    check_error("World::draw");
 }
 
 void World::resize()

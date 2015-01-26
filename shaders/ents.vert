@@ -25,13 +25,21 @@
 
 in vec3 vert_pos;
 in vec2 vert_tex_coords;
+in vec3 vert_normals;
 
 uniform mat4 model_view_proj;
+uniform mat4 model_view;
+uniform mat3 normal_transform;
 
 out vec2 tex_coords;
+out vec3 normal_vec;
+out vec3 pos;
 
 void main()
 {
     tex_coords = vert_tex_coords;
+    normal_vec = normalize(normal_transform * vert_normals);
+    // transform the vertex position into view space coordinates
+    pos = vec3(model_view * vec4(vert_pos, 1.0));
     gl_Position = model_view_proj * vec4(vert_pos, 1.0);
 }

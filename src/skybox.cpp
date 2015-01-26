@@ -88,15 +88,17 @@ void Skybox::init()
     glBindVertexArray(0);
     _num_indexes = index.size();
 
-    check_error("Skybox::init");
-
     _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)});
-    _prog.add_uniform("model_view_proj"); // TODO: check? exception
+    _prog.use();
+    _prog.add_uniform("model_view_proj");
 
     _tex.init(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
         check_in_pwd("img/bluecloud_bk.jpg"), check_in_pwd("img/bluecloud_ft.jpg"),
         check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg"));
+    glUseProgram(0); // TODO get prev val
+
+    check_error("Skybox::init");
 }
 
 void Skybox::draw(const Entity & cam, const glm::mat4 & proj)

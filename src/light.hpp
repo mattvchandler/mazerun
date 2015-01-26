@@ -1,5 +1,5 @@
-// shader.hpp
-// shader program creation & managment
+// light.hpp
+// light structures
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,34 +21,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef SHADER_PROG_HPP
-#define SHADER_PROG_HPP
+#ifndef LIGHT_HPP
+#define LIGHT_HPP
 
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+#include <glm/glm.hpp>
 
 #include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
-#include <SFML/System.hpp>
 
-class Shader_prog: public sf::NonCopyable
+struct Light
 {
-public:
-    Shader_prog();
-    ~Shader_prog();
-    void init(const std::vector<std::pair<std::string, GLenum>> & sources,
-        const std::vector<std::pair<std::string, GLuint>> & attribs);
-    void add_uniform(const std::string & uniform);
-    void use() const;
-    GLuint operator()() const;
-    // TODO: probably my own exceptions, rather than use system exceptions
-
-    std::unordered_map<std::string, GLuint> uniforms; // convenience storage for uniform values // TODO: maybe make private and add get method?
-protected:
-    GLuint _prog;
+    glm::vec3 color;
+    float strength;
 };
 
-#endif // SHADER_PROG_HPP
+struct Point_light: public Light
+{
+    glm::vec3 pos;
+    // attenuation properties
+    float const_atten;
+    float linear_atten;
+    float quad_atten;
+    Point_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
+    const float const_atten, const float linear_atten, const float quad_atten):
+        Light({color, strength}), pos(pos),
+        const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
+    {
+    }
+};
+
+struct Dir_light: public Light
+{
+    glm::vec3 dir;
+    Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir):
+        Light({color, strength}), dir(dir)
+        {
+    }
+};
+
+// TODO: spotlight
+
+#endif // LIGHT_HPP

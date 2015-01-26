@@ -41,13 +41,13 @@ GLuint Texture::operator()() const
     if(_texid)
         return  _texid;
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized texture"));
+        throw std::runtime_error("Attempt to use uninitialized texture");
 }
 
 void Texture_2D::init(const std::string & filename)
 {
     if(_texid)
-        throw std::runtime_error(std::string("Attempt to regen initialized texture"));
+        throw std::runtime_error("Attempt to regen initialized texture");
 
     glGenTextures(1, &_texid);
     glBindTexture(GL_TEXTURE_2D, _texid);
@@ -75,7 +75,7 @@ void Texture_2D::bind() const
     if(_texid)
         glBindTexture(GL_TEXTURE_2D, _texid);
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized texture"));
+        throw std::runtime_error("Attempt to use uninitialized texture");
 }
 
 // TODO should all inits should return bool OR throw (pick one)
@@ -85,7 +85,7 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
     const std::string & down_fname, const std::string & up_fname)
 {
     if(_texid)
-        throw std::runtime_error(std::string("Attempt to regen initialized texture"));
+        throw std::runtime_error("Attempt to regen initialized texture");
 
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
     // create array of pairs: filename with type enum
@@ -131,5 +131,5 @@ void Texture_cubemap::bind() const
     if(_texid)
         glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized texture"));
+        throw std::runtime_error("Attempt to use uninitialized texture");
 }

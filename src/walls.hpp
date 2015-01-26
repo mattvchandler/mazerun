@@ -26,13 +26,15 @@
 
 #include "gl_wrappers.hpp"
 #include "material.hpp"
+#include "shader_prog.hpp"
 
 class Walls
 {
 public:
     Walls();
     void init(const unsigned int width, const unsigned int height);
-    void draw();
+    void draw() const;
+    const Material & get_material() const;
 protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;
@@ -45,7 +47,8 @@ class Floor
 public:
     Floor();
     void init(const unsigned int width, const unsigned int height);
-    void draw();
+    void draw() const;
+    const Material & get_material() const;
 protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;

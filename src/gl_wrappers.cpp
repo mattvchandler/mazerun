@@ -40,7 +40,7 @@ GL_buffer::~GL_buffer()
 void GL_buffer::gen()
 {
     if(_buf)
-        throw std::runtime_error(std::string("Attempt to regen initialized buffer"));
+        throw std::runtime_error("Attempt to regen initialized buffer");
 
     glGenBuffers(1, &_buf);
 }
@@ -50,7 +50,7 @@ void GL_buffer::bind() const
     if(_buf)
         glBindBuffer(_type, _buf);
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized buffer"));
+        throw std::runtime_error("Attempt to use uninitialized buffer");
 }
 
 GLenum GL_buffer::type() const
@@ -58,7 +58,7 @@ GLenum GL_buffer::type() const
     if(_buf)
         return _type;
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized buffer"));
+        throw std::runtime_error("Attempt to use uninitialized buffer");
 }
 
 GLuint GL_buffer::operator ()() const
@@ -80,7 +80,7 @@ GL_vertex_array::~GL_vertex_array()
 void GL_vertex_array::gen()
 {
     if(_arr)
-        throw std::runtime_error(std::string("Attempt to regen initialized array"));
+        throw std::runtime_error("Attempt to regen initialized array");
 
     glGenVertexArrays(1, &_arr);
 }
@@ -90,7 +90,7 @@ void GL_vertex_array::bind() const
     if(_arr)
         glBindVertexArray(_arr);
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized array"));
+        throw std::runtime_error("Attempt to use uninitialized array");
 }
 
 GLuint GL_vertex_array::operator ()() const
@@ -98,5 +98,5 @@ GLuint GL_vertex_array::operator ()() const
     if(_arr)
         return _arr;
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized array"));
+        throw std::runtime_error("Attempt to use uninitialized array");
 }

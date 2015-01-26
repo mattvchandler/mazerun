@@ -45,7 +45,7 @@ void Shader_prog::init(const std::vector<std::pair<std::string, GLenum>> & sourc
     const std::vector<std::pair<std::string, GLuint>> & attribs)
 {
     if(_prog)
-        throw std::runtime_error(std::string("Attempt to regen initialized shader prog"));
+        throw std::runtime_error("Attempt to regen initialized shader prog");
 
     std::vector<GLuint> shaders;
     for(const auto & source: sources)
@@ -135,13 +135,15 @@ void Shader_prog::init(const std::vector<std::pair<std::string, GLenum>> & sourc
         throw std::system_error(link_status, std::system_category(), std::string("Error linking shader program:\n") +
             std::string(log.data()));
     }
+    glUseProgram(0); // TODO: get prev val
 }
 
-bool Shader_prog::add_uniform(const std::string & uniform)
+void Shader_prog::add_uniform(const std::string & uniform)
 {
     GLint loc = glGetUniformLocation(_prog, uniform.c_str());
     uniforms[uniform] = loc;
-    return loc != -1;
+    if(loc == -1)
+        throw std::runtime_error(std::string("uniform ") + uniform + std::string(" not found"));
 }
 
 void Shader_prog::use() const
@@ -149,7 +151,7 @@ void Shader_prog::use() const
     if(_prog)
         glUseProgram(_prog);
     else
-        throw std::runtime_error(std::string("Attempt to use uninitialized shader prog"));
+        throw std::runtime_error("Attempt to use uninitialized shader prog");
 }
 
 GLuint Shader_prog::operator()() const

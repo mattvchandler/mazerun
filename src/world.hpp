@@ -33,6 +33,7 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
 
+#include "light.hpp"
 #include "player.hpp"
 #include "skybox.hpp"
 #include "shader_prog.hpp"
@@ -61,6 +62,7 @@ protected:
     glm::mat4 _proj;
 
     Skybox _skybox;
+    Dir_light _sunlight;
     Player _player;
     Walls _walls;
     Floor _floor;
