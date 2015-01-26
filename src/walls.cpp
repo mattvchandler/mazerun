@@ -41,12 +41,14 @@ void Walls::init(const unsigned int width, const unsigned int height)
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;
     std::vector<glm::vec3> vert_normals;
+    std::vector<glm::vec3> vert_tangents;
 
     glm::vec3 cell_scale(1.0f, 1.0f, 1.0f);
     glm::vec3 base(-0.5f * (float)grid.grid[0].size(), -0.5f * (float)grid.grid.size(), 0.0f);
 
-    glm::vec3 left_normal(-1.0f, 0.0f, 0.0f);
-    glm::vec3 up_normal(0.0f, -1.0f, 0.0f);
+    glm::vec3 left_normal(1.0f, 0.0f, 0.0f);
+    glm::vec3 up_normal(0.0f, 1.0f, 0.0f);
+    glm::vec3 tangent(0.0f, 0.0f, 1.0f);
 
     // draw border walls
     for(size_t row = 0; row < grid.grid.size(); ++row)
@@ -56,30 +58,36 @@ void Walls::init(const unsigned int width, const unsigned int height)
 
         vert_pos.push_back(origin);
         vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
-        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-
-        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
         vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
 
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
+        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+        vert_pos.push_back(origin);
+
         for(int i = 0; i < 6; ++i)
+        {
             vert_normals.push_back(left_normal);
+            vert_tangents.push_back(tangent);
+        }
     }
     for(size_t col = 0; col < grid.grid[0].size(); ++col)
     {
         glm::vec3 origin(cell_scale.x * (float)col, cell_scale.y * (float)grid.grid.size(), 0.0f);
         origin += base;
 
-        vert_pos.push_back(origin);
         vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+        vert_pos.push_back(origin);
         vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
 
         vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
         vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, cell_scale.z));
+        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
 
         for(int i = 0; i < 6; ++i)
+        {
             vert_normals.push_back(up_normal);
+            vert_tangents.push_back(tangent);
+        }
     }
 
     // draw cell walls
@@ -92,30 +100,36 @@ void Walls::init(const unsigned int width, const unsigned int height)
 
             if(grid.grid[row][col].walls[UP])
             {
-                vert_pos.push_back(origin);
                 vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+                vert_pos.push_back(origin);
                 vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
 
                 vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
                 vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, cell_scale.z));
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
 
                 for(int i = 0; i < 6; ++i)
+                {
                     vert_normals.push_back(up_normal);
+                    vert_tangents.push_back(tangent);
+                }
             }
 
             if(grid.grid[row][col].walls[LEFT])
             {
                 vert_pos.push_back(origin);
                 vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
-                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-
-                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
                 vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
 
+                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
+                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+                vert_pos.push_back(origin);
+
                 for(int i = 0; i < 6; ++i)
+                {
                     vert_normals.push_back(left_normal);
+                    vert_tangents.push_back(tangent);
+                }
             }
         }
     }
@@ -139,28 +153,42 @@ void Walls::init(const unsigned int width, const unsigned int height)
     _vbo.gen(); _vbo.bind();
 
     glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size() + sizeof(glm::vec3) * vert_normals.size(), NULL, GL_STATIC_DRAW);
-    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(),
-        sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size(), sizeof(glm::vec3) * vert_normals.size(), vert_normals.data());
+        sizeof(glm::vec2) * vert_tex_coords.size() +
+        sizeof(glm::vec3) * vert_normals.size() +
+        sizeof(glm::vec3) * vert_tangents.size(), NULL, GL_STATIC_DRAW);
 
+    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(),
+        sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size()));
     glEnableVertexAttribArray(1);
 
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
+        sizeof(glm::vec2) * vert_tex_coords.size(),
+        sizeof(glm::vec3) * vert_normals.size(), vert_normals.data());
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size() +
         sizeof(glm::vec2) * vert_tex_coords.size()));
     glEnableVertexAttribArray(2);
 
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
+        sizeof(glm::vec2) * vert_tex_coords.size() +
+        sizeof(glm::vec3) * vert_normals.size(),
+        sizeof(glm::vec3) * vert_tangents.size(), vert_tangents.data());
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size() +
+        sizeof(glm::vec2) * vert_tex_coords.size() +
+        sizeof(glm::vec3) * vert_normals.size()));
+    glEnableVertexAttribArray(3);
+
     glBindVertexArray(0);
 
-    _mat.tex.init(check_in_pwd("img/GroundCover.jpg"));
-    _mat.shininess = 50.0f;
-    _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
+    _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
+    _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
+    _mat.diffuse_map.init(check_in_pwd("img/GroundCover.jpg"));
+    _mat.normal_map.init(check_in_pwd("img/normals/GroundCover_N.jpg"));
+    _mat.shininess = 500.0f;
 
     check_error("Walls::init");
 }
@@ -213,6 +241,14 @@ void Floor::init(const unsigned int width, const unsigned int height)
         glm::vec3(0.0f, 0.0f, 1.0f)
     };
 
+    std::vector<glm::vec3> vert_tangents =
+    {
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f)
+    };
+
     _num_verts = vert_pos.size();
 
     // create OpenGL vertex objects
@@ -220,28 +256,41 @@ void Floor::init(const unsigned int width, const unsigned int height)
     _vbo.gen(); _vbo.bind();
 
     glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size() + sizeof(glm::vec3) * vert_normals.size(), NULL, GL_STATIC_DRAW);
-    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(),
-        sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size(), sizeof(glm::vec3) * vert_normals.size(), vert_normals.data());
+        sizeof(glm::vec2) * vert_tex_coords.size() +
+        sizeof(glm::vec3) * vert_normals.size() +
+        sizeof(glm::vec3) * vert_tangents.size(), NULL, GL_STATIC_DRAW);
 
+    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(),
+        sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size()));
     glEnableVertexAttribArray(1);
 
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
+        sizeof(glm::vec2) * vert_tex_coords.size(),
+        sizeof(glm::vec3) * vert_normals.size(), vert_normals.data());
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size() +
         sizeof(glm::vec2) * vert_tex_coords.size()));
     glEnableVertexAttribArray(2);
 
+    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
+        sizeof(glm::vec2) * vert_tex_coords.size() +
+        sizeof(glm::vec3) * vert_normals.size(),
+        sizeof(glm::vec3) * vert_tangents.size(), vert_tangents.data());
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size() +
+        sizeof(glm::vec2) * vert_tex_coords.size() +
+        sizeof(glm::vec3) * vert_normals.size()));
+    glEnableVertexAttribArray(3);
     glBindVertexArray(0);
 
-    _mat.tex.init(check_in_pwd("img/AncientFlooring.jpg"));
-    _mat.shininess = 50.0f;
-    _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
+    _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
+    _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
+    _mat.diffuse_map.init(check_in_pwd("img/AncientFlooring.jpg"));
+    _mat.normal_map.init(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
+    _mat.shininess = 500.0f;
 
     check_error("Floor::init");
 }

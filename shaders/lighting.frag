@@ -27,8 +27,11 @@
 // material vars
 struct Material
 {
-    vec3 specular;
+    vec3 specular_color;
+    vec3 emission_color;
     float shininess;
+    sampler2D diffuse_map;
+    sampler2D normal_map;
 };
 
 // lighting vars
@@ -53,6 +56,24 @@ struct Dir_light
     vec3 dir;
     vec3 half_vec;
 };
+
+vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in sampler2D normal_map)
+{
+    normal = normalize(normal);
+    tangent = normalize(tangent);
+
+    tangent = normalize(tangent - dot(tangent, normal) * normal);
+    vec3 bitangent = cross(tangent, normal);
+
+    vec3 norm_normal = texture(normal_map, tex_coord).xyz;
+    norm_normal = 2.0 * norm_normal - vec3(1.0, 1.0, 1.0);
+
+    mat3 tangent_bitangent_normal = mat3(tangent, bitangent, normal);
+
+    vec3 new_norm = tangent_bitangent_normal * norm_normal;
+    new_norm = normalize(new_norm);
+    return new_norm;
+}
 
 void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
     in Material material, in Base_light base,
@@ -101,7 +122,7 @@ void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     // diffuse light color
     scattered = point_light.base.color * diffuse_mul * atten;
     // specular light color
-    reflected = point_light.base.color * specular_mul * atten * material.specular;
+    reflected = point_light.base.color * specular_mul * atten;
 }
 
 void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light dir_light,
@@ -114,5 +135,5 @@ void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light di
     // diffuse light color
     scattered = dir_light.base.color * diffuse_mul;
     // specular light color
-    reflected = dir_light.base.color * specular_mul * material.specular;
+    reflected = dir_light.base.color * specular_mul;
 }

@@ -115,6 +115,7 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 
     glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
 
+    glActiveTexture(GL_TEXTURE0);
     _vao.bind();
     glDrawElements(GL_TRIANGLES, _num_indexes, GL_UNSIGNED_INT, (GLvoid *)0);
 

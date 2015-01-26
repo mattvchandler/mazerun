@@ -50,7 +50,7 @@ thread_local std::random_device rng;
 
 World::World(): _running(true), _focused(true), _do_resize(false),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
-    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), .25, glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)))
+    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f)))
 {
 }
 
@@ -93,13 +93,16 @@ bool World::init()
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
-        std::make_pair("vert_normals", 2)});
+        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)});
 
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
     // _ent_shader.add_uniform("model_view");
     _ent_shader.add_uniform("normal_transform");
-    _ent_shader.add_uniform("material.specular");
+    _ent_shader.add_uniform("material.emission_color");
+    _ent_shader.add_uniform("material.specular_color");
+    _ent_shader.add_uniform("material.diffuse_map");
+    _ent_shader.add_uniform("material.normal_map");
     _ent_shader.add_uniform("material.shininess");
     _ent_shader.add_uniform("ambient_color");
     _ent_shader.add_uniform("dir_light.base.color");
@@ -110,10 +113,13 @@ bool World::init()
 
     // set up static uniform vals
     // TODO: sunlight owned by skybox?
+    // TODO: replace uniform bracket op w/ at so exceptions are thrown
     glm::vec3 ambient_color(0.2f, 0.2f, 0.2f); // TODO: get from skybox?
     glUniform3fv(_ent_shader.uniforms["ambient_color"], 1, &ambient_color[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
     glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
+    glUniform1i(_ent_shader.uniforms["material.diffuse_map"], 0);
+    glUniform1i(_ent_shader.uniforms["material.normal_map"], 1);
 
     glUseProgram(0); // TODO get prev val
     check_error("World::init");
@@ -142,14 +148,22 @@ void World::draw()
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
-    _walls.get_material().tex.bind();
-    glUniform3fv(_ent_shader.uniforms["material.specular"], 1, &_walls.get_material().specular_color[0]);
+    glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_walls.get_material().specular_color[0]);
+    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_walls.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _walls.get_material().shininess);
+    glActiveTexture(GL_TEXTURE0);
+    _walls.get_material().diffuse_map.bind();
+    glActiveTexture(GL_TEXTURE1);
+    _walls.get_material().normal_map.bind();
     _walls.draw();
 
-    _floor.get_material().tex.bind();
-    glUniform3fv(_ent_shader.uniforms["material.specular"], 1, &_floor.get_material().specular_color[0]);
+    glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_floor.get_material().specular_color[0]);
+    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_floor.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _floor.get_material().shininess);
+    glActiveTexture(GL_TEXTURE0);
+    _floor.get_material().diffuse_map.bind();
+    glActiveTexture(GL_TEXTURE1);
+    _floor.get_material().normal_map.bind();
     _floor.draw();
 
     _win.display();

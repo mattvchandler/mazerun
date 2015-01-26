@@ -30,13 +30,12 @@
 
 struct Material
 {
-    float shininess;
+    glm::vec3 emission_color; //  TODO: replace w/ map?
     glm::vec3 specular_color;
-    Texture_2D tex;
-    Texture_2D norm;
-
+    Texture_2D diffuse_map;
+    Texture_2D normal_map;
+    float shininess;
     // TODO: ctor w/ tex vars
-    // Material(const float shininess, const glm::vec3 & specular_color, const
 };
 
 #endif // MATERIAL_HPP

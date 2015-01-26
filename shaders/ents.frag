@@ -25,8 +25,11 @@
 
 struct Material
 {
-    vec3 specular;
+    vec3 specular_color;
+    vec3 emission_color;
     float shininess;
+    sampler2D diffuse_map;
+    sampler2D normal_map;
 };
 
 struct Base_light
@@ -51,19 +54,20 @@ struct Dir_light
     vec3 half_vec;
 };
 
+vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in sampler2D normal_map);
+
 void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     in Material material, in Point_light point_light, out vec3 scattered, out vec3 reflected);
 
 void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light dir_light,
     out vec3 scattered, out vec3 reflected);
 
-in vec2 tex_coords;
 in vec3 pos;
+in vec2 tex_coord;
 in vec3 normal_vec;
+in vec3 tangent;
 
 // material vars
-uniform sampler2D tex;
-uniform sampler2D norm_map;
 uniform Material material;
 
 // lighting vars
@@ -77,19 +81,22 @@ out vec4 frag_color;
 
 void main()
 {
-    vec3 scattered = ambient_color, reflected = vec3(0.0, 0.0, 0.0);
+    vec3 scattered = ambient_color, reflected = vec3(0.0);
     vec3 tmp_scattered, tmp_reflected;
 
-    // calc_point_lighting(pos, light_forward, normal_vec, material, cam_light,
+    vec3 mapped_normal = norm_map_normal(tex_coord, normal_vec, tangent, material.normal_map);
+
+    // calc_point_lighting(pos, light_forward, new_normal, material, cam_light,
     //     tmp_scattered, tmp_reflected);
     // scattered += tmp_scattered;
     // reflected += tmp_reflected;
 
-    calc_dir_lighting(normal_vec, material, dir_light, tmp_scattered, tmp_reflected);
+    calc_dir_lighting(mapped_normal, material, dir_light, tmp_scattered, tmp_reflected);
     scattered += tmp_scattered;
     reflected += tmp_reflected;
 
     // add to material color (from texture) to lighting for final color
-    vec3 rgb = min(texture(tex, tex_coords).rgb * scattered + reflected, vec3(1.0));
+    vec3 rgb = min(material.emission_color + texture(material.diffuse_map, tex_coord).rgb * scattered
+        + material.specular_color * reflected, vec3(1.0));
     frag_color = vec4(rgb, 1.0);
 }
