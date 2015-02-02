@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8.8)
-project(mazegen)
+project(mazegen_2D)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
@@ -60,7 +60,7 @@ add_executable(${PROJECT_NAME}
     # src/config.cpp
     src/main.cpp
     src/maze.cpp
-    $<TARGET_OBJECTS:mazegen_shared>
+    $<TARGET_OBJECTS:mazegen>
     )
 
 target_link_libraries(${PROJECT_NAME}

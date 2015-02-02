@@ -56,13 +56,17 @@ link_directories(
     )
 
 # main compilation
-add_library(mazegen_shared OBJECT
+add_library(mazegen OBJECT
     src/gen_rooms.cpp
     src/grid.cpp
     src/mazegen.cpp
     )
 
-add_subdirectory(mazegen)
+set(MAZERUN_BUILD_MAZEGEN 1 CACHE STRING "Build 2D maze generator")
+
+if(MAZERUN_BUILD_MAZEGEN)
+    add_subdirectory(mazegen)
+endif()
 
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
@@ -77,7 +81,7 @@ add_executable(${PROJECT_NAME}
     src/texture.cpp
     src/walls.cpp
     src/world.cpp
-    $<TARGET_OBJECTS:mazegen_shared>
+    $<TARGET_OBJECTS:mazegen>
     )
 
 target_link_libraries(${PROJECT_NAME}
