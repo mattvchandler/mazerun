@@ -21,34 +21,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <SFML/System.hpp>
+
 #include "maze.hpp"
 
-Maze::Maze(sf::RenderWindow & win, const sf::Vector2u & grid_size):
-    _grid(grid_size),
-    _win(win),
-    _lines(sf::Lines)
+Maze::Maze(const unsigned int width, const unsigned int height):
+    _grid(sf::Vector2u(width, height))
 {
-}
+    set_title("MazeGen");
+    set_default_size(800, 600);
 
-void Maze::init()
-{
+    add(_draw_area);
+    show_all_children();
+
     _grid.init();
 
+    _draw_area.signal_draw().connect(sigc::mem_fun(*this, &Maze::draw));
+
+}
+
+bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr)
+{
     sf::Vector2u grid_size(_grid.grid[0].size(), _grid.grid.size());
-    sf::Vector2f cell_scale((float)_win.getSize().x / (float)grid_size.x, (float)_win.getSize().y / (float)grid_size.y);
+    sf::Vector2f cell_scale((float)_draw_area.get_allocated_width() / (float)grid_size.x,
+        (float)_draw_area.get_allocated_height() / (float)grid_size.y);
+
+    // set line properties
+    cr->set_source_rgb(0.0, 0.0, 0.0);
+    cr->set_line_width(2.0f);
 
     // draw border
-    _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
-    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, 0.0f), sf::Color::Black));
+    cr->move_to(0.0f, 0.0f);
+    cr->line_to((float)_draw_area.get_allocated_width(), 0.0f);
 
-    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, 0.0f), sf::Color::Black));
-    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, (float)_win.getSize().y), sf::Color::Black));
+    cr->move_to((float)_draw_area.get_allocated_width(), 0.0f);
+    cr->line_to((float)_draw_area.get_allocated_width(), (float)_draw_area.get_allocated_height());
 
-    _lines.append(sf::Vertex(sf::Vector2f((float)_win.getSize().x, (float)_win.getSize().y), sf::Color::Black));
-    _lines.append(sf::Vertex(sf::Vector2f(0.0f, (float)_win.getSize().y), sf::Color::Black));
+    cr->move_to((float)_draw_area.get_allocated_width(), (float)_draw_area.get_allocated_height());
+    cr->line_to(0.0f, (float)_draw_area.get_allocated_height());
 
-    _lines.append(sf::Vertex(sf::Vector2f(0.0f, (float)_win.getSize().y), sf::Color::Black));
-    _lines.append(sf::Vertex(sf::Vector2f(0.0f, 0.0f), sf::Color::Black));
+    cr->move_to(0.0f, (float)_draw_area.get_allocated_height());
+    cr->line_to(0.0f, 0.0f);
 
     // draw maze cells
     for(size_t row = 0; row < grid_size.y; ++row)
@@ -59,20 +72,18 @@ void Maze::init()
 
             if(_grid.grid[row][col].walls[UP])
             {
-                _lines.append(sf::Vertex(ul, sf::Color::Black));
-                _lines.append(sf::Vertex(sf::Vector2f(ul.x + cell_scale.x, ul.y), sf::Color::Black));
+                cr->move_to(ul.x, ul.y);
+                cr->line_to(ul.x + cell_scale.x, ul.y);
             }
             if(_grid.grid[row][col].walls[LEFT])
             {
-                _lines.append(sf::Vertex(ul, sf::Color::Black));
-                _lines.append(sf::Vertex(sf::Vector2f(ul.x, ul.y + cell_scale.y), sf::Color::Black));
+                cr->move_to(ul.x, ul.y);
+                cr->line_to(ul.x, ul.y + cell_scale.y);
             }
         }
     }
-}
 
-void Maze::draw()
-{
-    _win.draw(_lines);
-}
+    cr->stroke();
 
+    return true;
+};

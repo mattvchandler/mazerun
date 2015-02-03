@@ -23,7 +23,7 @@
 
 #include <random>
 
-#include <SFML/Graphics.hpp>
+#include <gtkmm/application.h>
 
 #include "maze.hpp"
 
@@ -34,32 +34,12 @@ thread_local std::mt19937 prng;
 int main(int argc, char * argv[])
 {
     prng.seed(rng());
-    sf::RenderWindow win(sf::VideoMode(800, 600), "mazegen", sf::Style::Default);
 
-    Maze maze(win, sf::Vector2u(32, 32));
-    maze.init();
+    // create app and window objects
+    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
+        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
 
-    while(win.isOpen())
-    {
-        win.clear(sf::Color(255, 255, 255, 255));
-        maze.draw();
-        win.display();
-        sf::Event ev;
+    Maze maze(32, 32);
 
-        if(win.waitEvent(ev))
-        {
-            switch(ev.type)
-            {
-                case sf::Event::Closed:
-                    win.close();
-                    break;
-                case sf::Event::Resized:
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    return EXIT_SUCCESS;
+    return app->run(maze);
 }

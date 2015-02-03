@@ -24,22 +24,20 @@
 #ifndef MAZE_HPP
 #define MAZE_HPP
 
-#include <SFML/Graphics.hpp>
+#include <gtkmm/drawingarea.h>
+#include <gtkmm/window.h>
 
 #include "grid.hpp"
 
-class Maze
+class Maze: public Gtk::Window
 {
 public:
-    Maze(sf::RenderWindow & win, const sf::Vector2u & grid_size);
-    void init();
-    void draw();
-    void set_grid_size(const sf::Vector2u & grid_size);
-    sf::Vector2u get_grid_size() const;
+    Maze(const unsigned int width, const unsigned int height);
 private:
+    bool draw(const Cairo::RefPtr<Cairo::Context> & cr);
+
     Grid _grid;
-    sf::RenderWindow & _win;
-    sf::VertexArray _lines;
+    Gtk::DrawingArea _draw_area;
 };
 
 #endif // MAZE_HPP
