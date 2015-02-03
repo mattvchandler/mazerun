@@ -28,7 +28,7 @@
 Maze::Maze(const unsigned int width, const unsigned int height):
     _grid(sf::Vector2u(width, height))
 {
-    set_title("MazeGen");
+    set_title("MazeGen 2D"); // TODO: get from config file
     set_default_size(800, 600);
 
     add(_draw_area);

@@ -3,7 +3,7 @@ project(mazegen_2D)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
-set(PROJECT_TITLE "MazeGen")
+set(PROJECT_TITLE "MazeGen 2D")
 set(PROJECT_AUTHOR "Matthew Chandler <tardarsauce@gmail.com>")
 set(PROJECT_SUMMARY "2D maze generation")
 set(PROJECT_WEBSITE "http://github.com/mattvchandler/mazerun")
@@ -29,8 +29,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTKMM gtkmm-3.0 REQUIRED REQUIRED)
 
 # configure variables
-set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
-set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazegen/)
+# set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
+# set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazegen/)
 
 # configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
 #     ${PROJECT_BINARY_DIR}/src/config.hpp)
@@ -42,7 +42,7 @@ set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazegen/)
 # directories
 include_directories(
     ${PROJECT_BINARY_DIR}/src/
-    ${PROJECT_BINARY_DIR}/mazegen/src/
+    ${PROJECT_BINARY_DIR}/mazegen_2D/src/
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/
     ${GTKMM_INCLUDE_DIRS}

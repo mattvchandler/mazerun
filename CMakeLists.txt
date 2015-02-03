@@ -62,10 +62,10 @@ add_library(mazegen OBJECT
     src/mazegen.cpp
     )
 
-set(MAZERUN_BUILD_MAZEGEN 1 CACHE STRING "Build 2D maze generator")
+set(MAZERUN_BUILD_MAZEGEN_2D 1 CACHE STRING "Build 2D maze generator")
 
-if(MAZERUN_BUILD_MAZEGEN)
-    add_subdirectory(mazegen)
+if(MAZERUN_BUILD_MAZEGEN_2D)
+    add_subdirectory(mazegen_2D)
 endif()
 
 add_executable(${PROJECT_NAME}
