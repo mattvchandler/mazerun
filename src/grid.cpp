@@ -30,21 +30,8 @@ Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
         walls[i] = true;
 }
 
-Grid::Grid(const sf::Vector2u & grid_size)
-    :grid(grid_size.y, std::vector<Grid_cell>(grid_size.x))
-{
-    if(grid_size.y == 0)
-    {
-        throw std::invalid_argument("grid_size.y == 0");
-    }
-    if(grid_size.x == 0)
-    {
-        throw std::invalid_argument("grid_size.x == 0");
-    }
-}
-
-Grid::Grid(const unsigned int width, const unsigned int height)
-    :grid(height, std::vector<Grid_cell>(width))
+void Grid::init(const unsigned int width, const unsigned int height,
+    const Mazegen_alg mazegen, const unsigned int room_attempts, const unsigned int wall_rm_attempts)
 {
     if(height == 0)
     {
@@ -54,22 +41,8 @@ Grid::Grid(const unsigned int width, const unsigned int height)
     {
         throw std::invalid_argument("grid_size.x == 0");
     }
-}
 
-void Grid::init(const Mazegen_alg mazegen,
-    const unsigned int room_attempts, const unsigned int wall_rm_attempts)
-{
-    for(auto & row: grid)
-    {
-        for(auto & cell: row)
-        {
-            cell.visited = false;
-            cell.region = -1;
-            cell.room = false;
-            for(int i = 0; i < 4; ++i)
-                cell.walls[i] = true;
-        }
-    }
+    grid.assign(height, std::vector<Grid_cell>(width));
 
     gen_rooms(mazegen, room_attempts, wall_rm_attempts); // TODO: parameterize
 }

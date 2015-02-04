@@ -50,9 +50,8 @@ class Grid
 public:
     typedef enum {MAZEGEN_DFS, MAZEGEN_PRIM, MAZEGEN_KRUSKAL} Mazegen_alg;
 
-    Grid(const sf::Vector2u & grid_size);
-    Grid(const unsigned int width, const unsigned int height);
-    void init(const Mazegen_alg mazegen,
+    void init(const unsigned int width, const unsigned int height,
+        const Mazegen_alg mazegen,
         const unsigned int room_attempts, const unsigned int wall_rm_attempts);
 
     std::vector<std::vector<Grid_cell>> grid;
