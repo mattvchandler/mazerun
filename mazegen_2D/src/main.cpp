@@ -22,18 +22,27 @@
 // SOFTWARE.
 
 #include <random>
+#ifdef __MINGW32__
+    #include <ctime>
+#endif
 
 #include <gtkmm/application.h>
 
 #include "maze.hpp"
 
-// global prng
-thread_local std::random_device rng;
+#ifndef __MINGW32__
+    thread_local std::random_device rng;
+#endif
 thread_local std::mt19937 prng;
 
 int main(int argc, char * argv[])
 {
-    prng.seed(rng());
+    // random_device curently not working in windows GCC
+    #ifdef __MINGW32__
+        prng.seed(time(NULL));
+    #else
+        prng.seed(rng());
+    #endif
 
     // create app and window objects
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
