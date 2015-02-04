@@ -24,8 +24,6 @@
 #ifndef GRID_HPP
 #define GRID_HPP
 
-#include <functional>
-
 #include <SFML/System.hpp>
 
 enum Direction {UP = 0, DOWN, LEFT, RIGHT};
@@ -50,13 +48,17 @@ struct Wall
 class Grid
 {
 public:
+    typedef enum {MAZEGEN_DFS, MAZEGEN_PRIM, MAZEGEN_KRUSKAL} Mazegen_alg;
+
     Grid(const sf::Vector2u & grid_size);
     Grid(const unsigned int width, const unsigned int height);
-    void init();
+    void init(const Mazegen_alg mazegen,
+        const unsigned int room_attempts, const unsigned int wall_rm_attempts);
 
     std::vector<std::vector<Grid_cell>> grid;
+
 private:
-    void gen_rooms(const std::function<void(Grid &, const sf::Vector2u &, const int)> & mazegen,
+    void gen_rooms(const Mazegen_alg mazegen,
         const unsigned int room_attempts, const unsigned int wall_rm_attempts);
     void mazegen_dfs(const sf::Vector2u & start, const int region);
     void mazegen_prim(const sf::Vector2u & start, const int region);

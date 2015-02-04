@@ -36,7 +36,7 @@ Walls::Walls(): _vbo(GL_ARRAY_BUFFER)
 void Walls::init(const unsigned int width, const unsigned int height)
 {
     Grid grid(width, height);
-    grid.init();
+    grid.init(Grid::MAZEGEN_DFS, 25, 100);
 
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;

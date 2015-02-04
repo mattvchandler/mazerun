@@ -56,7 +56,17 @@ Grid::Grid(const unsigned int width, const unsigned int height)
     }
 }
 
-void Grid::init()
+void Grid::init(const Mazegen_alg mazegen,
+    const unsigned int room_attempts, const unsigned int wall_rm_attempts)
 {
-    gen_rooms(&Grid::mazegen_dfs, 25, 100); // TODO: parameterize
+    for(auto & row: grid)
+    {
+        for(auto & cell: row)
+        {
+            for(int i = 0; i < 4; ++i)
+                cell.walls[i] = true;
+        }
+    }
+
+    gen_rooms(mazegen, room_attempts, wall_rm_attempts); // TODO: parameterize
 }

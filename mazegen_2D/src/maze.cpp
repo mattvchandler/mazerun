@@ -26,7 +26,7 @@
 #include "maze.hpp"
 
 Maze::Maze(const unsigned int width, const unsigned int height):
-    _grid(sf::Vector2u(width, height))
+    _grid(width, height)
 {
     set_title("MazeGen 2D"); // TODO: get from config file
     set_default_size(800, 600);
@@ -34,10 +34,9 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     add(_draw_area);
     show_all_children();
 
-    _grid.init();
+    _grid.init(Grid::MAZEGEN_DFS, 25, 100);
 
     _draw_area.signal_draw().connect(sigc::mem_fun(*this, &Maze::draw));
-
 }
 
 bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr)

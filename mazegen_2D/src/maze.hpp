@@ -29,7 +29,7 @@
 
 #include "grid.hpp"
 
-class Maze: public Gtk::Window
+class Maze final: public Gtk::Window
 {
 public:
     Maze(const unsigned int width, const unsigned int height);

@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 #include <algorithm>
+#include <functional>
 #include <random>
 
 #include "disjoint_set.hpp"
@@ -193,7 +194,7 @@ void destroy_rand_walls(std::vector<std::vector<Grid_cell>> & grid,
     }
 }
 
-void Grid::gen_rooms(const std::function<void(Grid &, const sf::Vector2u &, const int)> & mazegen,
+void Grid::gen_rooms(const Mazegen_alg mazegen,
     const unsigned int room_attempts, const unsigned int wall_rm_attempts)
 {
     int region = 0;
@@ -207,6 +208,21 @@ void Grid::gen_rooms(const std::function<void(Grid &, const sf::Vector2u &, cons
         place_room(grid, pos, size, region++);
     }
 
+    // get mazegen function
+    std::function<void(Grid &, const sf::Vector2u &, const int)> mazegen_f;
+    switch(mazegen)
+    {
+    case MAZEGEN_DFS:
+        mazegen_f = &Grid::mazegen_dfs;
+        break;
+    case MAZEGEN_PRIM:
+        mazegen_f = &Grid::mazegen_kruskal;
+        break;
+    case MAZEGEN_KRUSKAL:
+        mazegen_f = &Grid::mazegen_kruskal;
+        break;
+    }
+
     // fill in remaining areas with mazes
     for(size_t row = 0; row < grid.size(); ++row)
     {
@@ -214,7 +230,7 @@ void Grid::gen_rooms(const std::function<void(Grid &, const sf::Vector2u &, cons
         {
             if(!grid[row][col].visited)
             {
-                mazegen(*this, sf::Vector2u(col, row), region++);
+                mazegen_f(*this, sf::Vector2u(col, row), region++);
             }
         }
     }
