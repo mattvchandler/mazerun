@@ -24,6 +24,7 @@
 #ifndef MAZE_HPP
 #define MAZE_HPP
 
+#include <gtkmm/comboboxtext.h>
 #include <gtkmm/drawingarea.h>
 #include <gtkmm/spinbutton.h>
 #include <gtkmm/window.h>
@@ -40,19 +41,13 @@ private:
 
     Grid _grid;
 
-    unsigned int _grid_width;
-    unsigned int _grid_height;
-
-    Grid::Mazegen_alg _mazegen;
-    unsigned int _room_attempts;
-    unsigned int _wall_rm_attempts;
-
     Gtk::DrawingArea _draw_area;
 
-    Gtk::SpinButton _grid_width_spin;
-    Gtk::SpinButton _grid_height_spin;
-    Gtk::SpinButton _room_attempts_spin;
-    Gtk::SpinButton _wall_rm_attempts_spin;
+    Gtk::SpinButton _grid_width;
+    Gtk::SpinButton _grid_height;
+    Gtk::ComboBoxText _mazegen;
+    Gtk::SpinButton _room_attempts;
+    Gtk::SpinButton _wall_rm_attempts;
 };
 
 #endif // MAZE_HPP
