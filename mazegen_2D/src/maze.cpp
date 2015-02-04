@@ -55,9 +55,11 @@ Maze::Maze(const unsigned int width, const unsigned int height):
 
     layout->attach(*Gtk::manage(new Gtk::Label("Grid width")), 1, 0, 1, 1);
     layout->attach(_grid_width, 2, 0, 1, 1);
+    _grid_width.signal_activate().connect(sigc::mem_fun(*this, &Maze::regen));
 
     layout->attach(*Gtk::manage(new Gtk::Label("Grid height")), 1, 1, 1, 1);
     layout->attach(_grid_height, 2, 1, 1, 1);
+    _grid_height.signal_activate().connect(sigc::mem_fun(*this, &Maze::regen));
 
     layout->attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 1, 2, 2, 1);
 
@@ -67,12 +69,15 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     _mazegen.append("Prim's Algorithm");
     _mazegen.append("Kruskal's Algorithm");
     _mazegen.set_active_text("Depth First Search");
+    _mazegen.signal_changed().connect(sigc::mem_fun(*this, &Maze::regen));
 
     layout->attach(*Gtk::manage(new Gtk::Label("Room attempts")), 1, 4, 1, 1);
     layout->attach(_room_attempts, 2, 4, 1, 1);
+    _room_attempts.signal_activate().connect(sigc::mem_fun(*this, &Maze::regen));
 
     layout->attach(*Gtk::manage(new Gtk::Label("Wall removal attempts")), 1, 5, 1, 1);
     layout->attach(_wall_rm_attempts, 2, 5, 1, 1);
+    _wall_rm_attempts.signal_activate().connect(sigc::mem_fun(*this, &Maze::regen));
 
     layout->attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 1, 6, 2, 1);
 
@@ -86,6 +91,7 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     spacer->set_vexpand(true);
     layout->attach(*spacer, 1, 8, 2, 1);
 
+    // TODO: save function
     Gtk::Button * save_butt = Gtk::manage(new Gtk::Button("Save to disk"));
     layout->attach(*save_butt, 1, 9, 1, 1);
     save_butt->set_hexpand(false);
