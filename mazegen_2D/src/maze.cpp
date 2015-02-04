@@ -23,20 +23,36 @@
 
 #include <SFML/System.hpp>
 
+#include <gtkmm/button.h>
+#include <gtkmm/grid.h>
+#include <gtkmm/spinbutton.h>
+
 #include "maze.hpp"
 
 Maze::Maze(const unsigned int width, const unsigned int height):
-    _grid(width, height)
+    _grid(width, height),
+    _mazegen(Grid::MAZEGEN_DFS),
+    _room_attempts(25),
+    _wall_rm_attempts(100)
 {
     set_title("MazeGen 2D"); // TODO: get from config file
     set_default_size(800, 600);
 
-    add(_draw_area);
-    show_all_children();
+    regen();
 
-    _grid.init(Grid::MAZEGEN_DFS, 25, 100);
+    Gtk::Grid * layout = Gtk::manage(new Gtk::Grid);
+    add(*layout);
 
+    Gtk::Button * regen_butt = Gtk::manage(new Gtk::Button("Regenerate"));
+    layout->attach(*regen_butt, 1, 0, 1, 1);
+    regen_butt->signal_clicked().connect(sigc::mem_fun(*this, &Maze::regen));
+
+    _draw_area.set_hexpand();
+    _draw_area.set_vexpand();
+    layout->attach(_draw_area, 0, 0, 1, 1);
     _draw_area.signal_draw().connect(sigc::mem_fun(*this, &Maze::draw));
+
+    show_all_children();
 }
 
 bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr)
@@ -86,3 +102,12 @@ bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr)
 
     return true;
 };
+
+void Maze::regen()
+{
+    _grid.init(_mazegen, _room_attempts, _wall_rm_attempts);
+
+    auto win = _draw_area.get_window();
+    if(win)
+        win->invalidate(true);
+}

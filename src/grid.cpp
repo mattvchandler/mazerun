@@ -63,6 +63,9 @@ void Grid::init(const Mazegen_alg mazegen,
     {
         for(auto & cell: row)
         {
+            cell.visited = false;
+            cell.region = -1;
+            cell.room = false;
             for(int i = 0; i < 4; ++i)
                 cell.walls[i] = true;
         }

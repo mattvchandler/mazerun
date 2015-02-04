@@ -35,8 +35,14 @@ public:
     Maze(const unsigned int width, const unsigned int height);
 private:
     bool draw(const Cairo::RefPtr<Cairo::Context> & cr);
+    void regen();
 
     Grid _grid;
+
+    Grid::Mazegen_alg _mazegen;
+    unsigned int _room_attempts;
+    unsigned int _wall_rm_attempts;
+
     Gtk::DrawingArea _draw_area;
 };
 
