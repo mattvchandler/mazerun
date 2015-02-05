@@ -38,6 +38,7 @@ public:
 private:
     bool draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int width, const unsigned int height);
     void regen();
+    void save();
 
     Grid _grid;
 

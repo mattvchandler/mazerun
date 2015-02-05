@@ -25,6 +25,7 @@
 #include <stdexcept>
 
 #include <gtkmm/button.h>
+#include <gtkmm/filechooserdialog.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/label.h>
 #include <gtkmm/separator.h>
@@ -89,12 +90,11 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     spacer->set_vexpand(true);
     layout->attach(*spacer, 1, 8, 2, 1);
 
-    // TODO: save function
-    Gtk::Button * save_butt = Gtk::manage(new Gtk::Button("Save to disk"));
+    Gtk::Button * save_butt = Gtk::manage(new Gtk::Button("Save image to disk"));
     layout->attach(*save_butt, 1, 9, 1, 1);
     save_butt->set_hexpand(false);
     save_butt->set_halign(Gtk::ALIGN_END);
-    save_butt->signal_clicked().connect(sigc::mem_fun(*this, &Maze::hide));
+    save_butt->signal_clicked().connect(sigc::mem_fun(*this, &Maze::save));
 
     Gtk::Button * close_butt = Gtk::manage(new Gtk::Button("Close"));
     layout->attach(*close_butt, 2, 9, 1, 1);
@@ -120,11 +120,16 @@ bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int wid
     else
         height_d = (double)height;
 
+    // set background
+    cr->set_source_rgba(1.0, 1.0, 1.0, 1.0);
+    cr->rectangle(0.0, 0.0, width_d, height_d);
+    cr->fill();
+
     double cell_scale_x = width_d / (double)_grid.grid[0].size();
     double cell_scale_y = height_d / (double)_grid.grid.size();
 
     // set line properties
-    cr->set_source_rgb(0.0, 0.0, 0.0);
+    cr->set_source_rgba(0.0, 0.0, 0.0, 1.0);
     cr->set_line_width(2.0);
 
     // draw border
@@ -186,4 +191,70 @@ void Maze::regen()
     _grid.init(grid_width, grid_height, mazegen, room_attempts, wall_rm_attempts);
 
     _draw_area.queue_draw();
+}
+
+void Maze::save()
+{
+    // get image size from user
+    Gtk::Dialog size_dialog("Image Size", *this, true);
+    size_dialog.add_button("OK", Gtk::RESPONSE_OK);
+    size_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+
+    Gtk::Grid size_layout;
+    size_layout.set_border_width(3);
+    size_layout.set_row_spacing(3);
+    size_layout.set_column_spacing(3);
+    size_dialog.get_content_area()->add(size_layout);
+
+    size_layout.attach(*Gtk::manage(new Gtk::Label("Width:")), 0, 0, 1, 1);
+    Gtk::SpinButton width_spin(Gtk::Adjustment::create(512.0, 1.0, 10000.0));
+    size_layout.attach(width_spin, 1, 0, 1, 1);
+
+    size_layout.attach(*Gtk::manage(new Gtk::Label("Height:")), 0, 1, 1, 1);
+    Gtk::SpinButton height_spin(Gtk::Adjustment::create(512.0, 1.0, 10000.0));
+    size_layout.attach(height_spin, 1, 1, 1, 1);
+
+    size_dialog.show_all_children();
+
+    if(size_dialog.run() != Gtk::RESPONSE_OK)
+        return;
+
+    size_dialog.hide();
+
+    Gtk::FileChooserDialog chooser(*this, "Save to", Gtk::FILE_CHOOSER_ACTION_SAVE);
+    chooser.set_modal(true);
+    chooser.set_current_folder(".");
+    chooser.set_select_multiple(false);
+    chooser.set_do_overwrite_confirmation(true);
+    chooser.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+    chooser.add_button("Save", Gtk::RESPONSE_OK);
+
+    for(const auto & format: Gdk::Pixbuf::get_formats())
+    {
+        if(!format.is_writable())
+            continue;
+
+        Glib::RefPtr<Gtk::FileFilter> image_type = Gtk::FileFilter::create();
+        image_type->set_name(format.get_name());
+
+        for(const auto & mimetype: format.get_mime_types())
+            image_type->add_mime_type(mimetype);
+
+        chooser.add_filter(image_type);
+
+        if(format.get_name() == "png")
+            chooser.set_filter(image_type);
+    }
+
+    if(chooser.run() != Gtk::RESPONSE_OK)
+        return;
+
+    chooser.hide();
+
+    unsigned int width = width_spin.get_value_as_int();
+    unsigned int height = height_spin.get_value_as_int();
+
+    Cairo::RefPtr<Cairo::ImageSurface> render_target = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, width, height);
+    draw(Cairo::Context::create(render_target), width, height);
+    Gdk::Pixbuf::create(render_target, 0, 0, width, height)->save(chooser.get_filename(), chooser.get_filter()->get_name());
 }
