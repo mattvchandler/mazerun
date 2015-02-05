@@ -51,7 +51,7 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     layout->attach(_draw_area, 0, 0, 1, 10);
     _draw_area.set_hexpand();
     _draw_area.set_vexpand();
-    _draw_area.signal_draw().connect(sigc::bind(sigc::mem_fun(*this, &Maze::draw), 0, 0));
+    _draw_area.signal_draw().connect(sigc::bind<const unsigned int, const unsigned int>(sigc::mem_fun(*this, &Maze::draw), 0, 0));
 
     layout->attach(*Gtk::manage(new Gtk::Label("Grid width")), 1, 0, 1, 1);
     layout->attach(_grid_width, 2, 0, 1, 1);
