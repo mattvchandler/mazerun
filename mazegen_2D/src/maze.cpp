@@ -49,7 +49,7 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     layout->attach(_draw_area, 0, 0, 1, 10);
     _draw_area.set_hexpand();
     _draw_area.set_vexpand();
-    _draw_area.signal_draw().connect(sigc::mem_fun(*this, &Maze::draw));
+    _draw_area.signal_draw().connect(sigc::bind(sigc::mem_fun(*this, &Maze::draw), 0, 0));
 
     layout->attach(*Gtk::manage(new Gtk::Label("Grid width")), 1, 0, 1, 1);
     layout->attach(_grid_width, 2, 0, 1, 1);
@@ -106,12 +106,19 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     regen();
 }
 
-bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr)
+bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int width, const unsigned int height)
 {
     double width_d, height_d;
 
+    if(width == 0)
         width_d = (double)_draw_area.get_allocated_width();
+    else
+        width_d = (double)width;
+
+    if(height == 0)
         height_d = (double)_draw_area.get_allocated_height();
+    else
+        height_d = (double)height;
 
     double cell_scale_x = width_d / (double)_grid.grid[0].size();
     double cell_scale_y = height_d / (double)_grid.grid.size();

@@ -36,7 +36,7 @@ class Maze final: public Gtk::Window
 public:
     Maze(const unsigned int width, const unsigned int height);
 private:
-    bool draw(const Cairo::RefPtr<Cairo::Context> & cr);
+    bool draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int width, const unsigned int height);
     void regen();
 
     Grid _grid;
