@@ -28,6 +28,7 @@
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/label.h>
+#include <gtkmm/messagedialog.h>
 #include <gtkmm/separator.h>
 
 #include "maze.hpp"
@@ -245,5 +246,17 @@ void Maze::save()
 
     Cairo::RefPtr<Cairo::ImageSurface> render_target = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, width, height);
     draw(Cairo::Context::create(render_target), width, height);
-    Gdk::Pixbuf::create(render_target, 0, 0, width, height)->save(chooser.get_filename(), chooser.get_filter()->get_name());
+
+    try
+    {
+        Gdk::Pixbuf::create(render_target, 0, 0, width, height)->
+            save(chooser.get_filename(), chooser.get_filter()->get_name());
+    }
+    catch(const Glib::Error & e)
+    {
+        Gtk::MessageDialog error_box(*this, std::string("Error saving to ") + chooser.get_filename(),
+            false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK, true);
+        error_box.set_secondary_text(e.what());
+        error_box.run();
+    }
 }
