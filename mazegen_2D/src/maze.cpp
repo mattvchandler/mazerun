@@ -123,27 +123,16 @@ bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int wid
     // set background
     cr->set_source_rgba(1.0, 1.0, 1.0, 1.0);
     cr->rectangle(0.0, 0.0, width_d, height_d);
-    cr->fill();
-
-    double cell_scale_x = width_d / (double)_grid.grid[0].size();
-    double cell_scale_y = height_d / (double)_grid.grid.size();
+    cr->fill_preserve();
 
     // set line properties
     cr->set_source_rgba(0.0, 0.0, 0.0, 1.0);
     cr->set_line_width(2.0);
 
-    // draw border
-    cr->move_to(0.0, 0.0);
-    cr->line_to(width_d, 0.0);
+    cr->stroke();
 
-    cr->move_to(width_d, 0.0);
-    cr->line_to(width_d, height_d);
-
-    cr->move_to(width_d, height_d);
-    cr->line_to(0.0, height_d);
-
-    cr->move_to(0.0, height_d);
-    cr->line_to(0.0, 0.0);
+    double cell_scale_x = width_d / (double)_grid.grid[0].size();
+    double cell_scale_y = height_d / (double)_grid.grid.size();
 
     // draw maze cells
     for(size_t row = 0; row < _grid.grid.size(); ++row)
