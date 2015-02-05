@@ -40,7 +40,7 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     _wall_rm_attempts(Gtk::Adjustment::create(100, 0.0, 10000.0, 1.0))
 {
     set_title("MazeGen 2D"); // TODO: get from config file
-    set_default_size(800, 600);
+    set_default_size(1024, 600);
 
     Gtk::Grid * layout = Gtk::manage(new Gtk::Grid);
     layout->set_border_width(3);
@@ -91,16 +91,25 @@ Maze::Maze(const unsigned int width, const unsigned int height):
     spacer->set_vexpand(true);
     layout->attach(*spacer, 1, 8, 2, 1);
 
-    Gtk::Button * save_butt = Gtk::manage(new Gtk::Button("Save image to disk"));
-    layout->attach(*save_butt, 1, 9, 1, 1);
+    Gtk::Grid * button_box = Gtk::manage(new Gtk::Grid);
+    layout->attach(*button_box, 1, 9, 2, 1);
+    button_box->set_column_spacing(3);
+    button_box->set_hexpand(false);
+
+    Gtk::Label * button_spacer = Gtk::manage(new Gtk::Label);
+    button_spacer->set_hexpand(true);
+    button_box->attach(*button_spacer, 0, 0, 1, 1);
+
+    Gtk::Button * save_butt = Gtk::manage(new Gtk::Button("Save"));
+    button_box->attach(*save_butt, 1, 0, 1, 1);
     save_butt->set_hexpand(false);
-    save_butt->set_halign(Gtk::ALIGN_END);
+    save_butt->set_halign(Gtk::ALIGN_CENTER);
     save_butt->signal_clicked().connect(sigc::mem_fun(*this, &Maze::save));
 
     Gtk::Button * close_butt = Gtk::manage(new Gtk::Button("Close"));
-    layout->attach(*close_butt, 2, 9, 1, 1);
+    button_box->attach(*close_butt, 2, 0, 1, 1);
     close_butt->set_hexpand(false);
-    close_butt->set_halign(Gtk::ALIGN_START);
+    close_butt->set_halign(Gtk::ALIGN_CENTER);
     close_butt->signal_clicked().connect(sigc::mem_fun(*this, &Maze::hide));
 
     show_all_children();
