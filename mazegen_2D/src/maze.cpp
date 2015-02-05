@@ -34,10 +34,10 @@
 #include "maze.hpp"
 
 Maze::Maze(const unsigned int width, const unsigned int height):
-    _grid_width(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0), 1.0, 0),
-    _grid_height(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0), 1.0, 0),
-    _room_attempts(Gtk::Adjustment::create(25, 0.0, 10000.0, 1.0), 1.0, 0),
-    _wall_rm_attempts(Gtk::Adjustment::create(100, 0.0, 10000.0, 1.0), 1.0, 0)
+    _grid_width(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0)),
+    _grid_height(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0)),
+    _room_attempts(Gtk::Adjustment::create(25, 0.0, 10000.0, 1.0)),
+    _wall_rm_attempts(Gtk::Adjustment::create(100, 0.0, 10000.0, 1.0))
 {
     set_title("MazeGen 2D"); // TODO: get from config file
     set_default_size(800, 600);
@@ -176,7 +176,5 @@ void Maze::regen()
 
     _grid.init(grid_width, grid_height, mazegen, room_attempts, wall_rm_attempts);
 
-    auto win = _draw_area.get_window();
-    if(win)
-        win->invalidate(true);
+    _draw_area.queue_draw();
 }
