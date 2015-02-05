@@ -24,8 +24,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <SFML/System.hpp>
-
 #include <gtkmm/button.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/label.h>
@@ -110,43 +108,47 @@ Maze::Maze(const unsigned int width, const unsigned int height):
 
 bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr)
 {
-    sf::Vector2u grid_size(_grid.grid[0].size(), _grid.grid.size());
-    sf::Vector2f cell_scale((float)_draw_area.get_allocated_width() / (float)grid_size.x,
-        (float)_draw_area.get_allocated_height() / (float)grid_size.y);
+    double width_d, height_d;
+
+        width_d = (double)_draw_area.get_allocated_width();
+        height_d = (double)_draw_area.get_allocated_height();
+
+    double cell_scale_x = width_d / (double)_grid.grid[0].size();
+    double cell_scale_y = height_d / (double)_grid.grid.size();
 
     // set line properties
     cr->set_source_rgb(0.0, 0.0, 0.0);
-    cr->set_line_width(2.0f);
+    cr->set_line_width(2.0);
 
     // draw border
-    cr->move_to(0.0f, 0.0f);
-    cr->line_to((float)_draw_area.get_allocated_width(), 0.0f);
+    cr->move_to(0.0, 0.0);
+    cr->line_to(width_d, 0.0);
 
-    cr->move_to((float)_draw_area.get_allocated_width(), 0.0f);
-    cr->line_to((float)_draw_area.get_allocated_width(), (float)_draw_area.get_allocated_height());
+    cr->move_to(width_d, 0.0);
+    cr->line_to(width_d, height_d);
 
-    cr->move_to((float)_draw_area.get_allocated_width(), (float)_draw_area.get_allocated_height());
-    cr->line_to(0.0f, (float)_draw_area.get_allocated_height());
+    cr->move_to(width_d, height_d);
+    cr->line_to(0.0, height_d);
 
-    cr->move_to(0.0f, (float)_draw_area.get_allocated_height());
-    cr->line_to(0.0f, 0.0f);
+    cr->move_to(0.0, height_d);
+    cr->line_to(0.0, 0.0);
 
     // draw maze cells
-    for(size_t row = 0; row < grid_size.y; ++row)
+    for(size_t row = 0; row < _grid.grid.size(); ++row)
     {
-        for(size_t col = 0; col < grid_size.x; ++col)
+        for(size_t col = 0; col < _grid.grid[row].size(); ++col)
         {
-            sf::Vector2f ul(cell_scale.x * (float)col, cell_scale.y * (float)row);
+            sf::Vector2f ul(cell_scale_x * (double)col, cell_scale_y * (double)row);
 
             if(_grid.grid[row][col].walls[UP])
             {
                 cr->move_to(ul.x, ul.y);
-                cr->line_to(ul.x + cell_scale.x, ul.y);
+                cr->line_to(ul.x + cell_scale_x, ul.y);
             }
             if(_grid.grid[row][col].walls[LEFT])
             {
                 cr->move_to(ul.x, ul.y);
-                cr->line_to(ul.x, ul.y + cell_scale.y);
+                cr->line_to(ul.x, ul.y + cell_scale_y);
             }
         }
     }
