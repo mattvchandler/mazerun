@@ -44,48 +44,48 @@ void Walls::init(const unsigned int width, const unsigned int height)
     std::vector<glm::vec3> vert_tangents;
 
     glm::vec3 cell_scale(1.0f, 1.0f, 1.0f);
-    glm::vec3 base(-0.5f * (float)grid.grid[0].size(), -0.5f * (float)grid.grid.size(), 0.0f);
+    glm::vec3 base(-0.5f * (float)grid.grid[0].size(), 0.0f, -0.5f * (float)grid.grid.size());
 
     glm::vec3 left_normal(1.0f, 0.0f, 0.0f);
-    glm::vec3 up_normal(0.0f, 1.0f, 0.0f);
-    glm::vec3 tangent(0.0f, 0.0f, 1.0f);
+    glm::vec3 up_normal(0.0f, 0.0f, 1.0f);
+    glm::vec3 tangent(0.0f, 1.0f, 0.0f);
 
     // draw border walls
-    for(size_t row = 0; row < grid.grid.size(); ++row)
-    {
-        glm::vec3 origin(cell_scale.x * (float)grid.grid[row].size(), cell_scale.y * (float)row, 0.0f);
-        origin += base;
-
-        vert_pos.push_back(origin);
-        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
-        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
-
-        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
-        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-        vert_pos.push_back(origin);
-
-        for(int i = 0; i < 6; ++i)
-        {
-            vert_normals.push_back(left_normal);
-            vert_tangents.push_back(tangent);
-        }
-    }
     for(size_t col = 0; col < grid.grid[0].size(); ++col)
     {
-        glm::vec3 origin(cell_scale.x * (float)col, cell_scale.y * (float)grid.grid.size(), 0.0f);
+        glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.z * (float)grid.grid.size());
         origin += base;
 
-        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
         vert_pos.push_back(origin);
-        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-
-        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, cell_scale.z));
         vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+        vert_pos.push_back(origin + glm::vec3(cell_scale.x, cell_scale.y, 0.0f));
 
         for(int i = 0; i < 6; ++i)
         {
             vert_normals.push_back(up_normal);
+            vert_tangents.push_back(tangent);
+        }
+    }
+    for(size_t row = 0; row < grid.grid.size(); ++row)
+    {
+        glm::vec3 origin(cell_scale.x * (float)grid.grid[row].size(), 0.0f, cell_scale.z * (float)row);
+        origin += base;
+
+        vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
+        vert_pos.push_back(origin);
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
+
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
+        vert_pos.push_back(origin);
+        vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+
+        for(int i = 0; i < 6; ++i)
+        {
+            vert_normals.push_back(left_normal);
             vert_tangents.push_back(tangent);
         }
     }
@@ -95,18 +95,18 @@ void Walls::init(const unsigned int width, const unsigned int height)
     {
         for(size_t col = 0; col < grid.grid[row].size(); ++col)
         {
-            glm::vec3 origin(cell_scale.x * (float)col, cell_scale.y * (float)row, 0.0f);
+            glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.y * (float)row);
             origin += base;
 
             if(grid.grid[row][col].walls[UP])
             {
-                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
                 vert_pos.push_back(origin);
-                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-
-                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
-                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, cell_scale.z));
                 vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+
+                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, cell_scale.y, 0.0f));
 
                 for(int i = 0; i < 6; ++i)
                 {
@@ -117,13 +117,13 @@ void Walls::init(const unsigned int width, const unsigned int height)
 
             if(grid.grid[row][col].walls[LEFT])
             {
+                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
                 vert_pos.push_back(origin);
-                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
                 vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
 
                 vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, cell_scale.z));
-                vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
                 vert_pos.push_back(origin);
+                vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
 
                 for(int i = 0; i < 6; ++i)
                 {
@@ -214,15 +214,15 @@ Floor::Floor(): _vbo(GL_ARRAY_BUFFER)
 
 void Floor::init(const unsigned int width, const unsigned int height)
 {
-    glm::vec2 ll(-0.5f * (float)width, -0.5f * (float)height);
-    glm::vec2 ur(0.5f * (float)width, 0.5f * (float)height);
+    glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);
+    glm::vec2 ur(0.5f * (float)width, -0.5f * (float)height);
 
     std::vector<glm::vec3> vert_pos =
     {
-        glm::vec3(ll, 0.0f),
-        glm::vec3(ur.x, ll.y, 0.0f),
-        glm::vec3(ll.x, ur.y, 0.0f),
-        glm::vec3(ur, 0.0f)
+        glm::vec3(ll.x, 0.0f, ll.y),
+        glm::vec3(ur.x, 0.0f, ll.y),
+        glm::vec3(ll.x, 0.0f, ur.y),
+        glm::vec3(ur.x, 0.0f, ur.y)
     };
 
     std::vector<glm::vec2> vert_tex_coords =
@@ -235,10 +235,10 @@ void Floor::init(const unsigned int width, const unsigned int height)
 
     std::vector<glm::vec3> vert_normals =
     {
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f)
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
     };
 
     std::vector<glm::vec3> vert_tangents =

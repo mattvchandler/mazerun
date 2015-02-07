@@ -82,7 +82,7 @@ bool World::init()
     resize();
 
     // set camera initial position / orientation
-    _player.set(glm::vec3(1.0f, -10.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    _player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     _skybox.init();
     // _player.init();

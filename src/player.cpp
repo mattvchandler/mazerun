@@ -69,13 +69,13 @@ void Player::handle_input(const sf::Window & win, const float dt)
     // move up
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
     {
-        translate(mov_scale * glm::vec3(0.0f, 0.0f, 1.0f) * dt);
+        translate(mov_scale * glm::vec3(0.0f, 1.0f,  0.0f) * dt);
     }
 
     // move down
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::E))
     {
-        translate(-mov_scale * glm::vec3(0.0f, 0.0f, 1.0f) * dt);
+        translate(-mov_scale * glm::vec3(0.0f, 1.0f, 0.0f) * dt);
     }
 
     // rotate view with mouse click & drag
@@ -85,7 +85,7 @@ void Player::handle_input(const sf::Window & win, const float dt)
         int d_y = new_mouse_pos.y - old_mouse_pos.y;
 
         rotate(0.001f * d_y, right());
-        rotate(0.001f * d_x, glm::vec3(0.0f, 0.0f, 1.0f));
+        rotate(0.001f * d_x, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     old_mouse_pos = new_mouse_pos;

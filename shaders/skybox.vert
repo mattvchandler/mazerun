@@ -31,6 +31,6 @@ out vec3 tex_coords;
 
 void main()
 {
-    tex_coords = vert_pos.xzy; // swizzle to convert from cartesian to OpenGL coords
+    tex_coords = vert_pos;
     gl_Position = (model_view_proj * vec4(vert_pos, 1.0)).xyww; // keep at far plane
 }
