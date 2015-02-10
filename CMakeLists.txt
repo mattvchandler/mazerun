@@ -49,9 +49,10 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${GLM_INCLUDE_DIRS}
     ${SFML_INCLUDE_DIRS}
+    ${GLEW_INCLUDE_DIRS}
     )
 link_directories(
-    ${SFML_LIBRART_DIRS}
+    ${SFML_LIBRARIES_DIRS}
     ${GLEW_LIBRARIES_DIRS}
     )
 

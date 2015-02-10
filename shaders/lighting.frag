@@ -71,8 +71,7 @@ vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in samp
     mat3 tangent_bitangent_normal = mat3(tangent, bitangent, normal);
 
     vec3 new_norm = tangent_bitangent_normal * norm_normal;
-    new_norm = normalize(new_norm);
-    return new_norm;
+    return normalize(new_norm);
 }
 
 void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
