@@ -26,6 +26,8 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
 find_package(PkgConfig REQUIRED)
+pkg_check_modules(ASSIMP assimp REQUIRED)
+
 find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
@@ -47,11 +49,13 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
 include_directories(
     ${PROJECT_BINARY_DIR}/src/
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    ${ASSIMP_INCLUDE_DIRS}
     ${GLM_INCLUDE_DIRS}
     ${SFML_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     )
 link_directories(
+    ${ASSIMP_LIBRARIES_DIRS}
     ${SFML_LIBRARIES_DIRS}
     ${GLEW_LIBRARIES_DIRS}
     )
@@ -86,6 +90,7 @@ add_executable(${PROJECT_NAME}
     )
 
 target_link_libraries(${PROJECT_NAME}
+    ${ASSIMP_LIBRARIES}
     ${SFML_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}

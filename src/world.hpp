@@ -66,6 +66,7 @@ protected:
     Player _player;
     Walls _walls;
     Floor _floor;
+    Model _testmdl;
     Shader_prog _ent_shader;
     // TODO: entity table
 };

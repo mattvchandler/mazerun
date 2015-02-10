@@ -51,7 +51,7 @@ thread_local std::random_device rng;
 World::World(): _running(true), _focused(true), _do_resize(false),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
-    _walls(32, 32), _floor(32, 32)
+    _walls(32, 32), _floor(32, 32), _testmdl("mdl/boring_sphere.obj")
 {
 }
 
@@ -89,6 +89,7 @@ bool World::init()
     // _player.init();
     _walls.init();
     _floor.init();
+    _testmdl.init();
 
     _ent_shader.init({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
@@ -148,6 +149,15 @@ void World::draw()
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+
+    glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_testmdl.get_material().specular_color[0]);
+    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_testmdl.get_material().emission_color[0]);
+    glUniform1f(_ent_shader.uniforms["material.shininess"], _testmdl.get_material().shininess);
+    glActiveTexture(GL_TEXTURE0);
+    _testmdl.get_material().diffuse_map.bind();
+    glActiveTexture(GL_TEXTURE1);
+    _testmdl.get_material().normal_map.bind();
+    _testmdl.draw();
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_walls.get_material().specular_color[0]);
     glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_walls.get_material().emission_color[0]);
