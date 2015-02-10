@@ -1,5 +1,5 @@
-// walls.hpp
-// maze walls
+// renderable.hpp
+// renderable base class
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,30 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef WALLS_HPP
-#define WALLS_HPP
+#ifndef RENDERABLE_HPP
+#define RENDERABLE_HPP
 
-#include "grid.hpp"
-#include "renderable.hpp"
+#include "gl_wrappers.hpp"
+#include "material.hpp"
 
-class Walls final: public Renderable
+class Renderable
 {
 public:
-    Walls(const unsigned int width, const unsigned int height);
-    void init();
-    void draw() const;
-private:
-    Grid _grid;
+    Renderable();
+    virtual void init()= 0;
+    virtual void draw() const = 0;
+    virtual const Material & get_material() const;
+protected:
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
+    GLsizei _num_verts;
+    Material _mat;
 };
 
-class Floor final: public Renderable
-{
-public:
-    Floor(const unsigned int width, const unsigned int height);
-    void init();
-    void draw() const;
-private:
-    unsigned int _width, _height;
-};
-
-#endif // WALLS_HPP
+#endif // RENDERABLE_HPP

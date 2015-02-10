@@ -34,6 +34,7 @@
 #include <SFML/Window.hpp>
 
 #include "light.hpp"
+#include "model.hpp"
 #include "player.hpp"
 #include "skybox.hpp"
 #include "shader_prog.hpp"
