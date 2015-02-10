@@ -25,16 +25,17 @@
 #define WALLS_HPP
 
 #include "gl_wrappers.hpp"
+#include "grid.hpp"
 #include "material.hpp"
 #include "shader_prog.hpp"
 
-class Walls
+class Renderable
 {
 public:
-    Walls();
-    void init(const unsigned int width, const unsigned int height);
-    void draw() const;
-    const Material & get_material() const;
+    Renderable();
+    virtual void init()= 0;
+    virtual void draw() const = 0;
+    virtual const Material & get_material() const;
 protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;
@@ -42,18 +43,24 @@ protected:
     Material _mat;
 };
 
-class Floor
+class Walls final: public Renderable
 {
 public:
-    Floor();
-    void init(const unsigned int width, const unsigned int height);
+    Walls(const unsigned int width, const unsigned int height);
+    void init();
     void draw() const;
-    const Material & get_material() const;
-protected:
-    GL_vertex_array _vao;
-    GL_buffer _vbo;
-    GLsizei _num_verts;
-    Material _mat;
+private:
+    Grid _grid;
+};
+
+class Floor final: public Renderable
+{
+public:
+    Floor(const unsigned int width, const unsigned int height);
+    void init();
+    void draw() const;
+private:
+    unsigned int _width, _height;
 };
 
 #endif // WALLS_HPP

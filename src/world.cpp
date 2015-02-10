@@ -50,7 +50,8 @@ thread_local std::random_device rng;
 
 World::World(): _running(true), _focused(true), _do_resize(false),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
-    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f)))
+    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
+    _walls(32, 32), _floor(32, 32)
 {
 }
 
@@ -86,8 +87,8 @@ bool World::init()
 
     _skybox.init();
     // _player.init();
-    _walls.init(32, 32);
-    _floor.init(32, 32);
+    _walls.init();
+    _floor.init();
 
     _ent_shader.init({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),

@@ -26,34 +26,40 @@
 
 #include "config.hpp"
 #include "gl_helpers.hpp"
-#include "grid.hpp"
 #include "walls.hpp"
 
-Walls::Walls(): _vbo(GL_ARRAY_BUFFER)
+Renderable::Renderable(): _vbo(GL_ARRAY_BUFFER)
 {
 }
 
-void Walls::init(const unsigned int width, const unsigned int height)
+const Material & Renderable::get_material() const
 {
-    Grid grid;
-    grid.init(width, height, Grid::MAZEGEN_DFS, 25, 100);
+    return _mat;
+}
 
+Walls::Walls(const unsigned int width, const unsigned int height)
+{
+    _grid.init(width, height, Grid::MAZEGEN_DFS, 25, 100);
+}
+
+void Walls::init()
+{
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;
     std::vector<glm::vec3> vert_normals;
     std::vector<glm::vec3> vert_tangents;
 
     glm::vec3 cell_scale(1.0f, 1.0f, 1.0f);
-    glm::vec3 base(-0.5f * (float)grid.grid[0].size(), 0.0f, -0.5f * (float)grid.grid.size());
+    glm::vec3 base(-0.5f * (float)_grid.grid[0].size(), 0.0f, -0.5f * (float)_grid.grid.size());
 
     glm::vec3 left_normal(1.0f, 0.0f, 0.0f);
     glm::vec3 up_normal(0.0f, 0.0f, 1.0f);
     glm::vec3 tangent(0.0f, 1.0f, 0.0f);
 
     // draw border walls
-    for(size_t col = 0; col < grid.grid[0].size(); ++col)
+    for(size_t col = 0; col < _grid.grid[0].size(); ++col)
     {
-        glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.z * (float)grid.grid.size());
+        glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.z * (float)_grid.grid.size());
         origin += base;
 
         vert_pos.push_back(origin);
@@ -70,9 +76,9 @@ void Walls::init(const unsigned int width, const unsigned int height)
             vert_tangents.push_back(tangent);
         }
     }
-    for(size_t row = 0; row < grid.grid.size(); ++row)
+    for(size_t row = 0; row < _grid.grid.size(); ++row)
     {
-        glm::vec3 origin(cell_scale.x * (float)grid.grid[row].size(), 0.0f, cell_scale.z * (float)row);
+        glm::vec3 origin(cell_scale.x * (float)_grid.grid[row].size(), 0.0f, cell_scale.z * (float)row);
         origin += base;
 
         vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
@@ -91,14 +97,14 @@ void Walls::init(const unsigned int width, const unsigned int height)
     }
 
     // draw cell walls
-    for(size_t row = 0; row < grid.grid.size(); ++row)
+    for(size_t row = 0; row < _grid.grid.size(); ++row)
     {
-        for(size_t col = 0; col < grid.grid[row].size(); ++col)
+        for(size_t col = 0; col < _grid.grid[row].size(); ++col)
         {
             glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.y * (float)row);
             origin += base;
 
-            if(grid.grid[row][col].walls[UP])
+            if(_grid.grid[row][col].walls[UP])
             {
                 vert_pos.push_back(origin);
                 vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
@@ -115,7 +121,7 @@ void Walls::init(const unsigned int width, const unsigned int height)
                 }
             }
 
-            if(grid.grid[row][col].walls[LEFT])
+            if(_grid.grid[row][col].walls[LEFT])
             {
                 vert_pos.push_back(origin + glm::vec3(0.0f, 0.0f, cell_scale.z));
                 vert_pos.push_back(origin);
@@ -203,19 +209,15 @@ void Walls::draw() const
     check_error("Walls::Draw");
 }
 
-const Material & Walls::get_material() const
-{
-    return _mat;
-}
-
-Floor::Floor(): _vbo(GL_ARRAY_BUFFER)
+Floor::Floor(const unsigned int width, const unsigned int height):
+    _width(width), _height(height)
 {
 }
 
-void Floor::init(const unsigned int width, const unsigned int height)
+void Floor::init()
 {
-    glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);
-    glm::vec2 ur(0.5f * (float)width, -0.5f * (float)height);
+    glm::vec2 ll(-0.5f * (float)_width, 0.5f * (float)_height);
+    glm::vec2 ur(0.5f * (float)_width, -0.5f * (float)_height);
 
     std::vector<glm::vec3> vert_pos =
     {
@@ -228,9 +230,9 @@ void Floor::init(const unsigned int width, const unsigned int height)
     std::vector<glm::vec2> vert_tex_coords =
     {
         glm::vec2(0.0f, 0.0f),
-        glm::vec2((float)width, 0.0f),
-        glm::vec2(0.0f, (float)height),
-        glm::vec2((float)width, (float)height)
+        glm::vec2((float)_width, 0.0f),
+        glm::vec2(0.0f, (float)_height),
+        glm::vec2((float)_width, (float)_height)
     };
 
     std::vector<glm::vec3> vert_normals =
@@ -304,9 +306,4 @@ void Floor::draw() const
     glBindVertexArray(0); // TODO: get prev val?
 
     check_error("Floor::Draw");
-}
-
-const Material & Floor::get_material() const
-{
-    return _mat;
 }
