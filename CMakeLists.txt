@@ -23,7 +23,7 @@ if(MSYS AND CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # libraries
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
 find_package(PkgConfig REQUIRED)
 find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
