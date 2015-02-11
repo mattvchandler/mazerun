@@ -26,6 +26,7 @@
 #include <glm/glm.hpp>
 
 #include <assimp/Importer.hpp>
+#include <assimp/material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
@@ -60,6 +61,63 @@ void Model::init()
         // TODO: throw
         std::cerr<<imp.GetErrorString()<<std::endl;
         return;
+    }
+
+    if(scene->HasMaterials())
+    {
+        // TODO: should be array of models?
+        if(scene->mNumMaterials > 1)
+        {
+            // TODO: thow
+            std::cerr<<"multiple materials"<<std::endl;
+            return;
+        }
+
+        const aiMaterial * mat = scene->mMaterials[0];
+
+        aiColor3D mat_color;
+        if(mat->Get(AI_MATKEY_COLOR_EMISSIVE, mat_color) == AI_SUCCESS)
+        {
+            _mat.emission_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+        }
+        else
+            _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
+
+        if(mat->Get(AI_MATKEY_COLOR_SPECULAR, mat_color) == AI_SUCCESS)
+        {
+            _mat.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+        }
+        else
+            _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
+
+        if(mat->Get(AI_MATKEY_SHININESS, _mat.shininess) != AI_SUCCESS)
+            _mat.shininess = 100.0f;
+
+        aiString tex_path;
+        if(mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) != AI_SUCCESS)
+        {
+            // TODO: thow
+            std::cerr<<"No diffuse map"<<std::endl;
+            return;
+        }
+        _mat.diffuse_map.init(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+
+        if(mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) != AI_SUCCESS)
+        {
+            // TODO: fallback
+            std::cerr<<"No normal map"<<std::endl;
+            return;
+        }
+        _mat.normal_map.init(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+    }
+    else
+    {
+        // TODO Fallback
+        _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
+        _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
+        _mat.diffuse_map.init(check_in_pwd("img/AncientFlooring.jpg"));
+        _mat.normal_map.init(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
+        _mat.shininess = 1000.0f;
     }
 
     if(!scene->HasMeshes())
@@ -161,12 +219,6 @@ void Model::init()
     glBufferData(_ebo.type(), sizeof(GLuint) * index.size(), index.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
-
-    _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
-    _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
-    _mat.diffuse_map.init(check_in_pwd("img/AncientFlooring.jpg"));
-    _mat.normal_map.init(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
-    _mat.shininess = 1000.0f;
 
     check_error("Model::init");
 }
