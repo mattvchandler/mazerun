@@ -51,7 +51,7 @@ thread_local std::random_device rng;
 World::World(): _running(true), _focused(true), _do_resize(false),
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
-    _walls(32, 32), _floor(32, 32), _testmdl("mdl/boring_sphere.obj")
+    _walls(32, 32), _floor(32, 32), _testmdl("mdl/boring_sphere.dae")
 {
 }
 
