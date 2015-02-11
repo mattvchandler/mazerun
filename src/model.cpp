@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <iostream> // TODO: remove
+
 #include <glm/glm.hpp>
 
 #include <assimp/Importer.hpp>
@@ -38,6 +40,7 @@ Model::Model(const std::string & filename):
 
 void Model::init()
 {
+    // TODO: check format (COLLADA)
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;
     std::vector<glm::vec3> vert_normals;
@@ -46,6 +49,7 @@ void Model::init()
 
     Assimp::Importer imp;
 
+    // TODO: remove unneeded
     const aiScene * scene = imp.ReadFile(_filename,
         aiProcess_CalcTangentSpace | aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices | aiProcess_SortByPType |
@@ -54,54 +58,61 @@ void Model::init()
     if(!scene)
     {
         // TODO: throw
+        std::cerr<<imp.GetErrorString()<<std::endl;
         return;
+    }
+
+    if(!scene->HasMeshes())
+    {
+        // TODO: throw
+        std::cerr<<"no meshes"<<std::endl;
+        return;
+    }
+    if(scene->mNumMeshes > 1)
+    {
+        std::cerr<<"multiple meshes"<<std::endl;
     }
 
     for(size_t mesh_i = 0; mesh_i < scene->mNumMeshes; ++mesh_i)
     {
-        aiMesh * mesh = scene->mMeshes[mesh_i];
+        const aiMesh * mesh = scene->mMeshes[mesh_i];
+        if(!mesh->HasTextureCoords(0))
+        {
+            // TODO: throw
+            std::cerr<<"no tex coords"<<std::endl;
+            return;
+        }
+        if(!mesh->HasNormals())
+        {
+            // TODO: throw
+            std::cerr<<"no normals"<<std::endl;
+            return;
+        }
+
+        // Tangets are generated, so we don't need to check them
+
         for(size_t vert_i = 0; vert_i < mesh->mNumVertices; ++vert_i)
         {
-            // TODO: fallbacks
-            aiVector3D & vert = mesh->mVertices[vert_i];
+            const aiVector3D & vert = mesh->mVertices[vert_i];
             vert_pos.push_back(glm::vec3(vert.x, vert.y, vert.z));
 
-            if(mesh->HasTextureCoords(0))
-            {
-                aiVector3D & tex = mesh->mTextureCoords[0][vert_i];
-                vert_tex_coords.push_back(glm::vec2(tex.x, tex.y));
-            }
-            else
-            {
-                vert_tex_coords.push_back(glm::vec2(0.0f));
-            }
+            const aiVector3D & tex = mesh->mTextureCoords[0][vert_i];
+            vert_tex_coords.push_back(glm::vec2(tex.x, tex.y));
 
-            if(mesh->HasNormals())
-            {
-                aiVector3D & norm = mesh->mNormals[vert_i];
-                vert_normals.push_back(glm::vec3(norm.x, norm.y, norm.z));
-            }
-            else
-            {
-                vert_normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
-            }
+            const aiVector3D & norm = mesh->mNormals[vert_i];
+            vert_normals.push_back(glm::vec3(norm.x, norm.y, norm.z));
 
-            if(mesh->HasTangentsAndBitangents())
-            {
-                aiVector3D & tangent = mesh->mTangents[vert_i];
-                vert_tangents.push_back(glm::vec3(tangent.x, tangent.y, tangent.z));
-            }
-            {
-                vert_tangents.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
-            }
+            const aiVector3D & tangent = mesh->mTangents[vert_i];
+            vert_tangents.push_back(glm::vec3(tangent.x, tangent.y, tangent.z));
         }
 
         for(size_t face_i = 0; face_i < mesh->mNumFaces; ++face_i)
         {
-            aiFace & face = mesh->mFaces[face_i];
+            const aiFace & face = mesh->mFaces[face_i];
             if(face.mNumIndices != 3)
             {
                 // TODO: throw
+                std::cerr<<"non-triangular polygon"<<std::endl;
                 return;
             }
 
