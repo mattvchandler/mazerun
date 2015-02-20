@@ -66,7 +66,7 @@ World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _running(true), _focused(true), _do_resize(false),
     _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
-    _walls(32, 32), _floor(32, 32), _testmdl("mdl/boring_sphere.dae"),
+    _walls(32, 32), _floor(32, 32), _testmdl("mdl/weird_cube.dae"),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
