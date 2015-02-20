@@ -156,7 +156,7 @@ void destroy_rand_walls(std::vector<std::vector<Grid_cell>> & grid,
     for(unsigned int i = 0; i  < wall_rm_attempts; ++i)
     {
         sf::Vector2u cell(std::uniform_int_distribution<unsigned int>(0, grid[0].size() - 1)(prng),
-            std::uniform_int_distribution<unsigned int>(0, grid[0].size() - 1)(prng));
+            std::uniform_int_distribution<unsigned int>(0, grid.size() - 1)(prng));
 
         Direction wall = (Direction)std::uniform_int_distribution<int>(0, 3)(prng);
 
