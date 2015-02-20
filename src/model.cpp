@@ -36,11 +36,7 @@
 #include "gl_helpers.hpp"
 
 Model::Model(const std::string & filename):
-    _filename(filename), _ebo(GL_ELEMENT_ARRAY_BUFFER)
-{
-}
-
-void Model::init()
+    _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
     // TODO: check format (COLLADA)
     std::vector<glm::vec3> vert_pos;
@@ -52,7 +48,7 @@ void Model::init()
     Assimp::Importer imp;
 
     // TODO: remove unneeded
-    const aiScene * scene = imp.ReadFile(_filename,
+    const aiScene * scene = imp.ReadFile(filename,
         aiProcess_CalcTangentSpace | aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices | aiProcess_SortByPType |
         aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
@@ -64,6 +60,7 @@ void Model::init()
         return;
     }
 
+    // get material
     if(scene->HasMaterials())
     {
         // TODO: should be array of models?
@@ -101,7 +98,7 @@ void Model::init()
             std::cerr<<"No diffuse map"<<std::endl;
             return;
         }
-        _mat.diffuse_map.init(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        _mat.diffuse_map.reset(new Texture_2D(check_in_pwd(std::string("mdl/") + tex_path.C_Str())));
 
         if(mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) != AI_SUCCESS)
         {
@@ -109,15 +106,15 @@ void Model::init()
             std::cerr<<"No normal map"<<std::endl;
             return;
         }
-        _mat.normal_map.init(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        _mat.normal_map.reset(new Texture_2D(check_in_pwd(std::string("mdl/") + tex_path.C_Str())));
     }
     else
     {
         // TODO Fallback
         _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
         _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
-        _mat.diffuse_map.init(check_in_pwd("img/AncientFlooring.jpg"));
-        _mat.normal_map.init(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
+        _mat.diffuse_map.reset(new Texture_2D(check_in_pwd("img/AncientFlooring.jpg")));
+        _mat.normal_map.reset(new Texture_2D(check_in_pwd("img/normals/AncientFlooring_N.jpg")));
         _mat.shininess = 1000.0f;
     }
 
@@ -149,7 +146,6 @@ void Model::init()
         }
 
         // Tangets are generated, so we don't need to check them
-
         for(size_t vert_i = 0; vert_i < mesh->mNumVertices; ++vert_i)
         {
             const aiVector3D & vert = mesh->mVertices[vert_i];
@@ -165,6 +161,7 @@ void Model::init()
             vert_tangents.push_back(glm::vec3(tangent.x, tangent.y, tangent.z));
         }
 
+        // get indexes
         for(size_t face_i = 0; face_i < mesh->mNumFaces; ++face_i)
         {
             const aiFace & face = mesh->mFaces[face_i];
@@ -183,8 +180,8 @@ void Model::init()
     _num_verts = index.size();
 
     // create OpenGL vertex objects
-    _vao.gen(); _vao.bind();
-    _vbo.gen(); _vbo.bind();
+    _vao.bind();
+    _vbo.bind();
 
     glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
         sizeof(glm::vec2) * vert_tex_coords.size() +
@@ -216,12 +213,12 @@ void Model::init()
         sizeof(glm::vec3) * vert_normals.size()));
     glEnableVertexAttribArray(3);
 
-    _ebo.gen(); _ebo.bind();
+    _ebo.bind();
     glBufferData(_ebo.type(), sizeof(GLuint) * index.size(), index.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
 
-    check_error("Model::init");
+    check_error("Model::Model");
 }
 
 void Model::draw() const

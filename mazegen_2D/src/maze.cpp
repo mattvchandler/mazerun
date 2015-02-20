@@ -141,22 +141,22 @@ bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int wid
 
     cr->stroke();
 
-    double cell_scale_x = width_d / (double)_grid.grid[0].size();
-    double cell_scale_y = height_d / (double)_grid.grid.size();
+    double cell_scale_x = width_d / (double)_grid->grid[0].size();
+    double cell_scale_y = height_d / (double)_grid->grid.size();
 
     // draw maze cells
-    for(size_t row = 0; row < _grid.grid.size(); ++row)
+    for(size_t row = 0; row < _grid->grid.size(); ++row)
     {
-        for(size_t col = 0; col < _grid.grid[row].size(); ++col)
+        for(size_t col = 0; col < _grid->grid[row].size(); ++col)
         {
             sf::Vector2f ul(cell_scale_x * (double)col, cell_scale_y * (double)row);
 
-            if(_grid.grid[row][col].walls[UP])
+            if(_grid->grid[row][col].walls[UP])
             {
                 cr->move_to(ul.x, ul.y);
                 cr->line_to(ul.x + cell_scale_x, ul.y);
             }
-            if(_grid.grid[row][col].walls[LEFT])
+            if(_grid->grid[row][col].walls[LEFT])
             {
                 cr->move_to(ul.x, ul.y);
                 cr->line_to(ul.x, ul.y + cell_scale_y);
@@ -187,7 +187,7 @@ void Maze::regen()
     else
         throw std::invalid_argument(std::string("Unknown maze algorithm: ") + mazegen_txt);
 
-    _grid.init(grid_width, grid_height, mazegen, room_attempts, wall_rm_attempts);
+    _grid.reset(new Grid(grid_width, grid_height, mazegen, room_attempts, wall_rm_attempts));
 
     _draw_area.queue_draw();
 }

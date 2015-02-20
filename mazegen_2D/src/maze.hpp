@@ -24,6 +24,8 @@
 #ifndef MAZE_HPP
 #define MAZE_HPP
 
+#include <memory>
+
 #include <gtkmm/comboboxtext.h>
 #include <gtkmm/drawingarea.h>
 #include <gtkmm/spinbutton.h>
@@ -40,7 +42,7 @@ private:
     void regen();
     void save();
 
-    Grid _grid;
+    std::unique_ptr<Grid> _grid;
 
     Gtk::DrawingArea _draw_area;
 

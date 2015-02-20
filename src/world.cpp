@@ -21,9 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// TODO: window is owned here. can we ensure that all openGL objects are constructed after the window (so that GL context is valid)
-//       If so, move inits to ctors
-
 // TODO: we've got a lot of state saving & restoring already. after code works, do performance sweep and clean these up when possible
 
 // TODO: why uber-lag when resized? I think it's too much geometry... (but it shouldn't be)
@@ -49,21 +46,34 @@
 thread_local std::mt19937 prng;
 thread_local std::random_device rng;
 
-World::World(): _running(true), _focused(true), _do_resize(false),
-    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
-    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
-    _walls(32, 32), _floor(32, 32), _testmdl("mdl/boring_sphere.dae")
+Glew_init::Glew_init()
 {
-}
-
-bool World::init()
-{
-    // TODO: loading screen
+    if(Glew_init::_initialized)
+    {
+        // TODO: throw
+    }
+    Glew_init::_initialized = true;
     if(glewInit() != GLEW_OK)
     {
         std::cerr<<"Error loading glew"<<std::endl;
-        return false; // TODO: exception? at least be consistent w/ other inits
+        // TODO: throw
     }
+}
+
+bool Glew_init::_initialized = false;
+
+World::World():
+    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
+    _running(true), _focused(true), _do_resize(false),
+    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
+    _walls(32, 32), _floor(32, 32), _testmdl("mdl/boring_sphere.dae"),
+    _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
+        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)})
+{
+    // TODO: loading screen
 
     _win.setKeyRepeatEnabled(false);
     // _win.setFramerateLimit(60);
@@ -86,17 +96,6 @@ bool World::init()
     // set camera initial position / orientation
     _player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    _skybox.init();
-    // _player.init();
-    _walls.init();
-    _floor.init();
-    _testmdl.init();
-
-    _ent_shader.init({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
-        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
-        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)});
 
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
@@ -125,9 +124,7 @@ bool World::init()
     glUniform1i(_ent_shader.uniforms["material.normal_map"], 1);
 
     glUseProgram(0); // TODO get prev val
-    check_error("World::init");
-
-    return true;
+    check_error("World::World");
 }
 
 void World::draw()
@@ -155,27 +152,27 @@ void World::draw()
     glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_testmdl.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _testmdl.get_material().shininess);
     glActiveTexture(GL_TEXTURE0);
-    _testmdl.get_material().diffuse_map.bind();
+    _testmdl.get_material().diffuse_map->bind();
     glActiveTexture(GL_TEXTURE1);
-    _testmdl.get_material().normal_map.bind();
+    _testmdl.get_material().normal_map->bind();
     _testmdl.draw();
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_walls.get_material().specular_color[0]);
     glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_walls.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _walls.get_material().shininess);
     glActiveTexture(GL_TEXTURE0);
-    _walls.get_material().diffuse_map.bind();
+    _walls.get_material().diffuse_map->bind();
     glActiveTexture(GL_TEXTURE1);
-    _walls.get_material().normal_map.bind();
+    _walls.get_material().normal_map->bind();
     _walls.draw();
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_floor.get_material().specular_color[0]);
     glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_floor.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _floor.get_material().shininess);
     glActiveTexture(GL_TEXTURE0);
-    _floor.get_material().diffuse_map.bind();
+    _floor.get_material().diffuse_map->bind();
     glActiveTexture(GL_TEXTURE1);
-    _floor.get_material().normal_map.bind();
+    _floor.get_material().normal_map->bind();
     _floor.draw();
 
     _win.display();

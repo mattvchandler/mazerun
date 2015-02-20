@@ -34,7 +34,6 @@ class GL_buffer: public sf::NonCopyable
 public:
     GL_buffer(const GLenum type);
     ~GL_buffer();
-    void gen();
     void bind() const;
     GLenum type() const;
     GLuint operator ()() const;
@@ -48,7 +47,6 @@ class GL_vertex_array: public sf::NonCopyable
 public:
     GL_vertex_array();
     ~GL_vertex_array();
-    void gen();
     void bind() const;
     GLuint operator ()() const;
 private:

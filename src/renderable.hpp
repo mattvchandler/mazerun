@@ -31,7 +31,6 @@ class Renderable
 {
 public:
     Renderable();
-    virtual void init()= 0;
     virtual void draw() const = 0;
     virtual const Material & get_material() const;
 protected:

@@ -37,14 +37,14 @@ class Skybox
 {
 public:
     Skybox();
-    void init();
     void draw(const Entity & cam, const glm::mat4 & proj);
 protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;
     GL_buffer _ebo;
-    Texture_cubemap _tex; // TODO: may want to expose this for environment mapping
     GLuint _num_indexes;
+
+    Texture_cubemap _tex; // TODO: may want to expose this for environment mapping
     Shader_prog _prog;
 };
 

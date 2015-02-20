@@ -35,10 +35,6 @@ int main(int argc, char * argv[])
 
     // initialize wworld
     World world;
-    if(!world.init())
-    {
-        return EXIT_FAILURE;
-    }
 
     world.game_loop();
 

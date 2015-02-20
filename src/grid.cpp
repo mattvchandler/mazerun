@@ -31,7 +31,7 @@ Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
         walls[i] = true;
 }
 
-void Grid::init(const unsigned int width, const unsigned int height,
+Grid::Grid(const unsigned int width, const unsigned int height,
     const Mazegen_alg mazegen, const unsigned int room_attempts, const unsigned int wall_rm_attempts)
 {
     if(height == 0)

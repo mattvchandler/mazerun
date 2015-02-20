@@ -28,13 +28,10 @@
 #include "config.hpp"
 #include "gl_helpers.hpp"
 
-Walls::Walls(const unsigned int width, const unsigned int height)
+Walls::Walls(const unsigned int width, const unsigned int height):
+    _grid(width, height, Grid::MAZEGEN_DFS, 25, 100)
 {
-    _grid.init(width, height, Grid::MAZEGEN_DFS, 25, 100);
-}
 
-void Walls::init()
-{
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;
     std::vector<glm::vec3> vert_normals;
@@ -146,8 +143,8 @@ void Walls::init()
     _num_verts = vert_pos.size();
 
     // create OpenGL vertex objects
-    _vao.gen(); _vao.bind();
-    _vbo.gen(); _vbo.bind();
+    _vao.bind();
+    _vbo.bind();
 
     glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
         sizeof(glm::vec2) * vert_tex_coords.size() +
@@ -183,11 +180,11 @@ void Walls::init()
 
     _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
-    _mat.diffuse_map.init(check_in_pwd("img/GroundCover.jpg"));
-    _mat.normal_map.init(check_in_pwd("img/normals/GroundCover_N.jpg"));
+    _mat.diffuse_map.reset(new Texture_2D(check_in_pwd("img/GroundCover.jpg")));
+    _mat.normal_map.reset(new Texture_2D(check_in_pwd("img/normals/GroundCover_N.jpg")));
     _mat.shininess = 500.0f;
 
-    check_error("Walls::init");
+    check_error("Walls::Walls");
 }
 
 void Walls::draw() const
@@ -202,10 +199,6 @@ void Walls::draw() const
 
 Floor::Floor(const unsigned int width, const unsigned int height):
     _width(width), _height(height)
-{
-}
-
-void Floor::init()
 {
     glm::vec2 ll(-0.5f * (float)_width, 0.5f * (float)_height);
     glm::vec2 ur(0.5f * (float)_width, -0.5f * (float)_height);
@@ -245,8 +238,8 @@ void Floor::init()
     _num_verts = vert_pos.size();
 
     // create OpenGL vertex objects
-    _vao.gen(); _vao.bind();
-    _vbo.gen(); _vbo.bind();
+    _vao.bind();
+    _vbo.bind();
 
     glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
         sizeof(glm::vec2) * vert_tex_coords.size() +
@@ -281,11 +274,11 @@ void Floor::init()
 
     _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
-    _mat.diffuse_map.init(check_in_pwd("img/AncientFlooring.jpg"));
-    _mat.normal_map.init(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
+    _mat.diffuse_map.reset(new Texture_2D(check_in_pwd("img/AncientFlooring.jpg")));
+    _mat.normal_map.reset(new Texture_2D(check_in_pwd("img/normals/AncientFlooring_N.jpg")));
     _mat.shininess = 500.0f;
 
-    check_error("Floor::init");
+    check_error("Floor::Floor");
 }
 
 void Floor::draw() const

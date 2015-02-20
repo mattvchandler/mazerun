@@ -37,10 +37,9 @@
 class Shader_prog: public sf::NonCopyable
 {
 public:
-    Shader_prog();
-    ~Shader_prog();
-    void init(const std::vector<std::pair<std::string, GLenum>> & sources,
+    Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sources,
         const std::vector<std::pair<std::string, GLuint>> & attribs);
+    ~Shader_prog();
     void add_uniform(const std::string & uniform);
     void use() const;
     GLuint operator()() const;

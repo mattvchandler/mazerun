@@ -40,15 +40,25 @@
 #include "shader_prog.hpp"
 #include "walls.hpp"
 
-class World // TODO: make this a singleton?
+class Glew_init
 {
 public:
+    Glew_init();
+private:
+    static bool _initialized;
+};
+
+class World // TODO: make this a singleton?
+{
+private:
+    sf::Window _win; // we need the OpenGL context to be created before anything else
+    Glew_init _glew_init; // needs to run after OpenGL, but before anything else (kind of a hack)
+public:
     World(); // TODO should we take default args?
-    bool init();
     void draw();
     void resize();
     void game_loop();
-protected:
+private:
     void event_loop();
     void main_loop();
 
@@ -57,8 +67,6 @@ protected:
     bool _do_resize; // TODO: find a better way (prob. messages/signals)
 
     std::mutex _lock; // TODO more descriptive name
-
-    sf::Window _win;
 
     glm::mat4 _proj;
 

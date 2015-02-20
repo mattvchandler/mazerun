@@ -21,44 +21,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <stdexcept>
-#include <system_error>
-
 #include "gl_wrappers.hpp"
 
 GL_buffer::GL_buffer(const GLenum type):
-    _buf(0), _type(type)
+    _type(type)
 {
+    glGenBuffers(1, &_buf);
 }
 
 GL_buffer::~GL_buffer()
 {
-    if(_buf)
-        glDeleteBuffers(1, &_buf);
-}
-
-void GL_buffer::gen()
-{
-    if(_buf)
-        throw std::runtime_error("Attempt to regen initialized buffer");
-
-    glGenBuffers(1, &_buf);
+    glDeleteBuffers(1, &_buf);
 }
 
 void GL_buffer::bind() const
 {
-    if(_buf)
-        glBindBuffer(_type, _buf);
-    else
-        throw std::runtime_error("Attempt to use uninitialized buffer");
+    glBindBuffer(_type, _buf);
 }
 
 GLenum GL_buffer::type() const
 {
-    if(_buf)
-        return _type;
-    else
-        throw std::runtime_error("Attempt to use uninitialized buffer");
+    return _type;
 }
 
 GLuint GL_buffer::operator ()() const
@@ -66,37 +49,22 @@ GLuint GL_buffer::operator ()() const
     return _buf;
 }
 
-GL_vertex_array::GL_vertex_array():
-    _arr(0)
+GL_vertex_array::GL_vertex_array()
 {
+    glGenVertexArrays(1, &_arr);
 }
 
 GL_vertex_array::~GL_vertex_array()
 {
-    if(_arr)
-        glDeleteVertexArrays(1, &_arr);
-}
-
-void GL_vertex_array::gen()
-{
-    if(_arr)
-        throw std::runtime_error("Attempt to regen initialized array");
-
-    glGenVertexArrays(1, &_arr);
+    glDeleteVertexArrays(1, &_arr);
 }
 
 void GL_vertex_array::bind() const
 {
-    if(_arr)
-        glBindVertexArray(_arr);
-    else
-        throw std::runtime_error("Attempt to use uninitialized array");
+    glBindVertexArray(_arr);
 }
 
 GLuint GL_vertex_array::operator ()() const
 {
-    if(_arr)
-        return _arr;
-    else
-        throw std::runtime_error("Attempt to use uninitialized array");
+    return _arr;
 }

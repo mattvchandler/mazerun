@@ -31,7 +31,6 @@ class Walls final: public Renderable
 {
 public:
     Walls(const unsigned int width, const unsigned int height);
-    void init();
     void draw() const;
 private:
     Grid _grid;
@@ -41,7 +40,6 @@ class Floor final: public Renderable
 {
 public:
     Floor(const unsigned int width, const unsigned int height);
-    void init();
     void draw() const;
 private:
     unsigned int _width, _height;

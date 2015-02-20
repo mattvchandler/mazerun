@@ -26,30 +26,23 @@
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 
-Texture::Texture(): _texid(0)
+Texture::Texture()
 {
+    glGenTextures(1, &_texid);
 }
 
 Texture::~Texture()
 {
-    if(_texid)
-        glDeleteTextures(1, &_texid);
+    glDeleteTextures(1, &_texid);
 }
 
 GLuint Texture::operator()() const
 {
-    if(_texid)
-        return  _texid;
-    else
-        throw std::runtime_error("Attempt to use uninitialized texture");
+    return  _texid;
 }
 
-void Texture_2D::init(const std::string & filename)
+Texture_2D::Texture_2D(const std::string & filename)
 {
-    if(_texid)
-        throw std::runtime_error("Attempt to regen initialized texture");
-
-    glGenTextures(1, &_texid);
     glBindTexture(GL_TEXTURE_2D, _texid);
 
     sf::Image img;
@@ -72,21 +65,14 @@ void Texture_2D::init(const std::string & filename)
 
 void Texture_2D::bind() const
 {
-    if(_texid)
-        glBindTexture(GL_TEXTURE_2D, _texid);
-    else
-        throw std::runtime_error("Attempt to use uninitialized texture");
+    glBindTexture(GL_TEXTURE_2D, _texid);
 }
 
-// TODO should all inits should return bool OR throw (pick one)
 // create a cubemap texture from 6 filenames
-void Texture_cubemap::init(const std::string & left_fname, const std::string & right_fname,
+Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname)
 {
-    if(_texid)
-        throw std::runtime_error("Attempt to regen initialized texture");
-
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
     // create array of pairs: filename with type enum
     std::vector<std::pair<std::string, GLenum>> filenames =
@@ -99,7 +85,6 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
         std::make_pair(up_fname, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)
     };
 
-    glGenTextures(1, &_texid);
     glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
 
     for(const auto & filename: filenames)
@@ -128,8 +113,5 @@ void Texture_cubemap::init(const std::string & left_fname, const std::string & r
 
 void Texture_cubemap::bind() const
 {
-    if(_texid)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
-    else
-        throw std::runtime_error("Attempt to use uninitialized texture");
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
 }

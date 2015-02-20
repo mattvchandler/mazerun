@@ -30,11 +30,8 @@ class Model final: public Renderable // TODO: inherit from entity?
 {
 public:
     Model(const std::string & filename);
-    void init();
     void draw() const;
 private:
-    std::string _filename;
-    glm::mat4 _model_transform;
     GL_buffer _ebo;
 };
 

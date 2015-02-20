@@ -26,18 +26,19 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <GL/glew.h>
-
 #include "config.hpp"
 #include "gl_helpers.hpp"
 
 // TODO: replace bottom half of skybox with ground (if doing environment mapping)
 
-Skybox::Skybox(): _vbo(GL_ARRAY_BUFFER), _ebo(GL_ELEMENT_ARRAY_BUFFER)
-{
-}
-
-void Skybox::init()
+Skybox::Skybox():
+    _vbo(GL_ARRAY_BUFFER),
+    _ebo(GL_ELEMENT_ARRAY_BUFFER),
+    _tex(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
+        check_in_pwd("img/bluecloud_bk.jpg"), check_in_pwd("img/bluecloud_ft.jpg"),
+        check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg")),
+    _prog({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)})
 {
     // TODO: a sphere might look better
     std::vector<glm::vec3> vert_pos =
@@ -75,31 +76,26 @@ void Skybox::init()
     };
 
     // create OpenGL vertex objects
-    _vao.gen(); _vao.bind();
+    _vao.bind();
+    _vbo.bind();
 
-    _vbo.gen(); _vbo.bind();
     glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(), vert_pos.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
-    _ebo.gen(); _ebo.bind();
+    _ebo.bind();
     glBufferData(_ebo.type(), sizeof(GLuint) * index.size(), index.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
     _num_indexes = index.size();
 
-    _prog.init({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)});
     _prog.use();
     _prog.add_uniform("model_view_proj");
 
-    _tex.init(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
-        check_in_pwd("img/bluecloud_bk.jpg"), check_in_pwd("img/bluecloud_ft.jpg"),
-        check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg"));
     glUseProgram(0); // TODO get prev val
 
-    check_error("Skybox::init");
+    check_error("Skybox::Skybox");
 }
 
 void Skybox::draw(const Entity & cam, const glm::mat4 & proj)

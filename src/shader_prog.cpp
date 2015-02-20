@@ -31,22 +31,9 @@
 
 #include <SFML/Graphics.hpp>
 
-Shader_prog::Shader_prog(): _prog(0)
-{
-}
-
-Shader_prog::~Shader_prog()
-{
-    if(_prog)
-        glDeleteProgram(_prog);
-}
-
-void Shader_prog::init(const std::vector<std::pair<std::string, GLenum>> & sources,
+Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sources,
     const std::vector<std::pair<std::string, GLuint>> & attribs)
 {
-    if(_prog)
-        throw std::runtime_error("Attempt to regen initialized shader prog");
-
     std::vector<GLuint> shaders;
     for(const auto & source: sources)
     {
@@ -136,6 +123,11 @@ void Shader_prog::init(const std::vector<std::pair<std::string, GLenum>> & sourc
             std::string(log.data()));
     }
     glUseProgram(0); // TODO: get prev val
+}
+
+Shader_prog::~Shader_prog()
+{
+    glDeleteProgram(_prog);
 }
 
 void Shader_prog::add_uniform(const std::string & uniform)

@@ -36,26 +36,26 @@ class Texture: public sf::NonCopyable
 public:
     Texture();
     virtual ~Texture();
+protected:
+    GLuint _texid;
 private:
     virtual void bind() const = 0;
     GLuint operator()() const;
-protected:
-    GLuint _texid;
 };
 
 class Texture_2D: public Texture
 {
 public:
-    void init(const std::string & filename);
+    Texture_2D(const std::string & filename);
     void bind() const override;
 };
 
 class Texture_cubemap: public Texture
 {
 public:
-    void init(const std::string & left_fname, const std::string & right_fname,
-    const std::string & back_fname, const std::string & front_fname,
-    const std::string & down_fname, const std::string & up_fname);
+    Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
+        const std::string & back_fname, const std::string & front_fname,
+        const std::string & down_fname, const std::string & up_fname);
     void bind() const override;
 };
 

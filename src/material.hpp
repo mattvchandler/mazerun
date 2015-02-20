@@ -24,6 +24,8 @@
 #ifndef MATERIAL_HPP
 #define MATERIAL_HPP
 
+#include <memory>
+
 #include <glm/glm.hpp>
 
 #include "texture.hpp"
@@ -32,8 +34,8 @@ struct Material
 {
     glm::vec3 emission_color; //  TODO: replace w/ map?
     glm::vec3 specular_color;
-    Texture_2D diffuse_map;
-    Texture_2D normal_map;
+    std::unique_ptr<Texture_2D> diffuse_map;
+    std::unique_ptr<Texture_2D> normal_map;
     float shininess;
     // TODO: ctor w/ tex vars
 };
