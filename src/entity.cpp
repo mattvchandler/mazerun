@@ -35,7 +35,17 @@ Entity::Entity()
 void Entity::set(const glm::vec3 & pos, const glm::vec3 & forward,
     const glm::vec3 & up)
 {
+    set_pos(pos);
+    set_facing(forward, up);
+}
+
+void Entity::set_pos(const glm::vec3 & pos)
+{
     _pos = pos;
+}
+
+void Entity::set_facing(const glm::vec3 & forward, const glm::vec3 & up)
+{
     _forward = glm::normalize(forward);
     _up = glm::normalize(up);
 }
@@ -61,6 +71,11 @@ void Entity::rotate(const float angle, const glm::vec3 & axis)
 glm::mat4 Entity::view_mat() const
 {
     return glm::lookAt(_pos, _pos + _forward, _up);
+}
+
+glm::mat4 Entity::model_mat() const
+{
+    return glm::inverse(view_mat());
 }
 
 glm::vec3 Entity::pos() const

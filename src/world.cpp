@@ -96,6 +96,9 @@ World::World():
     // set camera initial position / orientation
     _player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
+    _testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
+    _testmdl.rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    _testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
@@ -130,23 +133,26 @@ World::World():
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::mat4 model_view = _player.view_mat();
-    glm::mat4 model_view_proj = _proj * model_view;
-    glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
     glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
 
-    _skybox.draw(_player, _proj);
+    glm::mat4 model_view;
+    glm::mat4 model_view_proj;
+    glm::mat3 normal_transform;
 
     _ent_shader.use();
-    glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
-    // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
-    glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
-
     // sunlight vars
     glm::vec3 sunlight_dir = normal_transform * glm::normalize(-_sunlight.dir);
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+
+    model_view = _player.view_mat() * _testmdl.model_mat();
+    model_view_proj = _proj * model_view;
+    normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+
+    glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+    // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
+    glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_testmdl.get_material().specular_color[0]);
     glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_testmdl.get_material().emission_color[0]);
@@ -156,6 +162,14 @@ void World::draw()
     glActiveTexture(GL_TEXTURE1);
     _testmdl.get_material().normal_map->bind();
     _testmdl.draw();
+
+    model_view = _player.view_mat();
+    model_view_proj = _proj * model_view;
+    normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+
+    glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+    // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
+    glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_walls.get_material().specular_color[0]);
     glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_walls.get_material().emission_color[0]);
@@ -174,6 +188,8 @@ void World::draw()
     glActiveTexture(GL_TEXTURE1);
     _floor.get_material().normal_map->bind();
     _floor.draw();
+
+    _skybox.draw(_player, _proj);
 
     _win.display();
     check_error("World::draw");

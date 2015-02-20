@@ -34,8 +34,13 @@ public:
     // set / reset pos / orientation
     // default args put at origin looking down Y axis with Z axis up
     void set(const glm::vec3 & pos = glm::vec3(0.0f),
-        const glm::vec3 & forward = glm::vec3(0.0f, 1.0f, 0.0f),
-        const glm::vec3 & up = glm::vec3(0.0f, 0.0f, 1.0f));
+        const glm::vec3 & forward = glm::vec3(0.0f, 0.0f, -1.0f),
+        const glm::vec3 & up = glm::vec3(0.0f, 1.0f, 0.0f));
+
+    void set_pos(const glm::vec3 & pos = glm::vec3(0.0f));
+
+    void set_facing(const glm::vec3 & forward = glm::vec3(0.0f, 0.0f, -1.0f),
+        const glm::vec3 & up = glm::vec3(0.0f, 1.0f, 0.0f));
 
     // move the position acoording to a vector
     void translate(const glm::vec3 & translation);
@@ -45,6 +50,7 @@ public:
     void rotate(const float angle, const glm::vec3 & axis);
 
     glm::mat4 view_mat() const;
+    glm::mat4 model_mat() const;
 
     glm::vec3 pos() const;
     glm::vec3 forward() const;

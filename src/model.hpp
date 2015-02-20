@@ -24,9 +24,10 @@
 #ifndef MODEL_HPP
 #define MODEL_HPP
 
+#include "entity.hpp"
 #include "renderable.hpp"
 
-class Model final: public Renderable // TODO: inherit from entity?
+class Model final: public Entity, public Renderable // TODO: inherit from entity?
 {
 public:
     Model(const std::string & filename);
