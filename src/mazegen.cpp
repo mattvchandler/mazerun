@@ -21,11 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "grid.hpp"
+
 #include <random>
 
 #include "disjoint_set.hpp"
-#include "grid.hpp"
-
 extern thread_local std::mt19937 prng;
 
 // make sf::Vector2u hashable

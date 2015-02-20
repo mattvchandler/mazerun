@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "shader_prog.hpp"
+
 #include <fstream>
 #include <stdexcept>
 #include <system_error>
@@ -28,8 +30,6 @@
 #include <GL/glew.h>
 
 #include <SFML/Graphics.hpp>
-
-#include "shader_prog.hpp"
 
 Shader_prog::Shader_prog(): _prog(0)
 {

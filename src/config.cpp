@@ -21,9 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <fstream>
-
 #include "config.hpp"
+
+#include <fstream>
 
 std::string check_in_pwd(const std::string & path)
 {

@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "skybox.hpp"
+
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -28,7 +30,6 @@
 
 #include "config.hpp"
 #include "gl_helpers.hpp"
-#include "skybox.hpp"
 
 // TODO: replace bottom half of skybox with ground (if doing environment mapping)
 

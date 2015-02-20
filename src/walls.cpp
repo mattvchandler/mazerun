@@ -21,11 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "walls.hpp"
+
 #include <glm/glm.hpp>
 
 #include "config.hpp"
 #include "gl_helpers.hpp"
-#include "walls.hpp"
 
 Walls::Walls(const unsigned int width, const unsigned int height)
 {

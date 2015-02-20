@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "player.hpp"
+
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
@@ -29,8 +31,6 @@
 #include <glm/glm.hpp>
 
 #include <SFML/OpenGL.hpp>
-
-#include "player.hpp"
 
 void Player::handle_input(const sf::Window & win, const float dt)
 {

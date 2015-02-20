@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "maze.hpp"
+
 #include <string>
 #include <stdexcept>
 
@@ -30,8 +32,6 @@
 #include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/separator.h>
-
-#include "maze.hpp"
 
 Maze::Maze(const unsigned int width, const unsigned int height):
     _grid_width(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0)),

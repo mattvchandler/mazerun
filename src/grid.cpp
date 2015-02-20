@@ -21,9 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <stdexcept>
-
 #include "grid.hpp"
+
+#include <stdexcept>
 
 Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
 {

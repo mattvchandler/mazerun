@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "model.hpp"
+
 #include <iostream> // TODO: remove
 
 #include <glm/glm.hpp>
@@ -32,7 +34,6 @@
 
 #include "config.hpp"
 #include "gl_helpers.hpp"
-#include "model.hpp"
 
 Model::Model(const std::string & filename):
     _filename(filename), _ebo(GL_ELEMENT_ARRAY_BUFFER)

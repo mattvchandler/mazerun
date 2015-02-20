@@ -21,13 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "grid.hpp"
+
 #include <algorithm>
 #include <functional>
 #include <random>
 
 #include "disjoint_set.hpp"
-#include "grid.hpp"
-
 extern thread_local std::mt19937 prng;
 
 bool attempt_gen_room(const std::vector<std::vector<Grid_cell>> & grid,

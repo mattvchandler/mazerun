@@ -28,6 +28,8 @@
 
 // TODO: why uber-lag when resized? I think it's too much geometry... (but it shouldn't be)
 
+#include "world.hpp"
+
 #include <chrono>
 #include <iostream>
 #include <random>
@@ -42,7 +44,6 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "world.hpp"
 #include "gl_helpers.hpp" // TODO: move w/ walls decl
 
 thread_local std::mt19937 prng;

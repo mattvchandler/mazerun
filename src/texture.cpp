@@ -21,10 +21,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "texture.hpp"
+
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
-
-#include "texture.hpp"
 
 Texture::Texture(): _texid(0)
 {

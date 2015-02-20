@@ -21,11 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "gl_helpers.hpp"
+
 #include <iostream>
 
 #include <SFML/OpenGL.hpp>
-
-#include "gl_helpers.hpp"
 
 // check for OpenGL error and print message
 void check_error(const char * at)

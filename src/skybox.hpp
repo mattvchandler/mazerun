@@ -24,6 +24,8 @@
 #ifndef SKYBOX_HPP
 #define SKYBOX_HPP
 
+#include <GL/glew.h>
+
 #include <SFML/OpenGL.hpp>
 
 #include "entity.hpp"

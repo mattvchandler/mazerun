@@ -21,10 +21,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "entity.hpp"
+
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "entity.hpp"
 
 Entity::Entity()
 {
