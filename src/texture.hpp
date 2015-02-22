@@ -25,6 +25,7 @@
 #define TEXTURE_HPP
 
 #include <string>
+#include <unordered_map>
 
 #include <GL/glew.h>
 
@@ -34,10 +35,12 @@
 class Texture: public sf::NonCopyable
 {
 public:
-    Texture();
+    Texture(const std::string & filename);
     virtual ~Texture();
 protected:
     GLuint _texid;
+    std::string _filename;
+    static std::unordered_map<std::string, std::pair<unsigned int, GLuint>> _allocated_tex;
 private:
     virtual void bind() const = 0;
     GLuint operator()() const;
