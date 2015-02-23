@@ -25,6 +25,7 @@
 #define TEXTURE_HPP
 
 #include <string>
+#include <memory>
 #include <unordered_map>
 
 #include <GL/glew.h>
@@ -35,31 +36,37 @@
 class Texture: public sf::NonCopyable
 {
 public:
-    Texture(const std::string & filename);
     virtual ~Texture();
-protected:
-    GLuint _texid;
-    std::string _filename;
-    static std::unordered_map<std::string, std::pair<unsigned int, GLuint>> _allocated_tex;
-private:
     virtual void bind() const = 0;
     GLuint operator()() const;
+protected:
+    Texture();
+
+    GLuint _texid;
+    std::string _key;
+    static std::unordered_map<std::string, std::weak_ptr<Texture>> _allocated_tex;
 };
 
-class Texture_2D: public Texture
+class Texture_2D final: public Texture
 {
 public:
-    Texture_2D(const std::string & filename);
+    static std::shared_ptr<Texture_2D> create(const std::string & filename);
     void bind() const override;
+private:
+    Texture_2D(const std::string & filename);
 };
 
-class Texture_cubemap: public Texture
+class Texture_cubemap final: public Texture
 {
 public:
-    Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
+    static std::shared_ptr<Texture_cubemap> create(const std::string & left_fname, const std::string & right_fname,
         const std::string & back_fname, const std::string & front_fname,
         const std::string & down_fname, const std::string & up_fname);
     void bind() const override;
+private:
+    Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
+        const std::string & back_fname, const std::string & front_fname,
+        const std::string & down_fname, const std::string & up_fname);
 };
 
 #endif // TEXTURE_HPP

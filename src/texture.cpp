@@ -26,29 +26,12 @@
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 
-std::unordered_map<std::string, std::pair<unsigned int, GLuint>> Texture::_allocated_tex;
-
-// only allocate on the first instance of this texture, increment a count for others
-Texture::Texture(const std::string & filename): _filename(filename)
-{
-    if(_allocated_tex.count(filename) >= 1)
-    {
-        _texid = _allocated_tex[_filename].second;
-        ++_allocated_tex[_filename].first;
-    }
-    else
-    {
-        glGenTextures(1, &_texid);
-        _allocated_tex[_filename] = std::make_pair(1, _texid);
-    }
-}
+std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::_allocated_tex;
 
 Texture::~Texture()
 {
-    if(--_allocated_tex[_filename].first == 0)
-    {
-        glDeleteTextures(1, &_texid);
-    }
+    glDeleteTextures(1, &_texid);
+    _allocated_tex.erase(_key);
 }
 
 GLuint Texture::operator()() const
@@ -56,12 +39,29 @@ GLuint Texture::operator()() const
     return  _texid;
 }
 
-Texture_2D::Texture_2D(const std::string & filename):
-    Texture::Texture(std::string("2D:") + filename)
+Texture::Texture()
 {
-    if(_allocated_tex[_filename].first > 1)
-        return;
+    glGenTextures(1, &_texid);
+}
 
+std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
+{
+    std::string key = std::string("2D:") + filename;
+    if(Texture::_allocated_tex.count(key) > 0)
+    {
+        return std::dynamic_pointer_cast<Texture_2D>(Texture::_allocated_tex[key].lock());
+    }
+    else
+    {
+        std::shared_ptr<Texture_2D> ret(new Texture_2D(filename));
+        ret->_key = key;
+        Texture::_allocated_tex[key] = ret;
+        return ret;
+    }
+}
+
+Texture_2D::Texture_2D(const std::string & filename)
+{
     glBindTexture(GL_TEXTURE_2D, _texid);
 
     sf::Image img;
@@ -87,17 +87,35 @@ void Texture_2D::bind() const
     glBindTexture(GL_TEXTURE_2D, _texid);
 }
 
+std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & left_fname, const std::string & right_fname,
+    const std::string & back_fname, const std::string & front_fname,
+    const std::string & down_fname, const std::string & up_fname)
+{
+    std::string key = std::string("CUBE:") +
+        left_fname + ";" + right_fname + ";" +
+        back_fname + ";" + front_fname + ";" +
+        down_fname + ";" + up_fname;
+
+    if(Texture::_allocated_tex.count(key) > 0)
+    {
+        return std::dynamic_pointer_cast<Texture_cubemap>(Texture::_allocated_tex[key].lock());
+    }
+    else
+    {
+        std::shared_ptr<Texture_cubemap> ret(new Texture_cubemap(left_fname, right_fname,
+                back_fname, front_fname,
+                down_fname, up_fname));
+        ret->_key = key;
+        Texture::_allocated_tex[key] = ret;
+        return ret;
+    }
+}
+
 // create a cubemap texture from 6 filenames
 Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
     const std::string & back_fname, const std::string & front_fname,
-    const std::string & down_fname, const std::string & up_fname):
-    Texture::Texture(std::string("CUBE:") + left_fname + ";" + right_fname + ";" +
-        back_fname + ";" + front_fname + ";" +
-        down_fname + ";" + up_fname)
+    const std::string & down_fname, const std::string & up_fname)
 {
-    if(_allocated_tex[_filename].first > 1)
-        return;
-
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
     // create array of pairs: filename with type enum
     std::vector<std::pair<std::string, GLenum>> filenames =

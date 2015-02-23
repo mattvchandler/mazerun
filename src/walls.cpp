@@ -99,7 +99,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
                 vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
 
                 vert_pos.push_back(origin + glm::vec3(0.0f, cell_scale.y, 0.0f));
-vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
+                vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
                 vert_pos.push_back(origin + glm::vec3(cell_scale.x, cell_scale.y, 0.0f));
 
                 for(int i = 0; i < 6; ++i)
@@ -180,8 +180,8 @@ vert_pos.push_back(origin + glm::vec3(cell_scale.x, 0.0f, 0.0f));
 
     _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
-    _mat.diffuse_map.reset(new Texture_2D(check_in_pwd("img/GroundCover.jpg")));
-    _mat.normal_map.reset(new Texture_2D(check_in_pwd("img/normals/GroundCover_N.jpg")));
+    _mat.diffuse_map = Texture_2D::create(check_in_pwd("img/GroundCover.jpg"));
+    _mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"));
     _mat.shininess = 500.0f;
 
     check_error("Walls::Walls");
@@ -274,8 +274,8 @@ Floor::Floor(const unsigned int width, const unsigned int height):
 
     _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
-    _mat.diffuse_map.reset(new Texture_2D(check_in_pwd("mdl/AncientFlooring.jpg")));
-    _mat.normal_map.reset(new Texture_2D(check_in_pwd("mdl/AncientFlooring_N.jpg")));
+    _mat.diffuse_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring.jpg"));
+    _mat.normal_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"));
     _mat.shininess = 500.0f;
 
     check_error("Floor::Floor");

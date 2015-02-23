@@ -34,9 +34,9 @@
 Skybox::Skybox():
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER),
-    _tex(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
+    _tex(Texture_cubemap::create(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
         check_in_pwd("img/bluecloud_bk.jpg"), check_in_pwd("img/bluecloud_ft.jpg"),
-        check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg")),
+        check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg"))),
     _prog({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)})
 {
@@ -106,7 +106,7 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
     glDepthFunc(GL_LEQUAL);
 
     _prog.use();
-    _tex.bind();
+    _tex->bind();
 
     glm::mat4 model_view_proj = proj * glm::translate(cam.view_mat(), cam.pos());
 

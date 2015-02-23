@@ -24,6 +24,8 @@
 #ifndef SKYBOX_HPP
 #define SKYBOX_HPP
 
+#include <memory>
+
 #include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
@@ -44,7 +46,7 @@ protected:
     GL_buffer _ebo;
     GLuint _num_indexes;
 
-    Texture_cubemap _tex; // TODO: may want to expose this for environment mapping
+    std::shared_ptr<Texture_cubemap> _tex; // TODO: may want to expose this for environment mapping
     Shader_prog _prog;
 };
 

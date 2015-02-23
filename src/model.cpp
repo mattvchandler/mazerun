@@ -98,7 +98,7 @@ Model::Model(const std::string & filename):
             std::cerr<<"No diffuse map"<<std::endl;
             return;
         }
-        _mat.diffuse_map.reset(new Texture_2D(check_in_pwd(std::string("mdl/") + tex_path.C_Str())));
+        _mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
 
         if(mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) != AI_SUCCESS)
         {
@@ -106,15 +106,15 @@ Model::Model(const std::string & filename):
             std::cerr<<"No normal map"<<std::endl;
             return;
         }
-        _mat.normal_map.reset(new Texture_2D(check_in_pwd(std::string("mdl/") + tex_path.C_Str())));
+        _mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
     }
     else
     {
         // TODO Fallback
         _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
         _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
-        _mat.diffuse_map.reset(new Texture_2D(check_in_pwd("img/AncientFlooring.jpg")));
-        _mat.normal_map.reset(new Texture_2D(check_in_pwd("img/normals/AncientFlooring_N.jpg")));
+        _mat.diffuse_map = Texture_2D::create(check_in_pwd("img/AncientFlooring.jpg"));
+        _mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
         _mat.shininess = 1000.0f;
     }
 

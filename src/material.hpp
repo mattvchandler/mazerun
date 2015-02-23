@@ -34,8 +34,8 @@ struct Material
 {
     glm::vec3 emission_color; //  TODO: replace w/ map?
     glm::vec3 specular_color;
-    std::unique_ptr<Texture_2D> diffuse_map;
-    std::unique_ptr<Texture_2D> normal_map;
+    std::shared_ptr<Texture_2D> diffuse_map;
+    std::shared_ptr<Texture_2D> normal_map;
     float shininess;
     // TODO: ctor w/ tex vars
 };
