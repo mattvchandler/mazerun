@@ -140,16 +140,10 @@ void Shader_prog::add_uniform(const std::string & uniform)
 
 void Shader_prog::use() const
 {
-    if(_prog)
-        glUseProgram(_prog);
-    else
-        throw std::runtime_error("Attempt to use uninitialized shader prog");
+    glUseProgram(_prog);
 }
 
-GLuint Shader_prog::operator()() const
+GLuint Shader_prog::get_id() const
 {
-    if(_prog)
-        return _prog;
-    else
-        throw std::runtime_error(std::string("Attempt to use uninitialized shader prog"));
+    return _prog;
 }

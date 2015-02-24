@@ -44,7 +44,7 @@ GLenum GL_buffer::type() const
     return _type;
 }
 
-GLuint GL_buffer::operator ()() const
+GLuint GL_buffer::get_id() const
 {
     return _buf;
 }
@@ -64,7 +64,7 @@ void GL_vertex_array::bind() const
     glBindVertexArray(_arr);
 }
 
-GLuint GL_vertex_array::operator ()() const
+GLuint GL_vertex_array::get_id() const
 {
     return _arr;
 }

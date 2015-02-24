@@ -42,7 +42,7 @@ public:
     ~Shader_prog();
     void add_uniform(const std::string & uniform);
     void use() const;
-    GLuint operator()() const;
+    GLuint get_id() const;
     // TODO: probably my own exceptions, rather than use system exceptions
 
     std::unordered_map<std::string, GLuint> uniforms; // convenience storage for uniform values // TODO: maybe make private and add get method?

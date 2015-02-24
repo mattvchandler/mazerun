@@ -36,7 +36,7 @@ public:
     ~GL_buffer();
     void bind() const;
     GLenum type() const;
-    GLuint operator ()() const;
+    GLuint get_id() const;
 private:
     GLuint _buf;
     GLenum _type;
@@ -48,7 +48,7 @@ public:
     GL_vertex_array();
     ~GL_vertex_array();
     void bind() const;
-    GLuint operator ()() const;
+    GLuint get_id() const;
 private:
     GLuint _arr;
 };
