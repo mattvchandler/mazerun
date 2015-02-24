@@ -24,25 +24,34 @@
 #ifndef MODEL_HPP
 #define MODEL_HPP
 
+#include <string>
+#include <memory>
+#include <unordered_map>
+
 #include "entity.hpp"
 #include "gl_wrappers.hpp"
 #include "material.hpp"
 
 // TODO: entity should have a model (compositiion)
-// Possibly make model table so not loading same model multiple times
 
 class Model: public Entity
 {
 public:
-    Model(const std::string & filename);
+    virtual ~Model();
+    static std::shared_ptr<Model> create(const std::string & filename);
     virtual void draw() const;
     const Material & get_material() const;
 protected:
+    Model(const std::string & filename);
+
     GL_vertex_array _vao;
     GL_buffer _vbo;
     GL_buffer _ebo;
     GLsizei _num_verts;
     Material _mat;
+
+    static std::unordered_map<std::string, std::weak_ptr<Model>> _allocated_mdl;
+    std::string _key;
 };
 
 #endif // MODEL_HPP

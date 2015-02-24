@@ -66,13 +66,15 @@ World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _running(true), _focused(true), _do_resize(false),
     _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
-    _walls(32, 32), _floor(32, 32), _testmdl("mdl/weird_cube.dae"),
+    _walls(32, 32), _floor(32, 32),
+    _testmdl(Model::create("mdl/weird_cube.dae")),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)})
 {
+    // TODO: lighting direction or normals are changing???
     // TODO: loading screen
 
     _win.setKeyRepeatEnabled(false);
@@ -96,9 +98,9 @@ World::World():
     // set camera initial position / orientation
     _player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    _testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
-    _testmdl.rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    _testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    _testmdl->set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
+    _testmdl->rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    _testmdl->rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
@@ -146,7 +148,7 @@ void World::draw()
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
-    model_view = _player.view_mat() * _testmdl.model_mat();
+    model_view = _player.view_mat() * _testmdl->model_mat();
     model_view_proj = _proj * model_view;
     normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
@@ -154,14 +156,14 @@ void World::draw()
     // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
     glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
-    glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_testmdl.get_material().specular_color[0]);
-    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_testmdl.get_material().emission_color[0]);
-    glUniform1f(_ent_shader.uniforms["material.shininess"], _testmdl.get_material().shininess);
+    glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_testmdl->get_material().specular_color[0]);
+    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_testmdl->get_material().emission_color[0]);
+    glUniform1f(_ent_shader.uniforms["material.shininess"], _testmdl->get_material().shininess);
     glActiveTexture(GL_TEXTURE0);
-    _testmdl.get_material().diffuse_map->bind();
+    _testmdl->get_material().diffuse_map->bind();
     glActiveTexture(GL_TEXTURE1);
-    _testmdl.get_material().normal_map->bind();
-    _testmdl.draw();
+    _testmdl->get_material().normal_map->bind();
+    _testmdl->draw();
 
     model_view = _player.view_mat();
     model_view_proj = _proj * model_view;

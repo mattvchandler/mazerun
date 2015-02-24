@@ -35,6 +35,44 @@
 #include "config.hpp"
 #include "gl_helpers.hpp"
 
+std::unordered_map<std::string, std::weak_ptr<Model>> Model::_allocated_mdl;
+
+Model::~Model()
+{
+    _allocated_mdl.erase(_key);
+}
+
+std::shared_ptr<Model> Model::create(const std::string & filename)
+{
+    if(Model::_allocated_mdl.count(filename) > 0)
+    {
+        return _allocated_mdl[filename].lock();
+    }
+    else
+    {
+        std::shared_ptr<Model> ret(new Model(filename));
+        ret->_key = filename;
+        _allocated_mdl[filename] = ret;
+        return ret;
+    }
+}
+
+void Model::draw() const
+{
+    _vao.bind();
+
+    glDrawElements(GL_TRIANGLES, _num_verts, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glBindVertexArray(0); // TODO: get prev val?
+
+    check_error("Model::Draw");
+}
+
+const Material & Model::get_material() const
+{
+    return _mat;
+}
+
 Model::Model(const std::string & filename):
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
@@ -222,18 +260,3 @@ Model::Model(const std::string & filename):
     check_error("Model::Model");
 }
 
-void Model::draw() const
-{
-    _vao.bind();
-
-    glDrawElements(GL_TRIANGLES, _num_verts, GL_UNSIGNED_INT, (GLvoid *)0);
-
-    glBindVertexArray(0); // TODO: get prev val?
-
-    check_error("Model::Draw");
-}
-
-const Material & Model::get_material() const
-{
-    return _mat;
-}

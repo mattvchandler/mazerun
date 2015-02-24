@@ -24,6 +24,7 @@
 #ifndef WORLD_HPP
 #define WORLD_HPP
 
+#include <memory>
 #include <mutex>
 
 #include <glm/glm.hpp>
@@ -75,7 +76,7 @@ private:
     Player _player;
     Walls _walls;
     Floor _floor;
-    Model _testmdl;
+    std::shared_ptr<Model> _testmdl;
     Shader_prog _ent_shader;
     // TODO: entity table
 };
