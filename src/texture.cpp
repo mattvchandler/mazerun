@@ -34,7 +34,7 @@ Texture::~Texture()
     _allocated_tex.erase(_key);
 }
 
-GLuint Texture::operator()() const
+GLuint Texture::get_id() const
 {
     return  _texid;
 }
@@ -47,6 +47,7 @@ Texture::Texture()
 std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
 {
     std::string key = std::string("2D:") + filename;
+
     if(Texture::_allocated_tex.count(key) > 0)
     {
         return std::dynamic_pointer_cast<Texture_2D>(Texture::_allocated_tex[key].lock());
@@ -117,6 +118,7 @@ Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::stri
     const std::string & down_fname, const std::string & up_fname)
 {
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
+
     // create array of pairs: filename with type enum
     std::vector<std::pair<std::string, GLenum>> filenames =
     {

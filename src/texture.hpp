@@ -38,7 +38,7 @@ class Texture: public sf::NonCopyable
 public:
     virtual ~Texture();
     virtual void bind() const = 0;
-    GLuint operator()() const;
+    GLuint get_id() const;
 protected:
     Texture();
 
