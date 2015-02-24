@@ -36,6 +36,7 @@
 #include "gl_helpers.hpp"
 
 Model::Model(const std::string & filename):
+    _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
     // TODO: check format (COLLADA)
@@ -230,4 +231,9 @@ void Model::draw() const
     glBindVertexArray(0); // TODO: get prev val?
 
     check_error("Model::Draw");
+}
+
+const Material & Model::get_material() const
+{
+    return _mat;
 }

@@ -82,7 +82,6 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/model.cpp
     src/player.cpp
-    src/renderable.cpp
     src/shader_prog.cpp
     src/skybox.cpp
     src/texture.cpp

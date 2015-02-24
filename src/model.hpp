@@ -25,15 +25,24 @@
 #define MODEL_HPP
 
 #include "entity.hpp"
-#include "renderable.hpp"
+#include "gl_wrappers.hpp"
+#include "material.hpp"
 
-class Model final: public Entity, public Renderable // TODO: inherit from entity?
+// TODO: entity should have a model (compositiion)
+// Possibly make model table so not loading same model multiple times
+
+class Model: public Entity
 {
 public:
     Model(const std::string & filename);
-    void draw() const;
-private:
+    virtual void draw() const;
+    const Material & get_material() const;
+protected:
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
     GL_buffer _ebo;
+    GLsizei _num_verts;
+    Material _mat;
 };
 
 #endif // MODEL_HPP

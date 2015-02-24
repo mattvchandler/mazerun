@@ -29,7 +29,8 @@
 #include "gl_helpers.hpp"
 
 Walls::Walls(const unsigned int width, const unsigned int height):
-    _grid(width, height, Grid::MAZEGEN_DFS, 25, 100)
+    _grid(width, height, Grid::MAZEGEN_DFS, 25, 100),
+    _vbo(GL_ARRAY_BUFFER)
 {
 
     std::vector<glm::vec3> vert_pos;
@@ -197,11 +198,16 @@ void Walls::draw() const
     check_error("Walls::Draw");
 }
 
-Floor::Floor(const unsigned int width, const unsigned int height):
-    _width(width), _height(height)
+const Material & Walls::get_material() const
 {
-    glm::vec2 ll(-0.5f * (float)_width, 0.5f * (float)_height);
-    glm::vec2 ur(0.5f * (float)_width, -0.5f * (float)_height);
+    return _mat;
+}
+
+Floor::Floor(const unsigned int width, const unsigned int height):
+    _vbo(GL_ARRAY_BUFFER)
+{
+    glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);
+    glm::vec2 ur(0.5f * (float)width, -0.5f * (float)height);
 
     std::vector<glm::vec3> vert_pos =
     {
@@ -214,9 +220,9 @@ Floor::Floor(const unsigned int width, const unsigned int height):
     std::vector<glm::vec2> vert_tex_coords =
     {
         glm::vec2(0.0f, 0.0f),
-        glm::vec2((float)_width, 0.0f),
-        glm::vec2(0.0f, (float)_height),
-        glm::vec2((float)_width, (float)_height)
+        glm::vec2((float)width, 0.0f),
+        glm::vec2(0.0f, (float)height),
+        glm::vec2((float)width, (float)height)
     };
 
     std::vector<glm::vec3> vert_normals =
@@ -290,4 +296,9 @@ void Floor::draw() const
     glBindVertexArray(0); // TODO: get prev val?
 
     check_error("Floor::Draw");
+}
+
+const Material & Floor::get_material() const
+{
+    return _mat;
 }

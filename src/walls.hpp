@@ -24,25 +24,36 @@
 #ifndef WALLS_HPP
 #define WALLS_HPP
 
+#include "gl_wrappers.hpp"
 #include "grid.hpp"
-#include "renderable.hpp"
+#include "material.hpp"
 
-class Walls final: public Renderable
+// TODO, be a type of entity?
+class Walls
 {
 public:
     Walls(const unsigned int width, const unsigned int height);
     void draw() const;
+    const Material & get_material() const;
 private:
     Grid _grid;
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
+    GLsizei _num_verts;
+    Material _mat;
 };
 
-class Floor final: public Renderable
+class Floor
 {
 public:
     Floor(const unsigned int width, const unsigned int height);
     void draw() const;
+    const Material & get_material() const;
 private:
-    unsigned int _width, _height;
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
+    GLsizei _num_verts;
+    Material _mat;
 };
 
 #endif // WALLS_HPP
