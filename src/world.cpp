@@ -74,7 +74,6 @@ World::World():
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)})
 {
-    // TODO: lighting direction or normals are changing???
     // TODO: loading screen
 
     _win.setKeyRepeatEnabled(false);
@@ -142,15 +141,16 @@ void World::draw()
     glm::mat3 normal_transform;
 
     _ent_shader.use();
+
+    model_view = _player.view_mat() * _testmdl->model_mat();
+    model_view_proj = _proj * model_view;
+    normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+
     // sunlight vars
     glm::vec3 sunlight_dir = normal_transform * glm::normalize(-_sunlight.dir);
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
-
-    model_view = _player.view_mat() * _testmdl->model_mat();
-    model_view_proj = _proj * model_view;
-    normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
     // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
@@ -168,6 +168,12 @@ void World::draw()
     model_view = _player.view_mat();
     model_view_proj = _proj * model_view;
     normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+
+    // sunlight vars
+    sunlight_dir = normal_transform * glm::normalize(-_sunlight.dir);
+    sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
+    glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
     // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
