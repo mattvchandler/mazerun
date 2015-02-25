@@ -62,9 +62,7 @@ public:
     glm::vec3 up() const;
     glm::vec3 right() const;
 protected:
-    glm::vec3 _pos;
-    glm::vec3 _forward; // TODO: store as matrix and calc vectors as needed?
-    glm::vec3 _up; // OR: store as pos and quaternion?
+    glm::mat4 _model_mat;
 };
 
 #endif // ENTITY_HPP
