@@ -26,13 +26,18 @@
 
 #include <glm/glm.hpp>
 
+// TODO: seperate into components
+//      transform
+//      camera
+//      model
+//      etc.…
+
 class Entity
 {
 public:
     Entity();
 
     // set / reset pos / orientation
-    // default args put at origin looking down Y axis with Z axis up
     void set(const glm::vec3 & pos = glm::vec3(0.0f),
         const glm::vec3 & forward = glm::vec3(0.0f, 0.0f, -1.0f),
         const glm::vec3 & up = glm::vec3(0.0f, 1.0f, 0.0f));
@@ -59,7 +64,7 @@ public:
 protected:
     glm::vec3 _pos;
     glm::vec3 _forward; // TODO: store as matrix and calc vectors as needed?
-    glm::vec3 _up;
+    glm::vec3 _up; // OR: store as pos and quaternion?
 };
 
 #endif // ENTITY_HPP

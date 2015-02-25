@@ -134,22 +134,24 @@ World::World():
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
-
     glm::mat4 model_view;
     glm::mat4 model_view_proj;
     glm::mat3 normal_transform;
 
     _ent_shader.use();
 
+    glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
+    glm::vec3 sunlight_dir = glm::transpose(glm::inverse(glm::mat3(_player.view_mat()))) *
+        glm::normalize(-_sunlight.dir);
+    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
+    check_error("sunlight dir");
+
     model_view = _player.view_mat() * _testmdl->model_mat();
     model_view_proj = _proj * model_view;
     normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
     // sunlight vars
-    glm::vec3 sunlight_dir = normal_transform * glm::normalize(-_sunlight.dir);
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
-    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
@@ -170,9 +172,7 @@ void World::draw()
     normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
     // sunlight vars
-    sunlight_dir = normal_transform * glm::normalize(-_sunlight.dir);
     sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
-    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
@@ -267,6 +267,7 @@ void World::event_loop()
 // runs in a new thread
 void World::main_loop()
 {
+    sf::Clock dt_clk;
     prng.seed(rng());
     _win.setActive(true); // set render context active for this thread
     while(true)
@@ -288,6 +289,10 @@ void World::main_loop()
         {
             _player.handle_input(_win, 1.0f);
         }
+
+        float dt = dt_clk.restart().asSeconds();
+
+        _testmdl->rotate(dt * 0.5 * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
         // TODO should we make more threads for input, physics, messages, etc?
         // TODO: physics / AI updates
         draw();
