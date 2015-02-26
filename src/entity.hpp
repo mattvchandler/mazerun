@@ -1,5 +1,5 @@
 // entity.hpp
-// entity base class
+// main entity class
 
 // Copyright 2015 Matthew Chandler
 
@@ -24,18 +24,22 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
 
+#include <memory>
+
 #include <glm/glm.hpp>
 
-// TODO: seperate into components
-//      transform
-//      camera
-//      model
-//      etc.…
+#include "input.hpp"
+#include "model.hpp"
 
 class Entity
 {
 public:
-    Entity();
+    Entity(std::shared_ptr<Model> model,
+        std::shared_ptr<Input> input);
+
+    // component getters
+    std::shared_ptr <Model> model();
+    std::shared_ptr <Input> input();
 
     // set / reset pos / orientation
     void set(const glm::vec3 & pos = glm::vec3(0.0f),
@@ -63,6 +67,10 @@ public:
     glm::vec3 right() const;
 protected:
     glm::mat4 _model_mat;
+
+    // components
+    std::shared_ptr<Model> _model;
+    std::shared_ptr<Input> _input;
 };
 
 #endif // ENTITY_HPP

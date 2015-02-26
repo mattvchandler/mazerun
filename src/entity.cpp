@@ -1,5 +1,5 @@
 // entity.cpp
-// entity base class
+// main entity class
 
 // Copyright 2015 Matthew Chandler
 
@@ -26,9 +26,22 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
-Entity::Entity()
+Entity::Entity(std::shared_ptr<Model> model,
+    std::shared_ptr<Input> input):
+    _model(model),
+    _input(input)
 {
     set();
+}
+
+std::shared_ptr <Model> Entity::model()
+{
+    return _model;
+}
+
+std::shared_ptr <Input> Entity::input()
+{
+    return _input;
 }
 
 // set / reset pos / orientation

@@ -1,5 +1,5 @@
-// player.cpp
-// player class
+// input.cpp
+// input handling component
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "player.hpp"
+#include "input.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -30,9 +30,23 @@
 
 #include <glm/glm.hpp>
 
+#include <GL/glew.h>
+
 #include <SFML/OpenGL.hpp>
 
-void Player::handle_input(const sf::Window & win, const float dt)
+#include "entity.hpp"
+
+Input::Input()
+{
+}
+
+std::shared_ptr<Player_input> Player_input::create()
+{
+    return std::shared_ptr<Player_input>(new Player_input);
+}
+
+void Player_input::handle_input(Entity & ent,
+    const sf::Window & win, const float dt) const
 {
     static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
     static sf::Vector2i old_mouse_pos = sf::Mouse::getPosition(win);
@@ -44,38 +58,38 @@ void Player::handle_input(const sf::Window & win, const float dt)
     // move forward
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::W))
     {
-        translate(mov_scale * forward() * dt);
+        ent.translate(mov_scale * ent.forward() * dt);
     }
 
     // move backwards
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
     {
-        translate(-mov_scale * forward() * dt);
+        ent.translate(-mov_scale * ent.forward() * dt);
     }
 
     // move left
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
-        translate(-mov_scale * right() * dt);
+        ent.translate(-mov_scale * ent.right() * dt);
     }
 
     // move right
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
-        translate(mov_scale * right() * dt);
+        ent.translate(mov_scale * ent.right() * dt);
     }
 
     // TODO: replace with jump?
     // move up
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
     {
-        translate(mov_scale * glm::vec3(0.0f, 1.0f,  0.0f) * dt);
+        ent.translate(mov_scale * glm::vec3(0.0f, 1.0f,  0.0f) * dt);
     }
 
     // move down
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::E))
     {
-        translate(-mov_scale * glm::vec3(0.0f, 1.0f, 0.0f) * dt);
+        ent.translate(-mov_scale * glm::vec3(0.0f, 1.0f, 0.0f) * dt);
     }
 
     // rotate view with mouse click & drag
@@ -84,9 +98,13 @@ void Player::handle_input(const sf::Window & win, const float dt)
         int d_x = new_mouse_pos.x - old_mouse_pos.x;
         int d_y = new_mouse_pos.y - old_mouse_pos.y;
 
-        rotate(0.001f * d_y, right());
-        rotate(0.001f * d_x, glm::vec3(0.0f, 1.0f, 0.0f));
+        ent.rotate(0.001f * d_y, ent.right());
+        ent.rotate(0.001f * d_x, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     old_mouse_pos = new_mouse_pos;
+}
+
+Player_input::Player_input()
+{
 }

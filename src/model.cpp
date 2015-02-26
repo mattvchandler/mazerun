@@ -1,5 +1,5 @@
 // model.cpp
-// imported model class
+// imported model component
 
 // Copyright 2015 Matthew Chandler
 

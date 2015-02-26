@@ -1,5 +1,5 @@
 // model.hpp
-// imported model class
+// imported model component
 
 // Copyright 2015 Matthew Chandler
 
@@ -28,13 +28,12 @@
 #include <memory>
 #include <unordered_map>
 
-#include "entity.hpp"
 #include "gl_wrappers.hpp"
 #include "material.hpp"
 
 // TODO: entity should have a model (compositiion)
 
-class Model: public Entity
+class Model
 {
 public:
     virtual ~Model();

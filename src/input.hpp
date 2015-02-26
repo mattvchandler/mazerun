@@ -1,5 +1,5 @@
-// player.hpp
-// player class
+// input.hpp
+// input handling component
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,17 +21,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef PLAYER_HPP
-#define PLAYER_HPP
+#ifndef INPUT_HPP
+#define INPUT_HPP
 
+#include <memory>
 #include <SFML/Window.hpp>
 
-#include "entity.hpp"
+class Entity;
 
-class Player: public Entity
+class Input
 {
 public:
-    void handle_input(const sf::Window & win, const float dt);
+    static std::shared_ptr<Input> create();
+
+    virtual void handle_input(Entity & ent,
+        const sf::Window & win, const float dt) const = 0;
+protected:
+    Input();
 };
 
-#endif // PLAYER_HPP
+class Player_input final: public Input
+{
+public:
+    static std::shared_ptr<Player_input> create();
+
+    void handle_input(Entity & ent,
+        const sf::Window & win, const float dt) const override;
+private:
+    Player_input();
+};
+
+#endif // INPUT_HPP

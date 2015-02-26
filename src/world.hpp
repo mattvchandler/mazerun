@@ -34,9 +34,8 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
 
+#include "entity.hpp"
 #include "light.hpp"
-#include "model.hpp"
-#include "player.hpp"
 #include "skybox.hpp"
 #include "shader_prog.hpp"
 #include "walls.hpp"
@@ -73,10 +72,10 @@ private:
 
     Skybox _skybox;
     Dir_light _sunlight;
-    Player _player;
     Walls _walls;
     Floor _floor;
-    std::shared_ptr<Model> _testmdl;
+    Entity _player;
+    Entity _testmdl;
     Shader_prog _ent_shader;
     // TODO: entity table
 };
