@@ -30,16 +30,19 @@
 
 #include "input.hpp"
 #include "model.hpp"
+#include "physics.hpp"
 
 class Entity
 {
 public:
     Entity(std::shared_ptr<Model> model,
-        std::shared_ptr<Input> input);
+        std::shared_ptr<Input> input,
+        std::shared_ptr<Physics> physics);
 
     // component getters
-    std::shared_ptr <Model> model();
-    std::shared_ptr <Input> input();
+    std::shared_ptr<Model> model();
+    std::shared_ptr<Input> input();
+    std::shared_ptr<Physics> physics();
 
     // set / reset pos / orientation
     void set(const glm::vec3 & pos = glm::vec3(0.0f),
@@ -71,6 +74,7 @@ protected:
     // components
     std::shared_ptr<Model> _model;
     std::shared_ptr<Input> _input;
+    std::shared_ptr<Physics> _physics;
 };
 
 #endif // ENTITY_HPP

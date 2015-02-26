@@ -45,7 +45,7 @@ std::shared_ptr<Player_input> Player_input::create()
     return std::shared_ptr<Player_input>(new Player_input);
 }
 
-void Player_input::handle_input(Entity & ent,
+void Player_input::update(Entity & ent,
     const sf::Window & win, const float dt) const
 {
     static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;

@@ -1,5 +1,5 @@
-// input.hpp
-// input handling component
+// physics.hpp
+// physics handling component
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,34 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#ifndef PHYSICS_HPP
+#define PHYSICS_HPP
 
 #include <memory>
-#include <SFML/Window.hpp>
 
 class Entity;
 
-class Input
+class Physics
 {
 public:
-    static std::shared_ptr<Input> create();
+    static std::shared_ptr<Physics> create();
 
     virtual void update(Entity & ent,
-        const sf::Window & win, const float dt) const = 0;
+        const float dt) const = 0;
 protected:
-    Input();
+    Physics();
 };
 
-class Player_input final: public Input
+class Testmdl_physics final: public Physics
 {
 public:
-    static std::shared_ptr<Player_input> create();
+    static std::shared_ptr<Testmdl_physics> create();
 
     void update(Entity & ent,
-        const sf::Window & win, const float dt) const override;
+        const float dt) const override;
 private:
-    Player_input();
+    Testmdl_physics();
 };
 
-#endif // INPUT_HPP
+#endif // PHYSICS_HPP

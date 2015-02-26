@@ -1,5 +1,5 @@
-// input.hpp
-// input handling component
+// physics.cpp
+// physics handling component
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,34 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#include "physics.hpp"
 
-#include <memory>
-#include <SFML/Window.hpp>
+#define _USE_MATH_DEFINES
+#include <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
 
-class Entity;
+#include <glm/glm.hpp>
 
-class Input
+#include "entity.hpp"
+
+Physics::Physics()
 {
-public:
-    static std::shared_ptr<Input> create();
+}
 
-    virtual void update(Entity & ent,
-        const sf::Window & win, const float dt) const = 0;
-protected:
-    Input();
-};
-
-class Player_input final: public Input
+std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
 {
-public:
-    static std::shared_ptr<Player_input> create();
+    return std::shared_ptr<Testmdl_physics>(new Testmdl_physics());
+}
 
-    void update(Entity & ent,
-        const sf::Window & win, const float dt) const override;
-private:
-    Player_input();
-};
+void Testmdl_physics::update(Entity & ent,
+    const float dt) const
+{
+    ent.rotate(dt * 0.5 * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+}
 
-#endif // INPUT_HPP
+Testmdl_physics::Testmdl_physics()
+{
+}

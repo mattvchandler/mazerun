@@ -67,8 +67,12 @@ World::World():
     _running(true), _focused(true), _do_resize(false),
     _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
     _walls(32, 32), _floor(32, 32),
-    _player(std::shared_ptr<Model>(), Player_input::create()),
-    _testmdl(Model::create("mdl/weird_cube.dae"), std::shared_ptr<Input>()),
+    _player(std::shared_ptr<Model>(),
+        Player_input::create(),
+        std::shared_ptr<Physics>()),
+    _testmdl(Model::create("mdl/weird_cube.dae"),
+        std::shared_ptr<Input>(),
+        Testmdl_physics::create()),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
@@ -85,6 +89,10 @@ World::World():
     glDepthRangef(0.0f, 1.0f);
     glLineWidth(5.0f);
 
+    // TODO: enable backface culling
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
     glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -288,13 +296,13 @@ void World::main_loop()
         // std::cerr<<"("<<_player.pos().x<<","<<_player.pos().y<<","<<_player.pos().z<<")"<<std::endl;
         if(_focused)
         {
-            _player.input()->handle_input(_player, _win, 1.0f);
+            _player.input()->update(_player, _win, 1.0f);
         }
 
         float dt = dt_clk.restart().asSeconds();
 
-        // TODO: move to physics component
-        _testmdl.rotate(dt * 0.5 * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+        _testmdl.physics()->update(_testmdl, dt);
+
         // TODO should we make more threads for input, physics, messages, etc?
         // TODO: physics / AI updates
         draw();

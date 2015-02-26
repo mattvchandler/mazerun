@@ -27,9 +27,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Entity::Entity(std::shared_ptr<Model> model,
-    std::shared_ptr<Input> input):
+    std::shared_ptr<Input> input,
+    std::shared_ptr<Physics> physics):
     _model(model),
-    _input(input)
+    _input(input),
+    _physics(physics)
 {
     set();
 }
@@ -42,6 +44,11 @@ std::shared_ptr <Model> Entity::model()
 std::shared_ptr <Input> Entity::input()
 {
     return _input;
+}
+
+std::shared_ptr <Physics> Entity::physics()
+{
+    return _physics;
 }
 
 // set / reset pos / orientation

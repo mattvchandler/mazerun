@@ -82,6 +82,7 @@ add_executable(${PROJECT_NAME}
     src/input.cpp
     src/main.cpp
     src/model.cpp
+    src/physics.cpp
     src/shader_prog.cpp
     src/skybox.cpp
     src/texture.cpp
