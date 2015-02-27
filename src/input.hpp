@@ -42,15 +42,4 @@ protected:
     Input();
 };
 
-class Player_input final: public Input
-{
-public:
-    static std::shared_ptr<Player_input> create();
-
-    void update(Entity & ent,
-        const sf::Window & win, const float dt) const override;
-private:
-    Player_input();
-};
-
 #endif // INPUT_HPP

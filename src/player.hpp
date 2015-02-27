@@ -1,5 +1,5 @@
-// input.cpp
-// input handling component
+// player.hpp
+// player entity
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,8 +21,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef PLAYER_HPP
+#define PLAYER_HPP
+
 #include "input.hpp"
 
-Input::Input()
+class Player_input final: public Input
 {
-}
+public:
+    static std::shared_ptr<Player_input> create();
+
+    void update(Entity & ent,
+        const sf::Window & win, const float dt) const override;
+private:
+    Player_input();
+};
+
+std::unique_ptr<Entity> create_player();
+
+#endif // PLAYER_HPP

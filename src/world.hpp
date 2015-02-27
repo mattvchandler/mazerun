@@ -74,7 +74,7 @@ private:
     Dir_light _sunlight;
     Walls _walls;
     Floor _floor;
-    Entity _player;
+    std::unique_ptr<Entity> _player;
     Entity _testmdl;
     Shader_prog _ent_shader;
     // TODO: entity table
