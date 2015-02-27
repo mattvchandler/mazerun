@@ -27,9 +27,11 @@
 #include <memory>
 #include <SFML/Window.hpp>
 
+#include "component.hpp"
+
 class Entity;
 
-class Input
+class Input: public Component
 {
 public:
     static std::shared_ptr<Input> create();

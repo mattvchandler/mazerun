@@ -75,6 +75,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
+    src/component.cpp
     src/config.cpp
     src/entity.cpp
     src/gl_helpers.cpp

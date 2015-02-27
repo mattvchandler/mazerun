@@ -26,9 +26,11 @@
 
 #include <memory>
 
+#include "component.hpp"
+
 class Entity;
 
-class Physics
+class Physics: public Component
 {
 public:
     static std::shared_ptr<Physics> create();

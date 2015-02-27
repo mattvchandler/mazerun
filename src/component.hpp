@@ -1,5 +1,5 @@
-// model.hpp
-// imported model component
+// component.hpp
+// component base class
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,35 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef MODEL_HPP
-#define MODEL_HPP
+#ifndef COMPONENT_HPP
+#define COMPONENT_HPP
 
-#include <string>
-#include <memory>
-#include <unordered_map>
-
-#include "component.hpp"
-#include "gl_wrappers.hpp"
-#include "material.hpp"
-
-class Model: public Component
+class Component
 {
-public:
-    virtual ~Model();
-    static std::shared_ptr<Model> create(const std::string & filename);
-    virtual void draw() const;
-    const Material & get_material() const;
 protected:
-    Model(const std::string & filename);
-
-    GL_vertex_array _vao;
-    GL_buffer _vbo;
-    GL_buffer _ebo;
-    GLsizei _num_verts;
-    Material _mat;
-
-    static std::unordered_map<std::string, std::weak_ptr<Model>> _allocated_mdl;
-    std::string _key;
+    Component();
 };
 
-#endif // MODEL_HPP
+#endif // COMPONENT_HPP
