@@ -28,8 +28,6 @@
 
 #include "component.hpp"
 
-class Entity;
-
 class Physics: public Component
 {
 public:

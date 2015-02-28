@@ -29,8 +29,6 @@
 
 #include "component.hpp"
 
-class Entity;
-
 class Input: public Component
 {
 public:

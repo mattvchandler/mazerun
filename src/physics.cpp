@@ -31,8 +31,6 @@
 
 #include <glm/glm.hpp>
 
-#include "entity.hpp"
-
 Physics::Physics()
 {
 }
