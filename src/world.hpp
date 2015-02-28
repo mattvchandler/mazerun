@@ -74,10 +74,15 @@ private:
     Dir_light _sunlight;
     Walls _walls;
     Floor _floor;
-    std::unique_ptr<Entity> _player;
-    Entity _testmdl;
     Shader_prog _ent_shader;
-    // TODO: entity table
+
+    // entity tables
+    std::vector<Entity> _ents;
+    // std::vector<Model> _model_components;
+    // std::vector<Input> _input_components;
+    // std::vector<Physics> _physics_components;
+
+    Entity & _cam;
 };
 
 #endif // WORLD_HPP

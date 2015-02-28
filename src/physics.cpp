@@ -36,18 +36,3 @@
 Physics::Physics()
 {
 }
-
-std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
-{
-    return std::shared_ptr<Testmdl_physics>(new Testmdl_physics());
-}
-
-void Testmdl_physics::update(Entity & ent,
-    const float dt) const
-{
-    ent.rotate(dt * 0.5 * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
-}
-
-Testmdl_physics::Testmdl_physics()
-{
-}

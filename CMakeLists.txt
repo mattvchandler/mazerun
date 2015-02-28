@@ -87,6 +87,7 @@ add_executable(${PROJECT_NAME}
     src/player.cpp
     src/shader_prog.cpp
     src/skybox.cpp
+    src/testmdl.cpp
     src/texture.cpp
     src/walls.cpp
     src/world.cpp

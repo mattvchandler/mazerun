@@ -47,7 +47,7 @@ void Player_input::update(Entity & ent,
     static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
     static sf::Vector2i old_mouse_pos = sf::Mouse::getPosition(win);
 
-    float mov_scale = 0.1f;
+    float mov_scale = 5.0f;
     sf::Vector2i new_mouse_pos = sf::Mouse::getPosition(win);
     // TODO: invalidate signal somehow
 
@@ -105,9 +105,11 @@ Player_input::Player_input()
 {
 }
 
-std::unique_ptr<Entity> create_player()
+Entity create_player()
 {
-    return std::unique_ptr<Entity>(new Entity(std::shared_ptr<Model>(),
+    Entity player(std::shared_ptr<Model>(),
         Player_input::create(),
-        std::shared_ptr<Physics>()));
+        std::shared_ptr<Physics>());
+    player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    return player;
 }

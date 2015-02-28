@@ -1,5 +1,5 @@
-// physics.hpp
-// physics handling component
+// testmdl.cpp
+// test entity
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,24 +21,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef PHYSICS_HPP
-#define PHYSICS_HPP
+#include "testmdl.hpp"
 
-#include <memory>
+#define _USE_MATH_DEFINES
+#include <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
 
-#include "component.hpp"
+#include <glm/glm.hpp>
 
-class Entity;
+#include "entity.hpp"
 
-class Physics: public Component
+std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
 {
-public:
-    static std::shared_ptr<Physics> create();
+    return std::shared_ptr<Testmdl_physics>(new Testmdl_physics());
+}
 
-    virtual void update(Entity & ent,
-        const float dt) const = 0;
-protected:
-    Physics();
-};
+void Testmdl_physics::update(Entity & ent,
+    const float dt) const
+{
+    ent.rotate(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+}
 
-#endif // PHYSICS_HPP
+Testmdl_physics::Testmdl_physics()
+{
+}
+
+Entity create_testmdl()
+{
+    Entity testmdl(Model::create("mdl/weird_cube.dae"),
+        std::shared_ptr<Input>(),
+        Testmdl_physics::create());
+
+    testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
+    testmdl.rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    return testmdl;
+}

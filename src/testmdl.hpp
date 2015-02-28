@@ -1,5 +1,5 @@
-// physics.hpp
-// physics handling component
+// testmdl.cpp
+// test entity
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,24 +21,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef PHYSICS_HPP
-#define PHYSICS_HPP
+#ifndef TESTMDL_HPP
+#define TESTMDL_HPP
 
-#include <memory>
+#include "physics.hpp"
 
-#include "component.hpp"
-
-class Entity;
-
-class Physics: public Component
+class Testmdl_physics final: public Physics
 {
 public:
-    static std::shared_ptr<Physics> create();
+    static std::shared_ptr<Testmdl_physics> create();
 
-    virtual void update(Entity & ent,
-        const float dt) const = 0;
-protected:
-    Physics();
+    void update(Entity & ent,
+        const float dt) const override;
+private:
+    Testmdl_physics();
 };
 
-#endif // PHYSICS_HPP
+Entity create_testmdl();
+
+#endif // TESTMDL_HPP

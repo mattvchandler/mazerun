@@ -37,6 +37,6 @@ private:
     Player_input();
 };
 
-std::unique_ptr<Entity> create_player();
+Entity create_player();
 
 #endif // PLAYER_HPP

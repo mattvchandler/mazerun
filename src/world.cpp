@@ -43,6 +43,7 @@
 
 #include "gl_helpers.hpp" // TODO: move w/ walls decl
 #include "player.hpp"
+#include "testmdl.hpp"
 
 thread_local std::mt19937 prng;
 thread_local std::random_device rng;
@@ -68,15 +69,13 @@ World::World():
     _running(true), _focused(true), _do_resize(false),
     _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
     _walls(32, 32), _floor(32, 32),
-    _player(create_player()),
-    _testmdl(Model::create("mdl/weird_cube.dae"),
-        std::shared_ptr<Input>(),
-        Testmdl_physics::create()),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
-        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)})
+        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
+    _ents({create_player(), create_testmdl()}),
+    _cam(_ents[0])
 {
     // TODO: loading screen
 
@@ -101,13 +100,6 @@ World::World():
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
     resize();
-
-    // set camera initial position / orientation
-    _player->set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    _testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
-    _testmdl.rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    _testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
@@ -142,45 +134,48 @@ World::World():
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::mat4 model_view;
-    glm::mat4 model_view_proj;
-    glm::mat3 normal_transform;
-
     _ent_shader.use();
 
     glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
-    glm::vec3 sunlight_dir = glm::transpose(glm::inverse(glm::mat3(_player->view_mat()))) *
+    glm::vec3 sunlight_dir = glm::transpose(glm::inverse(glm::mat3(_cam.view_mat()))) *
         glm::normalize(-_sunlight.dir);
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     check_error("sunlight dir");
 
-    model_view = _player->view_mat() * _testmdl.model_mat();
-    model_view_proj = _proj * model_view;
-    normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+    for(auto & ent: _ents)
+    {
+        auto model = ent.model();
+        if(model)
+        {
+            glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
+            glm::mat4 model_view_proj = _proj * model_view;
+            glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+
+            glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+            glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+
+            glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+            // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
+            glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
+
+            glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &model->get_material().specular_color[0]);
+            glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &model->get_material().emission_color[0]);
+            glUniform1f(_ent_shader.uniforms["material.shininess"], model->get_material().shininess);
+            glActiveTexture(GL_TEXTURE0);
+            model->get_material().diffuse_map->bind();
+            glActiveTexture(GL_TEXTURE1);
+            model->get_material().normal_map->bind();
+
+            model->draw();
+        }
+    }
+
+    glm::mat4 model_view = _cam.view_mat();
+    glm::mat4 model_view_proj = _proj * model_view;
+    glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
     // sunlight vars
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
-    glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
-
-    glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
-    // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
-    glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
-
-    glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_testmdl.model()->get_material().specular_color[0]);
-    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_testmdl.model()->get_material().emission_color[0]);
-    glUniform1f(_ent_shader.uniforms["material.shininess"], _testmdl.model()->get_material().shininess);
-    glActiveTexture(GL_TEXTURE0);
-    _testmdl.model()->get_material().diffuse_map->bind();
-    glActiveTexture(GL_TEXTURE1);
-    _testmdl.model()->get_material().normal_map->bind();
-    _testmdl.model()->draw();
-
-    model_view = _player->view_mat();
-    model_view_proj = _proj * model_view;
-    normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-
-    // sunlight vars
-    sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
@@ -205,7 +200,7 @@ void World::draw()
     _floor.get_material().normal_map->bind();
     _floor.draw();
 
-    _skybox.draw(*_player, _proj);
+    _skybox.draw(_cam, _proj);
 
     _win.display();
     check_error("World::draw");
@@ -280,6 +275,8 @@ void World::main_loop()
     _win.setActive(true); // set render context active for this thread
     while(true)
     {
+        float dt = dt_clk.restart().asSeconds();
+
         _lock.lock();
         if(_do_resize)
         {
@@ -294,12 +291,24 @@ void World::main_loop()
         }
         if(_focused)
         {
-            _player->input()->update(*_player, _win, 1.0f);
+            for(auto & ent: _ents)
+            {
+                auto input = ent.input();
+                if(input)
+                {
+                    input->update(ent, _win, dt);
+                }
+            }
         }
 
-        float dt = dt_clk.restart().asSeconds();
-
-        _testmdl.physics()->update(_testmdl, dt);
+        for(auto & ent: _ents)
+        {
+            auto physics = ent.physics();
+            if(physics)
+            {
+                physics->update(ent, dt);
+            }
+        }
 
         // TODO should we make more threads for input, physics, messages, etc?
         // TODO: physics / AI updates
