@@ -29,12 +29,11 @@
 class Physics: public Component
 {
 public:
+    Physics();
     static std::shared_ptr<Physics> create();
 
     virtual void update(Entity & ent,
-        const float dt) const = 0;
-protected:
-    Physics();
+        const float dt) = 0;
 };
 
 #endif // PHYSICS_HPP

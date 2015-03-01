@@ -29,12 +29,9 @@
 class Testmdl_physics final: public Physics
 {
 public:
-    static std::shared_ptr<Testmdl_physics> create();
-
-    void update(Entity & ent,
-        const float dt) const override;
-private:
     Testmdl_physics();
+    static std::shared_ptr<Testmdl_physics> create();
+    void update(Entity & ent, const float dt) override;
 };
 
 Entity create_testmdl();

@@ -33,19 +33,18 @@
 
 #include "entity.hpp"
 
-std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
-{
-    return std::shared_ptr<Testmdl_physics>(new Testmdl_physics());
-}
-
-void Testmdl_physics::update(Entity & ent,
-    const float dt) const
-{
-    ent.rotate(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
-}
-
 Testmdl_physics::Testmdl_physics()
 {
+}
+
+std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
+{
+    return std::make_shared<Testmdl_physics>();
+}
+
+void Testmdl_physics::update(Entity & ent, const float dt)
+{
+    ent.rotate(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 Entity create_testmdl()

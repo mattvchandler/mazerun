@@ -31,12 +31,11 @@
 class Input: public Component
 {
 public:
+    Input();
     static std::shared_ptr<Input> create();
 
     virtual void update(Entity & ent,
-        const sf::Window & win, const float dt) const = 0;
-protected:
-    Input();
+        const sf::Window & win, const float dt) = 0;
 };
 
 #endif // INPUT_HPP

@@ -36,13 +36,17 @@
 
 #include "entity.hpp"
 
+Player_input::Player_input()
+{
+}
+
 std::shared_ptr<Player_input> Player_input::create()
 {
-    return std::shared_ptr<Player_input>(new Player_input);
+    return std::make_shared<Player_input>();
 }
 
 void Player_input::update(Entity & ent,
-    const sf::Window & win, const float dt) const
+    const sf::Window & win, const float dt)
 {
     static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
     static sf::Vector2i old_mouse_pos = sf::Mouse::getPosition(win);
@@ -99,10 +103,6 @@ void Player_input::update(Entity & ent,
     }
 
     old_mouse_pos = new_mouse_pos;
-}
-
-Player_input::Player_input()
-{
 }
 
 Entity create_player()
