@@ -74,7 +74,7 @@ World::World():
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
-    _ents({create_player(), create_testmdl()}),
+    _ents({create_player(), create_testmdl(), create_testlight()}),
     _cam(_ents[0])
 {
     // TODO: loading screen
