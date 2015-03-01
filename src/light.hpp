@@ -30,34 +30,43 @@
 
 #include <SFML/OpenGL.hpp>
 
-struct Light
+#include "component.hpp"
+
+class Light: public Component
 {
+public:
     glm::vec3 color;
     float strength;
+protected:
+    Light(const glm::vec3 & color, const float strength);
 };
 
-struct Point_light: public Light
+class Point_light: public Light
 {
+public:
+    Point_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
+        const float const_atten, const float linear_atten, const float quad_atten);
+
+    static std::shared_ptr<Point_light> create(const glm::vec3 & color, const float strength,
+        const glm::vec3 & pos, const float const_atten, const float linear_atten,
+        const float quad_atten);
+
     glm::vec3 pos;
     // attenuation properties
     float const_atten;
     float linear_atten;
     float quad_atten;
-    Point_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
-    const float const_atten, const float linear_atten, const float quad_atten):
-        Light({color, strength}), pos(pos),
-        const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
-    {
-    }
 };
 
-struct Dir_light: public Light
+class Dir_light: public Light
 {
+public:
+    Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir);
+
+    static std::shared_ptr<Dir_light> create(const glm::vec3 & color, const float strength,
+        const glm::vec3 & dir);
+
     glm::vec3 dir;
-    Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir):
-        Light({color, strength}), dir(dir)
-        {
-    }
 };
 
 // TODO: spotlight

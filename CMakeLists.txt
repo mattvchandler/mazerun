@@ -81,6 +81,7 @@ add_executable(${PROJECT_NAME}
     src/gl_helpers.cpp
     src/gl_wrappers.cpp
     src/input.cpp
+    src/light.cpp
     src/main.cpp
     src/model.cpp
     src/physics.cpp

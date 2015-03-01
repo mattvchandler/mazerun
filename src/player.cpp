@@ -109,7 +109,8 @@ Entity create_player()
 {
     Entity player(std::shared_ptr<Model>(),
         Player_input::create(),
-        std::shared_ptr<Physics>());
+        std::shared_ptr<Physics>(),
+        std::shared_ptr<Light>());
     player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     return player;
 }

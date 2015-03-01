@@ -1,5 +1,5 @@
-// testmdl.cpp
-// test entity
+// light.cpp
+// light structures
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "testmdl.hpp"
+#include "light.hpp"
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327950288
-#endif
-
-#include <glm/glm.hpp>
-
-#include "entity.hpp"
-
-Testmdl_physics::Testmdl_physics()
+Light::Light(const glm::vec3 & color, const float strength):
+    color(color), strength(strength)
 {
 }
 
-std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
+Point_light::Point_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
+    const float const_atten, const float linear_atten, const float quad_atten):
+    Light(color, strength), pos(pos),
+    const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
 {
-    return std::make_shared<Testmdl_physics>();
 }
 
-void Testmdl_physics::update(Entity & ent, const float dt)
+std::shared_ptr<Point_light> Point_light::create(const glm::vec3 & color, const float strength,
+    const glm::vec3 & pos, const float const_atten, const float linear_atten,
+    const float quad_atten)
 {
-    ent.rotate(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+    return std::make_shared<Point_light>(color, strength, pos, const_atten, linear_atten, quad_atten);
 }
 
-Entity create_testmdl()
+Dir_light::Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir):
+    Light(color, strength), dir(dir)
 {
-    Entity testmdl(Model::create("mdl/weird_cube.dae"),
-        std::shared_ptr<Input>(),
-        Testmdl_physics::create(),
-        std::shared_ptr<Light>());
+}
 
-    testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
-    testmdl.rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    return testmdl;
+std::shared_ptr<Dir_light> Dir_light::create(const glm::vec3 & color, const float strength,
+    const glm::vec3 & dir)
+{
+    return std::make_shared<Dir_light>(color, strength, dir);
 }

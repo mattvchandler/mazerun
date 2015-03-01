@@ -29,20 +29,26 @@
 #include <glm/glm.hpp>
 
 #include "input.hpp"
+#include "light.hpp"
 #include "model.hpp"
 #include "physics.hpp"
+
+// TODO: light component
 
 class Entity
 {
 public:
+    // TODO: order?
     Entity(std::shared_ptr<Model> model,
         std::shared_ptr<Input> input,
-        std::shared_ptr<Physics> physics);
+        std::shared_ptr<Physics> physics,
+        std::shared_ptr<Light> light);
 
     // component getters
     std::shared_ptr<Model> model();
     std::shared_ptr<Input> input();
     std::shared_ptr<Physics> physics();
+    std::shared_ptr<Light> light();
 
     // set / reset pos / orientation
     void set(const glm::vec3 & pos = glm::vec3(0.0f),
@@ -75,6 +81,7 @@ protected:
     std::shared_ptr<Model> _model;
     std::shared_ptr<Input> _input;
     std::shared_ptr<Physics> _physics;
+    std::shared_ptr<Light> _light;
 };
 
 #endif // ENTITY_HPP
