@@ -25,14 +25,15 @@
 #define MODEL_HPP
 
 #include <string>
-#include <memory>
 #include <unordered_map>
+
+#include <SFML/System.hpp>
 
 #include "component.hpp"
 #include "gl_wrappers.hpp"
 #include "material.hpp"
 
-class Model: public Component
+class Model: public Component, public sf::NonCopyable
 {
 public:
     virtual ~Model();

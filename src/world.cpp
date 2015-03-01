@@ -131,6 +131,8 @@ World::World():
     check_error("World::World");
 }
 
+// TODO: picking. Should we always do a pick pass, or make a 'pick' method?
+    // need: picking shader, target ent ptr
 void World::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -205,6 +207,21 @@ void World::draw()
     _win.display();
     check_error("World::draw");
 }
+
+// TODO: sound sys
+    // need: sound service locator
+    // listener
+    // sound source component
+    // OpenAL directly or SFML Audio?
+        // OpenAL:
+            // Pros: doppler, HRTF / other effects
+            // Cons: more involved, no easy streaming, no load from file
+        // SFML audio
+            // Pros: easy, no extra library dep
+            // cons: no special FX
+        // use SFML
+
+// TODO: logging
 
 void World::resize()
 {
@@ -311,7 +328,7 @@ void World::main_loop()
         }
 
         // TODO should we make more threads for input, physics, messages, etc?
-        // TODO: physics / AI updates
+        // TODO: AI
         draw();
         _lock.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));

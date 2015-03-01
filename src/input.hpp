@@ -24,7 +24,6 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
-#include <memory>
 #include <SFML/Window.hpp>
 
 #include "component.hpp"

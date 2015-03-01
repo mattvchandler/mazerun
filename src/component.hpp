@@ -24,6 +24,8 @@
 #ifndef COMPONENT_HPP
 #define COMPONENT_HPP
 
+#include <memory>
+
 class Entity;
 
 class Component

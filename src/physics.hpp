@@ -24,8 +24,6 @@
 #ifndef PHYSICS_HPP
 #define PHYSICS_HPP
 
-#include <memory>
-
 #include "component.hpp"
 
 class Physics: public Component
