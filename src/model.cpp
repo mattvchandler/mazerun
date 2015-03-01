@@ -131,29 +131,24 @@ Model::Model(const std::string & filename):
             _mat.shininess = 100.0f;
 
         aiString tex_path;
-        if(mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) != AI_SUCCESS)
-        {
-            // TODO: thow
-            std::cerr<<"No diffuse map"<<std::endl;
-            return;
-        }
-        _mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
 
-        if(mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) != AI_SUCCESS)
-        {
-            // TODO: fallback
-            std::cerr<<"No normal map"<<std::endl;
-            return;
-        }
-        _mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        if(mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) == AI_SUCCESS)
+            _mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        else
+            _mat.diffuse_map = Texture_2D::diffuse_fallback();
+
+        if(mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS)
+            _mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        else
+            _mat.normal_map = Texture_2D::normal_fallback();
     }
     else
     {
         // TODO Fallback
         _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
         _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
-        _mat.diffuse_map = Texture_2D::create(check_in_pwd("img/AncientFlooring.jpg"));
-        _mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/AncientFlooring_N.jpg"));
+        _mat.diffuse_map = Texture_2D::diffuse_fallback();
+        _mat.normal_map = Texture_2D::normal_fallback();
         _mat.shininess = 1000.0f;
     }
 

@@ -28,6 +28,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <glm/glm.hpp>
+
 #include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
@@ -39,8 +41,10 @@ public:
     virtual ~Texture();
     virtual void bind() const = 0;
     GLuint get_id() const;
+
 protected:
     Texture();
+    virtual void set_properties() const = 0;
 
     GLuint _texid;
     std::string _key;
@@ -51,9 +55,14 @@ class Texture_2D final: public Texture
 {
 public:
     static std::shared_ptr<Texture_2D> create(const std::string & filename);
+    static std::shared_ptr<Texture_2D> diffuse_fallback();
+    static std::shared_ptr<Texture_2D> normal_fallback();
     void bind() const override;
+
 private:
     Texture_2D(const std::string & filename);
+    Texture_2D(const glm::vec4 & color, const GLint width, const GLint height);
+    void set_properties() const override;
 };
 
 class Texture_cubemap final: public Texture
@@ -62,11 +71,15 @@ public:
     static std::shared_ptr<Texture_cubemap> create(const std::string & left_fname, const std::string & right_fname,
         const std::string & back_fname, const std::string & front_fname,
         const std::string & down_fname, const std::string & up_fname);
+    static std::shared_ptr<Texture_cubemap> env_fallback();
     void bind() const override;
+
 private:
     Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
         const std::string & back_fname, const std::string & front_fname,
         const std::string & down_fname, const std::string & up_fname);
+    Texture_cubemap(const glm::vec4 & color, const GLint width, const GLint height);
+    void set_properties() const override;
 };
 
 #endif // TEXTURE_HPP

@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// TODO: replace glm:: data to openGL with glm::value_ptr?
+
 #include "texture.hpp"
 
 #include <GL/glew.h>
@@ -74,6 +76,19 @@ Texture_2D::Texture_2D(const std::string & filename)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, img.getSize().x, img.getSize().y,
         0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
 
+    set_properties();
+}
+
+Texture_2D::Texture_2D(const glm::vec4 & color, const GLint width, const GLint height)
+{
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
+        0, GL_RGBA, GL_FLOAT, &color[0]);
+
+    set_properties();
+}
+
+void Texture_2D::set_properties() const
+{
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // set params
@@ -81,6 +96,26 @@ Texture_2D::Texture_2D(const std::string & filename)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
+std::shared_ptr<Texture_2D> Texture_2D::diffuse_fallback()
+{
+    static std::shared_ptr<Texture_2D> fallback;
+    if(!fallback)
+    {
+        fallback.reset(new Texture_2D(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
+    }
+    return fallback;
+}
+
+std::shared_ptr<Texture_2D> Texture_2D::normal_fallback()
+{
+    static std::shared_ptr<Texture_2D> fallback;
+    if(!fallback)
+    {
+        fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), 1, 1));
+    }
+    return fallback;
 }
 
 void Texture_2D::bind() const
@@ -146,6 +181,32 @@ Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::stri
             0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
     }
 
+    set_properties();
+}
+
+Texture_cubemap::Texture_cubemap(const glm::vec4 & color, const GLint width, const GLint height)
+{
+    std::vector<GLenum> sides =
+    {
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+    };
+
+    for(const auto & side: sides)
+    {
+        glTexImage2D(side, 0, GL_RGBA8, width, height,
+            0, GL_RGBA, GL_FLOAT, &color[0]);
+    }
+
+    set_properties();
+}
+
+void Texture_cubemap::set_properties() const
+{
     // set params
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
@@ -154,6 +215,16 @@ Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::stri
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+std::shared_ptr<Texture_cubemap> Texture_cubemap::env_fallback()
+{
+    static std::shared_ptr<Texture_cubemap> fallback;
+    if(!fallback)
+    {
+        fallback.reset(new Texture_cubemap(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
+    }
+    return fallback;
 }
 
 void Texture_cubemap::bind() const
