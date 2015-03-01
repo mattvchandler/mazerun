@@ -35,6 +35,7 @@
 class Light: public Component
 {
 public:
+    virtual ~Light();
     glm::vec3 color;
     float strength;
 protected:
@@ -62,9 +63,6 @@ class Dir_light: public Light
 {
 public:
     Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir);
-
-    static std::shared_ptr<Dir_light> create(const glm::vec3 & color, const float strength,
-        const glm::vec3 & dir);
 
     glm::vec3 dir;
 };

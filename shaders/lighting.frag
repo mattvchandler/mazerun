@@ -79,6 +79,7 @@ void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
     out float diffuse_mul, out float specular_mul)
 {
     // calculate ammt of diffuse and specular shading
+    // TODO: remove
     if(gl_FrontFacing)
     {
         diffuse_mul = max(0.0, dot(normal_vec, normalize(dir)));

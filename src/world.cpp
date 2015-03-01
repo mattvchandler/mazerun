@@ -48,6 +48,8 @@
 thread_local std::mt19937 prng;
 thread_local std::random_device rng;
 
+const unsigned int max_point_lights = 10;
+
 Glew_init::Glew_init()
 {
     if(Glew_init::_initialized)
@@ -103,7 +105,7 @@ World::World():
 
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
-    // _ent_shader.add_uniform("model_view");
+    _ent_shader.add_uniform("model_view");
     _ent_shader.add_uniform("normal_transform");
     _ent_shader.add_uniform("material.emission_color");
     _ent_shader.add_uniform("material.specular_color");
@@ -111,11 +113,24 @@ World::World():
     _ent_shader.add_uniform("material.normal_map");
     _ent_shader.add_uniform("material.shininess");
     _ent_shader.add_uniform("ambient_color");
+    _ent_shader.add_uniform("num_point_lights");
+
+    for(size_t i = 0; i < max_point_lights; ++i)
+    {
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.color");
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.strength");
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].pos_eye");
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].const_atten");
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].linear_atten");
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].quad_atten");
+    }
+
     _ent_shader.add_uniform("dir_light.base.color");
     _ent_shader.add_uniform("dir_light.base.strength");
     _ent_shader.add_uniform("dir_light.dir");
     _ent_shader.add_uniform("dir_light.half_vec");
-    // _ent_shader.add_uniform("cam_light_forward");
+
+    _ent_shader.add_uniform("cam_light_forward");
 
     // set up static uniform vals
     // TODO: sunlight owned by skybox?
@@ -138,11 +153,42 @@ void World::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _ent_shader.use();
 
+    // TODO: deferred lighting
     glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
     glm::vec3 sunlight_dir = glm::transpose(glm::inverse(glm::mat3(_cam.view_mat()))) *
         glm::normalize(-_sunlight.dir);
     glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
-    check_error("sunlight dir");
+
+    glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+    glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+
+    size_t point_light_i = 0;
+    for(auto & ent: _ents)
+    {
+        std::shared_ptr<Light> light = ent.light();
+        if(!light)
+            continue;
+
+        std::shared_ptr<Point_light> point_light = std::dynamic_pointer_cast<Point_light>(light);
+        if(point_light)
+        {
+            glm::vec3 point_light_pos_eye = glm::vec3(_cam.view_mat() * ent.model_mat() *
+                glm::vec4(point_light->pos, 1.0f));
+
+            glUniform3fv(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].base.color"], 1, &point_light->color[0]);
+            glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].base.strength"], point_light->strength);
+            glUniform3fv(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].pos_eye"], 1, &point_light_pos_eye[0]);
+            glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].const_atten"], point_light->const_atten);
+            glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].linear_atten"], point_light->linear_atten);
+            glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].quad_atten"], point_light->quad_atten);
+
+            ++point_light_i;
+        }
+    }
+
+    glUniform1i(_ent_shader.uniforms["num_point_lights"], point_light_i);
+
+    check_error("World::draw - light setup");
 
     for(auto & ent: _ents)
     {
@@ -153,11 +199,8 @@ void World::draw()
             glm::mat4 model_view_proj = _proj * model_view;
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
-            glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
-            glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
-
             glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
-            // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
+            glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
             glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
             glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &model->get_material().specular_color[0]);
@@ -177,11 +220,8 @@ void World::draw()
     glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
     // sunlight vars
-    glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
-    glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
-
     glUniformMatrix4fv(_ent_shader.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
-    // glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
+    glUniformMatrix4fv(_ent_shader.uniforms["model_view"], 1, GL_FALSE, &model_view[0][0]);
     glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_walls.get_material().specular_color[0]);
@@ -205,7 +245,7 @@ void World::draw()
     _skybox.draw(_cam, _proj);
 
     _win.display();
-    check_error("World::draw");
+    check_error("World::draw - end");
 }
 
 // TODO: sound sys

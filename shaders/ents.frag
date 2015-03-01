@@ -72,6 +72,9 @@ uniform Material material;
 
 // lighting vars
 uniform vec3 ambient_color;
+const int max_point_lights = 10; // TODO: set by config?
+uniform int num_point_lights;
+uniform Point_light point_lights[max_point_lights];
 uniform Dir_light dir_light;
 
 // camera facing direction (always (0, 0, 1) when viewed from camera)
@@ -86,10 +89,13 @@ void main()
 
     vec3 mapped_normal = norm_map_normal(tex_coord, normal_vec, tangent, material.normal_map);
 
-    // calc_point_lighting(pos, light_forward, new_normal, material, cam_light,
-    //     tmp_scattered, tmp_reflected);
-    // scattered += tmp_scattered;
-    // reflected += tmp_reflected;
+    for(int i = 0; i < num_point_lights; ++i)
+    {
+        calc_point_lighting(pos, cam_light_forward, mapped_normal, material, point_lights[i],
+                tmp_scattered, tmp_reflected);
+        scattered += tmp_scattered;
+        reflected += tmp_reflected;
+    }
 
     calc_dir_lighting(mapped_normal, material, dir_light, tmp_scattered, tmp_reflected);
     scattered += tmp_scattered;

@@ -23,6 +23,10 @@
 
 #include "light.hpp"
 
+Light::~Light()
+{
+}
+
 Light::Light(const glm::vec3 & color, const float strength):
     color(color), strength(strength)
 {
@@ -45,10 +49,4 @@ std::shared_ptr<Point_light> Point_light::create(const glm::vec3 & color, const 
 Dir_light::Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir):
     Light(color, strength), dir(dir)
 {
-}
-
-std::shared_ptr<Dir_light> Dir_light::create(const glm::vec3 & color, const float strength,
-    const glm::vec3 & dir)
-{
-    return std::make_shared<Dir_light>(color, strength, dir);
 }
