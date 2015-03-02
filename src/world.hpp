@@ -34,6 +34,8 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
 
+#include <sigc++/sigc++.h>
+
 #include "entity.hpp"
 #include "light.hpp"
 #include "skybox.hpp"
@@ -58,6 +60,7 @@ public:
     void draw();
     void resize();
     void game_loop();
+
 private:
     void event_loop();
     void main_loop();
@@ -83,6 +86,7 @@ private:
     // std::vector<Physics> _physics_components;
 
     Entity & _cam;
+    Entity & _player;
 };
 
 #endif // WORLD_HPP

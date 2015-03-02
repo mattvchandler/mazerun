@@ -77,7 +77,8 @@ World::World():
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
     _ents({create_player(), create_testmdl(), create_testlight()}),
-    _cam(_ents[0])
+    _cam(_ents[0]),
+    _player(_ents[0])
 {
     // TODO: loading screen
 
@@ -133,18 +134,21 @@ World::World():
     _ent_shader.add_uniform("cam_light_forward");
 
     // set up static uniform vals
-    // TODO: sunlight owned by skybox?
     // TODO: replace uniform bracket op w/ at so exceptions are thrown
-    glm::vec3 ambient_color(0.2f, 0.2f, 0.2f); // TODO: get from skybox?
-    glUniform3fv(_ent_shader.uniforms["ambient_color"], 1, &ambient_color[0]);
-    glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
-    glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
     glUniform1i(_ent_shader.uniforms["material.diffuse_map"], 0);
     glUniform1i(_ent_shader.uniforms["material.normal_map"], 1);
     glUniform1i(_ent_shader.uniforms["material.emissive_map"], 2);
 
     glUseProgram(0); // TODO get prev val
     check_error("World::World");
+
+    std::dynamic_pointer_cast<Player_input>(_player.input())->signal_sunlight_toggled().connect(
+        [this]()
+        {
+            static bool sun_on = true;
+            sun_on = !sun_on;
+            _sunlight.color = sun_on ? glm::vec3(1.0f) : glm::vec3(0.0f);
+        });
 }
 
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
@@ -155,12 +159,17 @@ void World::draw()
     _ent_shader.use();
 
     // TODO: deferred lighting
+    // TODO: sunlight owned by skybox?
+    glm::vec3 ambient_color(0.2f, 0.2f, 0.2f); // TODO: get from skybox?
     glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
     glm::vec3 sunlight_dir = glm::transpose(glm::inverse(glm::mat3(_cam.view_mat()))) *
         glm::normalize(-_sunlight.dir);
-    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
-
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+
+    glUniform3fv(_ent_shader.uniforms["ambient_color"], 1, &ambient_color[0]);
+    glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
+    glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
+    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
     glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
 
     size_t point_light_i = 0;

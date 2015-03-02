@@ -33,6 +33,9 @@ public:
     static std::shared_ptr<Player_input> create();
     void update(Entity & ent,
         const sf::Window & win, const float dt) override;
+    sigc::signal<void> signal_sunlight_toggled();
+private:
+    sigc::signal<void> _signal_sunlight_toggled;
 };
 
 Entity create_player();

@@ -92,6 +92,16 @@ void Player_input::update(Entity & ent,
         ent.translate(-mov_scale * glm::vec3(0.0f, 1.0f, 0.0f) * dt);
     }
 
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::I) && !key_lock[sf::Keyboard::I])
+    {
+        key_lock[sf::Keyboard::I] = true;
+        _signal_sunlight_toggled();
+    }
+    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::I) && key_lock[sf::Keyboard::I])
+    {
+        key_lock[sf::Keyboard::I] = false;
+    }
+
     // rotate view with mouse click & drag
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
     {
@@ -103,6 +113,11 @@ void Player_input::update(Entity & ent,
     }
 
     old_mouse_pos = new_mouse_pos;
+}
+
+sigc::signal<void> Player_input::signal_sunlight_toggled()
+{
+    return _signal_sunlight_toggled;
 }
 
 Entity create_player()
