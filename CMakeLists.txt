@@ -27,12 +27,30 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModu
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(ASSIMP assimp REQUIRED)
+pkg_check_modules(SIGC sigc++-2.0 REQUIRED)
 
 find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
-find_package(Threads)
+find_package(Threads REQUIRED)
+
+# directories
+include_directories(
+    ${PROJECT_BINARY_DIR}/src/
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    ${ASSIMP_INCLUDE_DIRS}
+    ${SIGC_INCLUDE_DIRS}
+    ${GLM_INCLUDE_DIRS}
+    ${SFML_INCLUDE_DIRS}
+    ${GLEW_INCLUDE_DIRS}
+    )
+link_directories(
+    ${ASSIMP_LIBRARIES_DIRS}
+    ${SIGC_LIBRARIES_DIRS}
+    ${SFML_LIBRARIES_DIRS}
+    ${GLEW_LIBRARIES_DIRS}
+    )
 
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
@@ -44,21 +62,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
 #     ${PROJECT_BINARY_DIR}/mazerun.desktop)
 # configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mazerun.rc.in
 #     ${PROJECT_BINARY_DIR}/mazerun.rc)
-
-# directories
-include_directories(
-    ${PROJECT_BINARY_DIR}/src/
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/
-    ${ASSIMP_INCLUDE_DIRS}
-    ${GLM_INCLUDE_DIRS}
-    ${SFML_INCLUDE_DIRS}
-    ${GLEW_INCLUDE_DIRS}
-    )
-link_directories(
-    ${ASSIMP_LIBRARIES_DIRS}
-    ${SFML_LIBRARIES_DIRS}
-    ${GLEW_LIBRARIES_DIRS}
-    )
 
 # main compilation
 add_library(mazegen OBJECT
@@ -94,9 +97,9 @@ add_executable(${PROJECT_NAME}
     src/world.cpp
     $<TARGET_OBJECTS:mazegen>
     )
-
 target_link_libraries(${PROJECT_NAME}
     ${ASSIMP_LIBRARIES}
+    ${SIGC_LIBRARIES}
     ${SFML_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}

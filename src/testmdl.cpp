@@ -63,7 +63,7 @@ Entity create_testmdl()
     return testmdl;
 }
 
-Testlight_input::Testlight_input(): _light_on(true), _moving(true)
+Testlight_input::Testlight_input()
 {
 }
 
@@ -79,18 +79,8 @@ void Testlight_input::update(Entity & ent, const sf::Window & win,
 
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && !key_lock[sf::Keyboard::P])
     {
-        _light_on = !_light_on;
-
-        if(_light_on)
-        {
-            ent.light()->color = glm::vec3(1.0f, 0.0f, 0.0f);
-        }
-        else
-        {
-            ent.light()->color = glm::vec3(0.0f, 0.0f, 0.0f);
-        }
-
         key_lock[sf::Keyboard::P] = true;
+        _signal_light_toggled();
     }
     else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::P) && key_lock[sf::Keyboard::P])
     {
@@ -99,9 +89,8 @@ void Testlight_input::update(Entity & ent, const sf::Window & win,
 
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::O) && !key_lock[sf::Keyboard::O])
     {
-        _moving = !_moving;
-
         key_lock[sf::Keyboard::O] = true;
+        _signal_move_toggled();
     }
     else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::O) && key_lock[sf::Keyboard::O])
     {
@@ -109,7 +98,17 @@ void Testlight_input::update(Entity & ent, const sf::Window & win,
     }
 }
 
-Testlight_physics::Testlight_physics()
+sigc::signal<void> Testlight_input::signal_light_toggled()
+{
+    return _signal_light_toggled;
+}
+
+sigc::signal<void> Testlight_input::signal_move_toggled()
+{
+    return _signal_move_toggled;
+}
+
+Testlight_physics::Testlight_physics(): _moving(true)
 {
 }
 
@@ -120,7 +119,7 @@ std::shared_ptr<Testlight_physics> Testlight_physics::create()
 
 void Testlight_physics::update(Entity & ent, const float dt)
 {
-    if(!std::dynamic_pointer_cast<Testlight_input>(ent.input())->_moving) // TODO: inter-component message passing?
+    if(!_moving)
         return;
 
     static float theta = 0.0f;
@@ -134,11 +133,48 @@ void Testlight_physics::update(Entity & ent, const float dt)
     }
 }
 
+void Testlight_physics::toggle_movement()
+{
+    _moving = !_moving;
+}
+
+Testlight_light::Testlight_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
+    const float const_atten, const float linear_atten, const float quad_atten):
+    Point_light(color, strength, pos, const_atten, linear_atten, quad_atten),
+    _on_color(color),
+    _light_on(true)
+{
+}
+
+std::shared_ptr<Testlight_light> Testlight_light::create(const glm::vec3 & color,
+    const float strength, const glm::vec3 & pos, const float const_atten,
+    const float linear_atten, const float quad_atten)
+{
+    return std::make_shared<Testlight_light>(color, strength, pos, const_atten, linear_atten, quad_atten);
+}
+
+void Testlight_light::toggle_light()
+{
+    _light_on = !_light_on;
+
+    if(_light_on)
+        color = _on_color;
+    else
+        color = glm::vec3(0.0f);
+}
+
 Entity create_testlight()
 {
-     return Entity(Model::create("mdl/boring_sphere.dae"),
-        Testlight_input::create(),
-        Testlight_physics::create(),
-        Point_light::create(glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
-            glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f));
+    auto model = Model::create("mdl/boring_sphere.dae");
+    auto input = Testlight_input::create();
+    auto physics = Testlight_physics::create();
+    auto light = Testlight_light::create(glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
+        glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
+
+    Entity ent(model, input, physics, light);
+
+    input->signal_light_toggled().connect(sigc::mem_fun(*light, &Testlight_light::toggle_light));
+    input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testlight_physics::toggle_movement));
+
+    return ent;
 }

@@ -24,7 +24,10 @@
 #ifndef TESTMDL_HPP
 #define TESTMDL_HPP
 
+#include <glm/glm.hpp>
+
 #include "input.hpp"
+#include "light.hpp"
 #include "physics.hpp"
 
 class Testmdl_physics final: public Physics
@@ -44,9 +47,12 @@ public:
     static std::shared_ptr<Testlight_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
+    sigc::signal<void> signal_light_toggled();
+    sigc::signal<void> signal_move_toggled();
 
-    bool _light_on;
-    bool _moving;
+private:
+    sigc::signal<void> _signal_light_toggled;
+    sigc::signal<void> _signal_move_toggled;
 };
 
 class Testlight_physics final: public Physics
@@ -55,6 +61,23 @@ public:
     Testlight_physics();
     static std::shared_ptr<Testlight_physics> create();
     void update(Entity & ent, const float dt) override;
+    void toggle_movement();
+private:
+    bool _moving;
+};
+
+class Testlight_light final: public Point_light
+{
+public:
+    Testlight_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
+        const float const_atten, const float linear_atten, const float quad_atten);
+    static std::shared_ptr<Testlight_light> create(const glm::vec3 & color,
+        const float strength, const glm::vec3 & pos, const float const_atten,
+        const float linear_atten, const float quad_atten);
+    void toggle_light();
+private:
+    glm::vec3 _on_color;
+    bool _light_on;
 };
 
 Entity create_testlight();

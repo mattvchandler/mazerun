@@ -26,9 +26,11 @@
 
 #include <memory>
 
+#include <sigc++/sigc++.h>
+
 class Entity;
 
-class Component
+class Component: public sigc::trackable
 {
 protected:
     Component();
