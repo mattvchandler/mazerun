@@ -57,6 +57,7 @@ public:
     static std::shared_ptr<Texture_2D> create(const std::string & filename);
     static std::shared_ptr<Texture_2D> diffuse_fallback();
     static std::shared_ptr<Texture_2D> normal_fallback();
+    static std::shared_ptr<Texture_2D> emissive_fallback();
     void bind() const override;
 
 private:

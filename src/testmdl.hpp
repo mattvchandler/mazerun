@@ -44,8 +44,9 @@ public:
     static std::shared_ptr<Testlight_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
-private:
+
     bool _light_on;
+    bool _moving;
 };
 
 class Testlight_physics final: public Physics

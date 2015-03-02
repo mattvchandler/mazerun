@@ -107,10 +107,10 @@ World::World():
     _ent_shader.add_uniform("model_view_proj");
     _ent_shader.add_uniform("model_view");
     _ent_shader.add_uniform("normal_transform");
-    _ent_shader.add_uniform("material.emission_color");
     _ent_shader.add_uniform("material.specular_color");
     _ent_shader.add_uniform("material.diffuse_map");
     _ent_shader.add_uniform("material.normal_map");
+    _ent_shader.add_uniform("material.emissive_map");
     _ent_shader.add_uniform("material.shininess");
     _ent_shader.add_uniform("ambient_color");
     _ent_shader.add_uniform("num_point_lights");
@@ -141,6 +141,7 @@ World::World():
     glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
     glUniform1i(_ent_shader.uniforms["material.diffuse_map"], 0);
     glUniform1i(_ent_shader.uniforms["material.normal_map"], 1);
+    glUniform1i(_ent_shader.uniforms["material.emissive_map"], 2);
 
     glUseProgram(0); // TODO get prev val
     check_error("World::World");
@@ -204,12 +205,13 @@ void World::draw()
             glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
             glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &model->get_material().specular_color[0]);
-            glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &model->get_material().emission_color[0]);
             glUniform1f(_ent_shader.uniforms["material.shininess"], model->get_material().shininess);
             glActiveTexture(GL_TEXTURE0);
             model->get_material().diffuse_map->bind();
             glActiveTexture(GL_TEXTURE1);
             model->get_material().normal_map->bind();
+            glActiveTexture(GL_TEXTURE2);
+            model->get_material().emissive_map->bind();
 
             model->draw();
         }
@@ -225,21 +227,23 @@ void World::draw()
     glUniformMatrix3fv(_ent_shader.uniforms["normal_transform"], 1, GL_FALSE, &normal_transform[0][0]);
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_walls.get_material().specular_color[0]);
-    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_walls.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _walls.get_material().shininess);
     glActiveTexture(GL_TEXTURE0);
     _walls.get_material().diffuse_map->bind();
     glActiveTexture(GL_TEXTURE1);
     _walls.get_material().normal_map->bind();
+    glActiveTexture(GL_TEXTURE2);
+    _walls.get_material().emissive_map->bind();
     _walls.draw();
 
     glUniform3fv(_ent_shader.uniforms["material.specular_color"], 1, &_floor.get_material().specular_color[0]);
-    glUniform3fv(_ent_shader.uniforms["material.emission_color"], 1, &_floor.get_material().emission_color[0]);
     glUniform1f(_ent_shader.uniforms["material.shininess"], _floor.get_material().shininess);
     glActiveTexture(GL_TEXTURE0);
     _floor.get_material().diffuse_map->bind();
     glActiveTexture(GL_TEXTURE1);
     _floor.get_material().normal_map->bind();
+    glActiveTexture(GL_TEXTURE2);
+    _floor.get_material().emissive_map->bind();
     _floor.draw();
 
     _skybox.draw(_cam, _proj);

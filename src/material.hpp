@@ -34,10 +34,10 @@
 struct Material
 {
     // TODO: specular map?
-    glm::vec3 emission_color; //  TODO: replace w/ map
     glm::vec3 specular_color;
     std::shared_ptr<Texture_2D> diffuse_map;
     std::shared_ptr<Texture_2D> normal_map;
+    std::shared_ptr<Texture_2D> emissive_map;
     float shininess; // TODO: add as alpha to normal map (https://developer.valvesoftware.com/wiki/Phong)
     // TODO: exponent?
     // TODO: ctor w/ tex vars

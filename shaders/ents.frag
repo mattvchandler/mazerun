@@ -26,10 +26,10 @@
 struct Material
 {
     vec3 specular_color;
-    vec3 emission_color;
     float shininess;
     sampler2D diffuse_map;
     sampler2D normal_map;
+    sampler2D emissive_map;
 };
 
 struct Base_light
@@ -102,7 +102,7 @@ void main()
     reflected += tmp_reflected;
 
     // add to material color (from texture) to lighting for final color
-    vec3 rgb = min(material.emission_color + texture(material.diffuse_map, tex_coord).rgb * scattered
+    vec3 rgb = min(texture(material.emissive_map, tex_coord).rgb + texture(material.diffuse_map, tex_coord).rgb * scattered
         + material.specular_color * reflected, vec3(1.0));
     frag_color = vec4(rgb, 1.0);
 }

@@ -63,7 +63,7 @@ Entity create_testmdl()
     return testmdl;
 }
 
-Testlight_input::Testlight_input(): _light_on(true)
+Testlight_input::Testlight_input(): _light_on(true), _moving(true)
 {
 }
 
@@ -83,7 +83,7 @@ void Testlight_input::update(Entity & ent, const sf::Window & win,
 
         if(_light_on)
         {
-            ent.light()->color = glm::vec3(0.0f, 1.0f, 1.0f);
+            ent.light()->color = glm::vec3(1.0f, 0.0f, 0.0f);
         }
         else
         {
@@ -95,6 +95,17 @@ void Testlight_input::update(Entity & ent, const sf::Window & win,
     else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::P) && key_lock[sf::Keyboard::P])
     {
         key_lock[sf::Keyboard::P] = false;
+    }
+
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::O) && !key_lock[sf::Keyboard::O])
+    {
+        _moving = !_moving;
+
+        key_lock[sf::Keyboard::O] = true;
+    }
+    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::O) && key_lock[sf::Keyboard::O])
+    {
+        key_lock[sf::Keyboard::O] = false;
     }
 }
 
@@ -109,11 +120,14 @@ std::shared_ptr<Testlight_physics> Testlight_physics::create()
 
 void Testlight_physics::update(Entity & ent, const float dt)
 {
+    if(!std::dynamic_pointer_cast<Testlight_input>(ent.input())->_moving) // TODO: inter-component message passing?
+        return;
+
     static float theta = 0.0f;
 
     ent.set_pos(glm::vec3(10.0f * cosf(theta), 3.0f, 10.0f * sinf(theta)));
 
-    theta += dt;
+    theta += dt * 0.0625f * M_PI;
     if(theta >= 2.0f * M_PI)
     {
         theta -= 2.0f * M_PI;
@@ -122,9 +136,9 @@ void Testlight_physics::update(Entity & ent, const float dt)
 
 Entity create_testlight()
 {
-     return Entity(std::shared_ptr<Model>(),
+     return Entity(Model::create("mdl/boring_sphere.dae"),
         Testlight_input::create(),
         Testlight_physics::create(),
-        Point_light::create(glm::vec3(0.0f, 1.0f, 1.0f), 1.0f,
+        Point_light::create(glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
             glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f));
 }

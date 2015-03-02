@@ -179,10 +179,10 @@ Walls::Walls(const unsigned int width, const unsigned int height):
 
     glBindVertexArray(0);
 
-    _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
     _mat.diffuse_map = Texture_2D::create(check_in_pwd("img/GroundCover.jpg"));
     _mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"));
+    _mat.emissive_map = Texture_2D::emissive_fallback();
     _mat.shininess = 500.0f;
 
     check_error("Walls::Walls");
@@ -278,10 +278,10 @@ Floor::Floor(const unsigned int width, const unsigned int height):
     glEnableVertexAttribArray(3);
     glBindVertexArray(0);
 
-    _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
     _mat.diffuse_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring.jpg"));
     _mat.normal_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"));
+    _mat.emissive_map = Texture_2D::emissive_fallback();
     _mat.shininess = 500.0f;
 
     check_error("Floor::Floor");

@@ -118,6 +118,16 @@ std::shared_ptr<Texture_2D> Texture_2D::normal_fallback()
     return fallback;
 }
 
+std::shared_ptr<Texture_2D> Texture_2D::emissive_fallback()
+{
+    static std::shared_ptr<Texture_2D> fallback;
+    if(!fallback)
+    {
+        fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1, 1));
+    }
+    return fallback;
+}
+
 void Texture_2D::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, _texid);

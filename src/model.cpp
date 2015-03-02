@@ -113,13 +113,6 @@ Model::Model(const std::string & filename):
         const aiMaterial * mat = scene->mMaterials[0];
 
         aiColor3D mat_color;
-        if(mat->Get(AI_MATKEY_COLOR_EMISSIVE, mat_color) == AI_SUCCESS)
-        {
-            _mat.emission_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
-        }
-        else
-            _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
-
         if(mat->Get(AI_MATKEY_COLOR_SPECULAR, mat_color) == AI_SUCCESS)
         {
             _mat.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
@@ -141,14 +134,19 @@ Model::Model(const std::string & filename):
             _mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
         else
             _mat.normal_map = Texture_2D::normal_fallback();
+
+        if(mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS)
+            _mat.emissive_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        else
+            _mat.emissive_map = Texture_2D::emissive_fallback();
     }
     else
     {
         // TODO Fallback
-        _mat.emission_color = glm::vec3(0.0f, 0.0f, 0.0f);
         _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
         _mat.diffuse_map = Texture_2D::diffuse_fallback();
         _mat.normal_map = Texture_2D::normal_fallback();
+        _mat.emissive_map = Texture_2D::emissive_fallback();
         _mat.shininess = 1000.0f;
     }
 
