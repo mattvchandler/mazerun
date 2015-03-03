@@ -138,29 +138,23 @@ void Testlight_physics::toggle_movement()
     _moving = !_moving;
 }
 
-Testlight_light::Testlight_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
-    const float const_atten, const float linear_atten, const float quad_atten):
-    Point_light(color, strength, pos, const_atten, linear_atten, quad_atten),
-    _on_color(color),
-    _light_on(true)
+Testlight_light::Testlight_light(const bool enabled, const glm::vec3 & color,
+    const float strength, const glm::vec3 & pos, const float const_atten, const float linear_atten,
+    const float quad_atten):
+    Point_light(enabled, color, strength, pos, const_atten, linear_atten, quad_atten)
 {
 }
 
-std::shared_ptr<Testlight_light> Testlight_light::create(const glm::vec3 & color,
+std::shared_ptr<Testlight_light> Testlight_light::create(const bool enabled, const glm::vec3 & color,
     const float strength, const glm::vec3 & pos, const float const_atten,
     const float linear_atten, const float quad_atten)
 {
-    return std::make_shared<Testlight_light>(color, strength, pos, const_atten, linear_atten, quad_atten);
+    return std::make_shared<Testlight_light>(enabled, color, strength, pos, const_atten, linear_atten, quad_atten);
 }
 
 void Testlight_light::toggle_light()
 {
-    _light_on = !_light_on;
-
-    if(_light_on)
-        color = _on_color;
-    else
-        color = glm::vec3(0.0f);
+    enabled = !enabled;
 }
 
 Entity create_testlight()
@@ -168,7 +162,7 @@ Entity create_testlight()
     auto model = Model::create("mdl/boring_sphere.dae");
     auto input = Testlight_input::create();
     auto physics = Testlight_physics::create();
-    auto light = Testlight_light::create(glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
+    auto light = Testlight_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
 
     Entity ent(model, input, physics, light);

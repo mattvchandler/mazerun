@@ -34,6 +34,7 @@ struct Material
 
 struct Base_light
 {
+    bool enabled;
     vec3 color;
     float strength;
 };

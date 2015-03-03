@@ -36,20 +36,23 @@ class Light: public Component
 {
 public:
     virtual ~Light();
+    bool enabled;
     glm::vec3 color;
     float strength;
+
 protected:
-    Light(const glm::vec3 & color, const float strength);
+    Light(const bool enabled, const glm::vec3 & color, const float strength);
 };
 
 class Point_light: public Light
 {
 public:
-    Point_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
-        const float const_atten, const float linear_atten, const float quad_atten);
-
-    static std::shared_ptr<Point_light> create(const glm::vec3 & color, const float strength,
+    Point_light(const bool enabled, const glm::vec3 & color, const float strength,
         const glm::vec3 & pos, const float const_atten, const float linear_atten,
+        const float quad_atten);
+
+    static std::shared_ptr<Point_light> create(const bool enabled, const glm::vec3 & color,
+        const float strength, const glm::vec3 & pos, const float const_atten, const float linear_atten,
         const float quad_atten);
 
     glm::vec3 pos;
@@ -62,7 +65,8 @@ public:
 class Dir_light: public Light
 {
 public:
-    Dir_light(const glm::vec3 & color, const float strength, const glm::vec3 & dir);
+    Dir_light(const bool enabled, const glm::vec3 & color, const float strength,
+        const glm::vec3 & dir);
 
     glm::vec3 dir;
 };

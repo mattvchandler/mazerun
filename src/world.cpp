@@ -69,7 +69,7 @@ bool Glew_init::_initialized = false;
 World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _running(true), _focused(true), _do_resize(false),
-    _sunlight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
+    _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
     _walls(32, 32), _floor(32, 32),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
@@ -118,14 +118,19 @@ World::World():
 
     for(size_t i = 0; i < max_point_lights; ++i)
     {
+        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.color");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.strength");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].pos_eye");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].const_atten");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].linear_atten");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].quad_atten");
+
+        // we won't ever send the GPU disabled point lights
+        glUniform1i(_ent_shader.uniforms["point_lights[" + std::to_string(i) + "].base.enabled"], true);
     }
 
+    _ent_shader.add_uniform("dir_light.base.enabled");
     _ent_shader.add_uniform("dir_light.base.color");
     _ent_shader.add_uniform("dir_light.base.strength");
     _ent_shader.add_uniform("dir_light.dir");
@@ -143,12 +148,7 @@ World::World():
     check_error("World::World");
 
     std::dynamic_pointer_cast<Player_input>(_player.input())->signal_sunlight_toggled().connect(
-        [this]()
-        {
-            static bool sun_on = true;
-            sun_on = !sun_on;
-            _sunlight.color = sun_on ? glm::vec3(1.0f) : glm::vec3(0.0f);
-        });
+        [this]() { _sunlight.enabled = !_sunlight.enabled; });
 }
 
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
@@ -167,16 +167,20 @@ void World::draw()
     glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
 
     glUniform3fv(_ent_shader.uniforms["ambient_color"], 1, &ambient_color[0]);
-    glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
-    glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
-    glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
-    glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+    glUniform1i(_ent_shader.uniforms["dir_light.base.enabled"], _sunlight.enabled); // TODO: Also from skybox?
+    if(_sunlight.enabled)
+    {
+        glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
+        glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
+        glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
+        glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
+    }
 
     size_t point_light_i = 0;
     for(auto & ent: _ents)
     {
         std::shared_ptr<Light> light = ent.light();
-        if(!light)
+        if(!light || !light->enabled)
             continue;
 
         std::shared_ptr<Point_light> point_light = std::dynamic_pointer_cast<Point_light>(light);

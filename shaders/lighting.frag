@@ -37,6 +37,7 @@ struct Material
 // lighting vars
 struct Base_light
 {
+    bool enabled;
     vec3 color;
     float strength;
 };
@@ -101,6 +102,12 @@ void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
 void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     in Material material, in Point_light point_light, out vec3 scattered, out vec3 reflected)
 {
+    scattered = vec3(0.0);
+    reflected = vec3(0.0);
+
+    if(!point_light.base.enabled)
+        return;
+
     // point light location
     vec3 dir = point_light.pos_eye - pos;
     float dist = length(dir);
@@ -128,6 +135,12 @@ void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
 void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light dir_light,
     out vec3 scattered, out vec3 reflected)
 {
+    scattered = vec3(0.0);
+    reflected = vec3(0.0);
+
+    if(!dir_light.base.enabled)
+        return;
+
     float diffuse_mul, specular_mul;
     calc_common_lighting(normal_vec, dir_light.dir, dir_light.half_vec, material, dir_light.base,
         diffuse_mul, specular_mul);

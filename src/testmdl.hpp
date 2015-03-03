@@ -69,15 +69,13 @@ private:
 class Testlight_light final: public Point_light
 {
 public:
-    Testlight_light(const glm::vec3 & color, const float strength, const glm::vec3 & pos,
-        const float const_atten, const float linear_atten, const float quad_atten);
-    static std::shared_ptr<Testlight_light> create(const glm::vec3 & color,
+    Testlight_light(const bool enabled, const glm::vec3 & color, const float strength,
+        const glm::vec3 & pos, const float const_atten, const float linear_atten,
+        const float quad_atten);
+    static std::shared_ptr<Testlight_light> create(const bool enabled, const glm::vec3 & color,
         const float strength, const glm::vec3 & pos, const float const_atten,
         const float linear_atten, const float quad_atten);
     void toggle_light();
-private:
-    glm::vec3 _on_color;
-    bool _light_on;
 };
 
 Entity create_testlight();
