@@ -33,9 +33,9 @@ class Entity;
 class Component: public sigc::trackable
 {
 public:
-    virtual ~Component();
+    virtual ~Component() = default;
 protected:
-    Component();
+    Component() = default;
 };
 
 #endif // COMPONENT_HPP

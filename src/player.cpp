@@ -36,10 +36,6 @@
 
 #include "entity.hpp"
 
-Player_input::Player_input()
-{
-}
-
 std::shared_ptr<Player_input> Player_input::create()
 {
     return std::make_shared<Player_input>();

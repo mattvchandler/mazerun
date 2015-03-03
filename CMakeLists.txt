@@ -78,16 +78,13 @@ endif()
 
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
-    src/component.cpp
     src/config.cpp
     src/entity.cpp
     src/gl_helpers.cpp
     src/gl_wrappers.cpp
-    src/input.cpp
     src/light.cpp
     src/main.cpp
     src/model.cpp
-    src/physics.cpp
     src/player.cpp
     src/shader_prog.cpp
     src/skybox.cpp

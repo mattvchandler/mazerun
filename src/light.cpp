@@ -25,10 +25,6 @@
 
 #include "light.hpp"
 
-Light::~Light()
-{
-}
-
 Light::Light(const bool enabled, const glm::vec3 & color, const float strength):
     enabled(enabled), color(color), strength(strength)
 {
@@ -38,10 +34,6 @@ Point_light::Point_light(const bool enabled, const glm::vec3 & color, const floa
     const glm::vec3 & pos, const float const_atten, const float linear_atten, const float quad_atten):
     Light(enabled, color, strength), pos(pos),
     const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
-{
-}
-
-Point_light::~Point_light()
 {
 }
 
@@ -55,9 +47,5 @@ std::shared_ptr<Point_light> Point_light::create(const bool enabled, const glm::
 Dir_light::Dir_light(const bool enabled, const glm::vec3 & color, const float strength,
     const glm::vec3 & dir):
     Light(enabled, color, strength), dir(dir)
-{
-}
-
-Dir_light::~Dir_light()
 {
 }

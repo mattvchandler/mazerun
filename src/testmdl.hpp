@@ -33,7 +33,7 @@
 class Testmdl_physics final: public Physics
 {
 public:
-    Testmdl_physics();
+    Testmdl_physics() = default;
     static std::shared_ptr<Testmdl_physics> create();
     void update(Entity & ent, const float dt) override;
 };
@@ -43,7 +43,7 @@ Entity create_testmdl();
 class Testlight_input final: public Input
 {
 public:
-    Testlight_input();
+    Testlight_input() = default;
     static std::shared_ptr<Testlight_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;

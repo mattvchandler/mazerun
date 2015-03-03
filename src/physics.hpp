@@ -29,9 +29,8 @@
 class Physics: public Component
 {
 public:
-    Physics();
-    virtual ~Physics();
-    static std::shared_ptr<Physics> create();
+    Physics() = default;
+    virtual ~Physics() = default;
 
     virtual void update(Entity & ent,
         const float dt) = 0;

@@ -80,7 +80,7 @@ private:
     Shader_prog _ent_shader;
 
     // entity tables
-    std::vector<Entity> _ents;
+    std::vector<Entity> _ents; // TODO: list might be better
     // std::vector<Model> _model_components;
     // std::vector<Input> _input_components;
     // std::vector<Physics> _physics_components;

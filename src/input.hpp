@@ -31,9 +31,8 @@
 class Input: public Component
 {
 public:
-    Input();
-    virtual ~Input();
-    static std::shared_ptr<Input> create();
+    Input() = default;
+    virtual ~Input() = default;
 
     virtual void update(Entity & ent,
         const sf::Window & win, const float dt) = 0;

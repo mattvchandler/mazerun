@@ -37,10 +37,6 @@
 
 #include "entity.hpp"
 
-Testmdl_physics::Testmdl_physics()
-{
-}
-
 std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
 {
     return std::make_shared<Testmdl_physics>();
@@ -63,10 +59,6 @@ Entity create_testmdl()
     testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     return testmdl;
-}
-
-Testlight_input::Testlight_input()
-{
 }
 
 std::shared_ptr<Testlight_input> Testlight_input::create()
