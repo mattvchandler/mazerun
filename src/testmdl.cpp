@@ -23,6 +23,8 @@
 
 #include "testmdl.hpp"
 
+#include <iostream>
+
 #include <unordered_map>
 
 #define _USE_MATH_DEFINES
@@ -138,36 +140,17 @@ void Testlight_physics::toggle_movement()
     _moving = !_moving;
 }
 
-Testlight_light::Testlight_light(const bool enabled, const glm::vec3 & color,
-    const float strength, const glm::vec3 & pos, const float const_atten, const float linear_atten,
-    const float quad_atten):
-    Point_light(enabled, color, strength, pos, const_atten, linear_atten, quad_atten)
-{
-}
-
-std::shared_ptr<Testlight_light> Testlight_light::create(const bool enabled, const glm::vec3 & color,
-    const float strength, const glm::vec3 & pos, const float const_atten,
-    const float linear_atten, const float quad_atten)
-{
-    return std::make_shared<Testlight_light>(enabled, color, strength, pos, const_atten, linear_atten, quad_atten);
-}
-
-void Testlight_light::toggle_light()
-{
-    enabled = !enabled;
-}
-
 Entity create_testlight()
 {
     auto model = Model::create("mdl/boring_sphere.dae");
     auto input = Testlight_input::create();
     auto physics = Testlight_physics::create();
-    auto light = Testlight_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
+    auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
 
     Entity ent(model, input, physics, light);
 
-    input->signal_light_toggled().connect(sigc::mem_fun(*light, &Testlight_light::toggle_light));
+    input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
     input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testlight_physics::toggle_movement));
 
     return ent;
