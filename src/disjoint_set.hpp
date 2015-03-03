@@ -28,7 +28,7 @@
 #include <vector>
 
 template <typename T>
-class Disjoint_set
+class Disjoint_set final
 {
 public:
     Disjoint_set(const std::vector<T> & items);

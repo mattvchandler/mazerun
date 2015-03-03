@@ -32,6 +32,7 @@ class Input: public Component
 {
 public:
     Input();
+    virtual ~Input();
     static std::shared_ptr<Input> create();
 
     virtual void update(Entity & ent,

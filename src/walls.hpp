@@ -29,7 +29,7 @@
 #include "material.hpp"
 
 // TODO, be a type of entity?
-class Walls
+class Walls final
 {
 public:
     Walls(const unsigned int width, const unsigned int height);
@@ -43,7 +43,7 @@ private:
     Material _mat;
 };
 
-class Floor
+class Floor final
 {
 public:
     Floor(const unsigned int width, const unsigned int height);

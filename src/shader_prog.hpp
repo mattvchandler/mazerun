@@ -34,7 +34,7 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/System.hpp>
 
-class Shader_prog: public sf::NonCopyable
+class Shader_prog final: public sf::NonCopyable
 {
 public:
     Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sources,

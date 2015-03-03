@@ -35,7 +35,7 @@
 
 // TODO: light component
 
-class Entity
+class Entity final
 {
 public:
     // TODO: order?

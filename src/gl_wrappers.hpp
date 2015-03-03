@@ -29,7 +29,7 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/System.hpp>
 
-class GL_buffer: public sf::NonCopyable
+class GL_buffer final: public sf::NonCopyable
 {
 public:
     GL_buffer(const GLenum type);
@@ -42,7 +42,7 @@ private:
     GLenum _type;
 };
 
-class GL_vertex_array: public sf::NonCopyable
+class GL_vertex_array final: public sf::NonCopyable
 {
 public:
     GL_vertex_array();

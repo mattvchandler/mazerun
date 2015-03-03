@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// TODO: remove virtual dtors as able
+
 #include "light.hpp"
 
 Light::~Light()
@@ -39,6 +41,10 @@ Point_light::Point_light(const bool enabled, const glm::vec3 & color, const floa
 {
 }
 
+Point_light::~Point_light()
+{
+}
+
 std::shared_ptr<Point_light> Point_light::create(const bool enabled, const glm::vec3 & color,
     const float strength, const glm::vec3 & pos, const float const_atten, const float linear_atten,
     const float quad_atten)
@@ -49,5 +55,9 @@ std::shared_ptr<Point_light> Point_light::create(const bool enabled, const glm::
 Dir_light::Dir_light(const bool enabled, const glm::vec3 & color, const float strength,
     const glm::vec3 & dir):
     Light(enabled, color, strength), dir(dir)
+{
+}
+
+Dir_light::~Dir_light()
 {
 }

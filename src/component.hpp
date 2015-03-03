@@ -32,6 +32,8 @@ class Entity;
 
 class Component: public sigc::trackable
 {
+public:
+    virtual ~Component();
 protected:
     Component();
 };

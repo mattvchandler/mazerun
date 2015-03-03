@@ -35,7 +35,7 @@
 #include "shader_prog.hpp"
 #include "texture.hpp"
 
-class Skybox
+class Skybox final
 {
 public:
     Skybox();

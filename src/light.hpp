@@ -50,6 +50,7 @@ public:
     Point_light(const bool enabled, const glm::vec3 & color, const float strength,
         const glm::vec3 & pos, const float const_atten, const float linear_atten,
         const float quad_atten);
+    virtual ~Point_light();
 
     static std::shared_ptr<Point_light> create(const bool enabled, const glm::vec3 & color,
         const float strength, const glm::vec3 & pos, const float const_atten, const float linear_atten,
@@ -67,6 +68,7 @@ class Dir_light: public Light
 public:
     Dir_light(const bool enabled, const glm::vec3 & color, const float strength,
         const glm::vec3 & dir);
+    virtual ~Dir_light();
 
     glm::vec3 dir;
 };

@@ -42,7 +42,7 @@
 #include "shader_prog.hpp"
 #include "walls.hpp"
 
-class Glew_init
+class Glew_init final: public sf::NonCopyable
 {
 public:
     Glew_init();
@@ -50,7 +50,7 @@ private:
     static bool _initialized;
 };
 
-class World // TODO: make this a singleton?
+class World final // TODO: make this a singleton?
 {
 private:
     sf::Window _win; // we need the OpenGL context to be created before anything else

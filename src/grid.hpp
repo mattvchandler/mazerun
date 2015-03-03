@@ -45,7 +45,7 @@ struct Wall
     int region_1, region_2;
 };
 
-class Grid
+class Grid final
 {
 public:
     typedef enum {MAZEGEN_DFS, MAZEGEN_PRIM, MAZEGEN_KRUSKAL} Mazegen_alg;

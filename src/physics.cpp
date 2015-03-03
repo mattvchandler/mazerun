@@ -34,3 +34,7 @@
 Physics::Physics()
 {
 }
+
+Physics::~Physics()
+{
+}

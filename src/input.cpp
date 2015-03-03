@@ -26,3 +26,7 @@
 Input::Input()
 {
 }
+
+Input::~Input()
+{
+}

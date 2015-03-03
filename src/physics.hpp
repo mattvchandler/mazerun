@@ -30,6 +30,7 @@ class Physics: public Component
 {
 public:
     Physics();
+    virtual ~Physics();
     static std::shared_ptr<Physics> create();
 
     virtual void update(Entity & ent,
