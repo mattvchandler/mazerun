@@ -145,7 +145,7 @@ Entity create_player()
     auto input = Player_input::create();
     auto physics = std::shared_ptr<Physics>();
     auto light = Spot_light::create(true, glm::vec3(1.0f, 1.0f, 0.0f), 1.0f,
-        glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f), cosf(0.0625f * M_PI), 0.01f, 1.0f, 0.5f, 0.0f);
+        glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f), std::cos(0.0625f * M_PI), 0.01f, 1.0f, 0.5f, 0.0f);
 
     Entity player(model, input, physics, light);
 

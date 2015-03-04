@@ -117,7 +117,7 @@ void Testlight_physics::update(Entity & ent, const float dt)
 
     static float theta = 0.0f;
 
-    ent.set_pos(glm::vec3(10.0f * cosf(theta), 3.0f, 10.0f * sinf(theta)));
+    ent.set_pos(glm::vec3(10.0f * std::cos(theta), 3.0f, 10.0f * std::sin(theta)));
 
     theta += dt * 0.0625f * M_PI;
     if(theta >= 2.0f * M_PI)
