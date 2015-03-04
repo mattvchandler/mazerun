@@ -42,8 +42,9 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     glm::vec3 base(-0.5f * (float)_grid.grid[0].size(), 0.0f, -0.5f * (float)_grid.grid.size());
 
     glm::vec3 left_normal(1.0f, 0.0f, 0.0f);
+    glm::vec3 left_tangent(0.0f, 0.0f, -1.0f);
     glm::vec3 up_normal(0.0f, 0.0f, 1.0f);
-    glm::vec3 tangent(0.0f, 1.0f, 0.0f);
+    glm::vec3 up_tangent(1.0f, 0.0f, 0.0f);
 
     // draw border walls
     for(size_t col = 0; col < _grid.grid[0].size(); ++col)
@@ -62,7 +63,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
         for(int i = 0; i < 6; ++i)
         {
             vert_normals.push_back(up_normal);
-            vert_tangents.push_back(tangent);
+            vert_tangents.push_back(up_tangent);
         }
     }
     for(size_t row = 0; row < _grid.grid.size(); ++row)
@@ -81,7 +82,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
         for(int i = 0; i < 6; ++i)
         {
             vert_normals.push_back(left_normal);
-            vert_tangents.push_back(tangent);
+            vert_tangents.push_back(left_tangent);
         }
     }
 
@@ -106,7 +107,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
                 for(int i = 0; i < 6; ++i)
                 {
                     vert_normals.push_back(up_normal);
-                    vert_tangents.push_back(tangent);
+                    vert_tangents.push_back(up_tangent);
                 }
             }
 
@@ -123,7 +124,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
                 for(int i = 0; i < 6; ++i)
                 {
                     vert_normals.push_back(left_normal);
-                    vert_tangents.push_back(tangent);
+                    vert_tangents.push_back(left_tangent);
                 }
             }
         }
@@ -143,7 +144,6 @@ Walls::Walls(const unsigned int width, const unsigned int height):
 
     _num_verts = vert_pos.size();
 
-    // create OpenGL vertex objects
     _vao.bind();
     _vbo.bind();
 
@@ -243,7 +243,6 @@ Floor::Floor(const unsigned int width, const unsigned int height):
 
     _num_verts = vert_pos.size();
 
-    // create OpenGL vertex objects
     _vao.bind();
     _vbo.bind();
 
