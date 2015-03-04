@@ -63,6 +63,27 @@ public:
     float quad_atten;
 };
 
+class Spot_light:public Light
+{
+public:
+    Spot_light(const bool enabled, const glm::vec3 & color, const float strength,
+        const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff, const float exponent,
+        const float const_atten, const float linear_atten, const float quad_atten);
+
+    static std::shared_ptr<Spot_light> create(const bool enabled, const glm::vec3 & color,
+        const float strength, const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff,
+        const float exponent, const float const_atten, const float linear_atten, const float quad_atten);
+
+    glm::vec3 pos;
+    glm::vec3 dir;
+    float cos_cutoff;
+    float exponent;
+    // attenuation properties
+    float const_atten;
+    float linear_atten;
+    float quad_atten;
+};
+
 class Dir_light: public Light
 {
 public:
@@ -72,7 +93,5 @@ public:
 
     glm::vec3 dir;
 };
-
-// TODO: spotlight
 
 #endif // LIGHT_HPP

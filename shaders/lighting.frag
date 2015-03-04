@@ -51,6 +51,18 @@ struct Point_light
     float quad_atten;
 };
 
+struct Spot_light
+{
+    Base_light base;
+    vec3 pos_eye;
+    vec3 dir_eye;
+    float cos_cutoff;
+    float exponent;
+    float const_atten;
+    float linear_atten;
+    float quad_atten;
+};
+
 struct Dir_light
 {
     Base_light base;
@@ -76,10 +88,11 @@ vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in samp
 }
 
 void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
-    in Material material, in Base_light base,
-    out float diffuse_mul, out float specular_mul)
+    in Material material, in Base_light base, in float atten,
+    out vec3 scattered, out vec3 reflected)
 {
     // calculate ammt of diffuse and specular shading
+    float diffuse_mul, specular_mul;
     // TODO: remove
     if(gl_FrontFacing)
     {
@@ -97,6 +110,38 @@ void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
         specular_mul = 0.0;
     else
         specular_mul = pow(specular_mul, material.shininess) * base.strength;
+
+    // diffuse light color
+    scattered = base.color * diffuse_mul * atten;
+    // specular light color
+    reflected = base.color * specular_mul * atten;
+}
+
+float calc_attenuation(in float const_atten, in float linear_atten, in float quad_atten, in float dist)
+{
+    return  1.0 / (const_atten +
+        linear_atten * dist +
+        quad_atten * dist * dist);
+}
+
+void calc_dist_dir(in vec3 light_pos_eye, in vec3 pos, out vec3 dir, out float dist)
+{
+    dir = light_pos_eye - pos;
+    dist = length(dir);
+
+    dir = dir / dist; // normalize, but reuse length instead of calling normalize
+}
+
+// TODO: not properly lighting walls
+void calc_point_spot_light(in vec3 pos, in vec3 forward, in vec3 normal_vec,
+    in vec3 dir, in float atten, in Material material, in Base_light base,
+    out vec3 scattered, out vec3 reflected)
+{
+    // midway between light and camera - for reflection calc
+    vec3 half_vec = normalize(dir + forward);
+
+    calc_common_lighting(normal_vec, dir, half_vec, material, base, atten,
+        scattered, reflected);
 }
 
 void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
@@ -108,28 +153,45 @@ void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     if(!point_light.base.enabled)
         return;
 
-    // point light location
-    vec3 dir = point_light.pos_eye - pos;
-    float dist = length(dir);
+    vec3 dir;
+    float dist;
+    calc_dist_dir(point_light.pos_eye, pos, dir, dist);
 
-    dir = dir / dist; // normalize, but reuse length instead of calling normalize
+    // calculate light falloff
+    float atten = calc_attenuation(point_light.const_atten, point_light.linear_atten,
+        point_light.quad_atten, dist);
 
-    // calculate point light falloff
-    float atten = 1.0 / (point_light.const_atten
-        + point_light.linear_atten * dist
-        + point_light.quad_atten * dist * dist);
+    calc_point_spot_light(pos, forward, normal_vec, dir, atten, material, point_light.base,
+        scattered, reflected);
+}
 
-    // midway between light and camera - for reflection calc
-    vec3 half_vec = normalize(dir + forward);
+// TODO: why sharp edge?
+void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
+    in Material material, in Spot_light spot_light, out vec3 scattered, out vec3 reflected)
+{
+    scattered = vec3(0.0);
+    reflected = vec3(0.0);
 
-    float diffuse_mul, specular_mul;
-    calc_common_lighting(normal_vec, dir, half_vec, material, point_light.base,
-        diffuse_mul, specular_mul);
+    if(!spot_light.base.enabled)
+        return;
 
-    // diffuse light color
-    scattered = point_light.base.color * diffuse_mul * atten;
-    // specular light color
-    reflected = point_light.base.color * specular_mul * atten;
+    vec3 dir;
+    float dist;
+    calc_dist_dir(spot_light.pos_eye, pos, dir, dist);
+
+    // calculate light falloff
+    float atten = calc_attenuation(spot_light.const_atten, spot_light.linear_atten,
+        spot_light.quad_atten, dist);
+
+    float spot_cos = dot(dir, -spot_light.dir_eye);
+
+    if(spot_cos < spot_light.cos_cutoff)
+        atten = 0.0;
+    else
+        atten *= pow(spot_cos, spot_light.exponent);
+
+    calc_point_spot_light(pos, forward, normal_vec, dir, atten, material, spot_light.base,
+        scattered, reflected);
 }
 
 void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light dir_light,
@@ -141,12 +203,6 @@ void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light di
     if(!dir_light.base.enabled)
         return;
 
-    float diffuse_mul, specular_mul;
-    calc_common_lighting(normal_vec, dir_light.dir, dir_light.half_vec, material, dir_light.base,
-        diffuse_mul, specular_mul);
-
-    // diffuse light color
-    scattered = dir_light.base.color * diffuse_mul;
-    // specular light color
-    reflected = dir_light.base.color * specular_mul;
+    calc_common_lighting(normal_vec, dir_light.dir, dir_light.half_vec, material, dir_light.base, 1.0,
+        scattered, reflected);
 }

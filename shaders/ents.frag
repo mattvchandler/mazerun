@@ -48,6 +48,18 @@ struct Point_light
     float quad_atten;
 };
 
+struct Spot_light
+{
+    Base_light base;
+    vec3 pos_eye;
+    vec3 dir_eye;
+    float cos_cutoff;
+    float exponent;
+    float const_atten;
+    float linear_atten;
+    float quad_atten;
+};
+
 struct Dir_light
 {
     Base_light base;
@@ -59,6 +71,9 @@ vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in samp
 
 void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     in Material material, in Point_light point_light, out vec3 scattered, out vec3 reflected);
+
+void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
+    in Material material, in Spot_light spot_light, out vec3 scattered, out vec3 reflected);
 
 void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light dir_light,
     out vec3 scattered, out vec3 reflected);
@@ -74,8 +89,11 @@ uniform Material material;
 // lighting vars
 uniform vec3 ambient_color;
 const int max_point_lights = 10; // TODO: set by config?
+const int max_spot_lights = 10; // TODO: set by config?
 uniform int num_point_lights;
+uniform int num_spot_lights;
 uniform Point_light point_lights[max_point_lights];
+uniform Spot_light spot_lights[max_spot_lights];
 uniform Dir_light dir_light;
 
 // camera facing direction (always (0, 0, 1) when viewed from camera)
@@ -93,6 +111,14 @@ void main()
     for(int i = 0; i < num_point_lights; ++i)
     {
         calc_point_lighting(pos, cam_light_forward, mapped_normal, material, point_lights[i],
+                tmp_scattered, tmp_reflected);
+        scattered += tmp_scattered;
+        reflected += tmp_reflected;
+    }
+
+    for(int i = 0; i < num_spot_lights; ++i)
+    {
+        calc_spot_lighting(pos, cam_light_forward, mapped_normal, material, spot_lights[i],
                 tmp_scattered, tmp_reflected);
         scattered += tmp_scattered;
         reflected += tmp_reflected;

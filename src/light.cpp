@@ -44,6 +44,22 @@ std::shared_ptr<Point_light> Point_light::create(const bool enabled, const glm::
     return std::make_shared<Point_light>(enabled, color, strength, pos, const_atten, linear_atten, quad_atten);
 }
 
+Spot_light::Spot_light(const bool enabled, const glm::vec3 & color, const float strength,
+    const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff, const float exponent,
+    const float const_atten, const float linear_atten, const float quad_atten):
+    Light(enabled, color, strength), pos(pos), dir(dir), cos_cutoff(cos_cutoff), exponent(exponent),
+    const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
+{
+}
+
+std::shared_ptr<Spot_light> Spot_light::create(const bool enabled, const glm::vec3 & color,
+    const float strength, const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff,
+    const float exponent, const float const_atten, const float linear_atten, const float quad_atten)
+{
+    return std::make_shared<Spot_light>(enabled, color, strength, pos, dir, cos_cutoff,
+        exponent, const_atten, linear_atten, quad_atten);
+}
+
 Dir_light::Dir_light(const bool enabled, const glm::vec3 & color, const float strength,
     const glm::vec3 & dir):
     Light(enabled, color, strength), dir(dir)

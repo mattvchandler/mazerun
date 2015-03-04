@@ -88,6 +88,18 @@ void Player_input::update(Entity & ent,
         ent.translate(-mov_scale * glm::vec3(0.0f, 1.0f, 0.0f) * dt);
     }
 
+    // toggle spotlight
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::F) && !key_lock[sf::Keyboard::F])
+    {
+        key_lock[sf::Keyboard::F] = true;
+        _signal_spotlight_toggled();
+    }
+    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::F) && key_lock[sf::Keyboard::F])
+    {
+        key_lock[sf::Keyboard::F] = false;
+    }
+
+    // Toggle sunlight
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::I) && !key_lock[sf::Keyboard::I])
     {
         key_lock[sf::Keyboard::I] = true;
@@ -111,6 +123,11 @@ void Player_input::update(Entity & ent,
     old_mouse_pos = new_mouse_pos;
 }
 
+sigc::signal<void> Player_input::signal_spotlight_toggled()
+{
+    return _signal_spotlight_toggled;
+}
+
 sigc::signal<void> Player_input::signal_sunlight_toggled()
 {
     return _signal_sunlight_toggled;
@@ -118,10 +135,17 @@ sigc::signal<void> Player_input::signal_sunlight_toggled()
 
 Entity create_player()
 {
-    Entity player(std::shared_ptr<Model>(),
-        Player_input::create(),
-        std::shared_ptr<Physics>(),
-        std::shared_ptr<Light>());
+    auto model = std::shared_ptr<Model>();
+    auto input = Player_input::create();
+    auto physics = std::shared_ptr<Physics>();
+    auto light = Spot_light::create(true, glm::vec3(1.0f, 1.0f, 0.0f), 1.0f,
+        glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f), cosf(0.0625f * M_PI), 0.01f, 1.0f, 0.5f, 0.0f);
+
+    Entity player(model, input, physics, light);
+
     player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    input->signal_spotlight_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
+
     return player;
 }
