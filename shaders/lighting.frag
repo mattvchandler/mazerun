@@ -78,13 +78,13 @@ vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in samp
     tangent = normalize(tangent - dot(tangent, normal) * normal);
     vec3 bitangent = cross(tangent, normal);
 
-    vec3 norm_normal = texture(normal_map, tex_coord).xyz;
-    norm_normal = 2.0 * norm_normal - vec3(1.0, 1.0, 1.0);
-
     mat3 tangent_bitangent_normal = mat3(tangent, bitangent, normal);
 
-    vec3 new_norm = tangent_bitangent_normal * norm_normal;
-    return normalize(new_norm);
+    vec3 map_normal = texture(normal_map, tex_coord).xyz;
+    map_normal = 2.0 * map_normal - vec3(1.0, 1.0, 1.0);
+
+    vec3 new_normal = tangent_bitangent_normal * map_normal;
+    return normalize(new_normal);
 }
 
 void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
@@ -96,12 +96,12 @@ void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
     // TODO: remove
     if(gl_FrontFacing)
     {
-        diffuse_mul = max(0.0, dot(normal_vec, normalize(dir)));
+        diffuse_mul = max(0.0, dot(normal_vec, dir));
         specular_mul = max(0.0, dot(normal_vec, half_vec));
     }
     else
     {
-        diffuse_mul = max(0.0, dot(-normal_vec, normalize(dir)));
+        diffuse_mul = max(0.0, dot(-normal_vec, dir));
         specular_mul = max(0.0, dot(-normal_vec, half_vec));
     }
 
@@ -132,7 +132,6 @@ void calc_dist_dir(in vec3 light_pos_eye, in vec3 pos, out vec3 dir, out float d
     dir = dir / dist; // normalize, but reuse length instead of calling normalize
 }
 
-// TODO: not properly lighting walls
 void calc_point_spot_light(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     in vec3 dir, in float atten, in Material material, in Base_light base,
     out vec3 scattered, out vec3 reflected)
@@ -203,6 +202,6 @@ void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light di
     if(!dir_light.base.enabled)
         return;
 
-    calc_common_lighting(normal_vec, dir_light.dir, dir_light.half_vec, material, dir_light.base, 1.0,
+    calc_common_lighting(normal_vec, normalize(dir_light.dir), normalize(dir_light.half_vec), material, dir_light.base, 1.0,
         scattered, reflected);
 }
