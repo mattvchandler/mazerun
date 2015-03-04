@@ -81,6 +81,8 @@ Texture_2D::Texture_2D(const std::string & filename)
 
 Texture_2D::Texture_2D(const glm::vec4 & color, const GLint width, const GLint height)
 {
+    glBindTexture(GL_TEXTURE_2D, _texid);
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
         0, GL_RGBA, GL_FLOAT, &color[0]);
 
