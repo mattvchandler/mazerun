@@ -24,7 +24,6 @@
 #include "testmdl.hpp"
 
 #include <iostream>
-
 #include <unordered_map>
 
 #define _USE_MATH_DEFINES
