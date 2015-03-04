@@ -115,7 +115,7 @@ std::shared_ptr<Texture_2D> Texture_2D::normal_fallback()
     static std::shared_ptr<Texture_2D> fallback;
     if(!fallback)
     {
-        fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), 1, 1));
+        fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
     }
     return fallback;
 }
