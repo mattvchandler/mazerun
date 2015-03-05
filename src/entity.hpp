@@ -33,8 +33,6 @@
 #include "model.hpp"
 #include "physics.hpp"
 
-// TODO: light component
-
 class Entity final
 {
 public:

@@ -164,7 +164,6 @@ void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
         scattered, reflected);
 }
 
-// TODO: why sharp edge?
 void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     in Material material, in Spot_light spot_light, out vec3 scattered, out vec3 reflected)
 {

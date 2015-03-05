@@ -41,7 +41,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "gl_helpers.hpp" // TODO: move w/ walls decl
+#include "gl_helpers.hpp"
 #include "player.hpp"
 #include "testmdl.hpp"
 

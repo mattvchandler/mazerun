@@ -45,5 +45,5 @@ Grid::Grid(const unsigned int width, const unsigned int height,
 
     grid.assign(height, std::vector<Grid_cell>(width));
 
-    gen_rooms(mazegen, room_attempts, wall_rm_attempts); // TODO: parameterize
+    gen_rooms(mazegen, room_attempts, wall_rm_attempts);
 }

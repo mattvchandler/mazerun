@@ -142,7 +142,6 @@ Model::Model(const std::string & filename):
     }
     else
     {
-        // TODO Fallback
         _mat.specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
         _mat.diffuse_map = Texture_2D::diffuse_fallback();
         _mat.normal_map = Texture_2D::normal_fallback();

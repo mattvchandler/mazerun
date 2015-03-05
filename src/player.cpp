@@ -55,7 +55,6 @@ void Player_input::update(Entity & ent,
 
     float mov_scale = 5.0f;
     sf::Vector2i new_mouse_pos = sf::Mouse::getPosition(win);
-    // TODO: invalidate signal somehow
 
     // move forward
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::W))
