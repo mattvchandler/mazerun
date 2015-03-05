@@ -33,12 +33,15 @@
 // TODO: default maps (white for diffuse, blue for normal, black for emmissive)
 struct Material
 {
+    // TODO: ambient term?
+    // TODO: diffuse color term?
     // TODO: specular map?
     glm::vec3 specular_color;
     std::shared_ptr<Texture_2D> diffuse_map;
     std::shared_ptr<Texture_2D> normal_map;
     std::shared_ptr<Texture_2D> emissive_map;
     float shininess; // TODO: add as alpha to normal map (https://developer.valvesoftware.com/wiki/Phong)
+        // TODO: shininess is exponent
     // TODO: exponent?
     // TODO: ctor w/ tex vars
     // TODO: environt mapping (reflectivity map?)

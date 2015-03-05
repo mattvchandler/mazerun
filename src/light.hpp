@@ -38,7 +38,7 @@ public:
     virtual ~Light() = default;
     bool enabled;
     glm::vec3 color;
-    float strength;
+    float strength; // TODO: should this be a material prop?
 
 protected:
     Light(const bool enabled, const glm::vec3 & color, const float strength);

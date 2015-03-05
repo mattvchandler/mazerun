@@ -179,16 +179,16 @@ void World::draw()
 
     // TODO: deferred lighting
     // TODO: sunlight owned by skybox?
-    glm::vec3 ambient_color(0.2f, 0.2f, 0.2f); // TODO: get from skybox?
+    glm::vec3 ambient_color(0.1f, 0.1f, 0.1f); // TODO: get from skybox?
     glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
-    glm::vec3 sunlight_dir = glm::transpose(glm::inverse(glm::mat3(_cam.view_mat()))) *
-        glm::normalize(-_sunlight.dir);
-    glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
-
     glUniform3fv(_ent_shader.uniforms["ambient_color"], 1, &ambient_color[0]);
     glUniform1i(_ent_shader.uniforms["dir_light.base.enabled"], _sunlight.enabled); // TODO: Also from skybox?
     if(_sunlight.enabled)
     {
+        glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam.view_mat()))) *
+            glm::normalize(-_sunlight.dir));
+        glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+
         glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
         glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
         glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);

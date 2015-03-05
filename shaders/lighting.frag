@@ -202,6 +202,6 @@ void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light di
     if(!dir_light.base.enabled)
         return;
 
-    calc_common_lighting(normal_vec, normalize(dir_light.dir), normalize(dir_light.half_vec), material, dir_light.base, 1.0,
+    calc_common_lighting(normal_vec, dir_light.dir, dir_light.half_vec, material, dir_light.base, 1.0,
         scattered, reflected);
 }
