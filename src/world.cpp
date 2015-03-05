@@ -177,6 +177,7 @@ void World::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _ent_shader.use();
 
+    // TODO: shadows
     // TODO: deferred lighting
     // TODO: sunlight owned by skybox?
     glm::vec3 ambient_color(0.1f, 0.1f, 0.1f); // TODO: get from skybox?
@@ -206,7 +207,7 @@ void World::draw()
         glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
 
         std::shared_ptr<Point_light> point_light = std::dynamic_pointer_cast<Point_light>(light);
-        if(point_light)
+        if(point_light && point_light_i < max_point_lights)
         {
             glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light->pos, 1.0f));
 
@@ -218,11 +219,10 @@ void World::draw()
             glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].quad_atten"], point_light->quad_atten);
 
             ++point_light_i;
-            // TODO: check for too many lights
         }
 
         std::shared_ptr<Spot_light> spot_light = std::dynamic_pointer_cast<Spot_light>(light);
-        if(spot_light)
+        if(spot_light && spot_light_i < max_spot_lights)
         {
             glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
 
@@ -240,8 +240,10 @@ void World::draw()
             glUniform1f(_ent_shader.uniforms["spot_lights[" + std::to_string(spot_light_i) + "].quad_atten"], spot_light->quad_atten);
 
             ++spot_light_i;
-            // TODO: check for too many lights
         }
+
+        if(point_light_i >= max_point_lights && spot_light_i >= max_spot_lights)
+            break;
     }
 
     glUniform1i(_ent_shader.uniforms["num_point_lights"], point_light_i);
