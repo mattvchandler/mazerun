@@ -70,7 +70,7 @@ bool Glew_init::_initialized = false;
 World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _running(true), _focused(true), _do_resize(false),
-    _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::normalize(glm::vec3(-1.0f))),
+    _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), glm::normalize(glm::vec3(-1.0f))),
     _walls(32, 32), _floor(32, 32),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
@@ -122,7 +122,6 @@ World::World():
     {
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.color");
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.strength");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].pos_eye");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].const_atten");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].linear_atten");
@@ -136,7 +135,6 @@ World::World():
     {
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.color");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.strength");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].pos_eye");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].dir_eye");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].cos_cutoff");
@@ -151,7 +149,6 @@ World::World():
 
     _ent_shader.add_uniform("dir_light.base.enabled");
     _ent_shader.add_uniform("dir_light.base.color");
-    _ent_shader.add_uniform("dir_light.base.strength");
     _ent_shader.add_uniform("dir_light.dir");
     _ent_shader.add_uniform("dir_light.half_vec");
 
@@ -191,7 +188,6 @@ void World::draw()
         glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
 
         glUniform3fv(_ent_shader.uniforms["dir_light.base.color"], 1, &_sunlight.color[0]); // TODO: Also from skybox?
-        glUniform1f(_ent_shader.uniforms["dir_light.base.strength"], _sunlight.strength); // TODO: Also from skybox?
         glUniform3fv(_ent_shader.uniforms["dir_light.dir"], 1, &sunlight_dir[0]);
         glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
     }
@@ -212,7 +208,6 @@ void World::draw()
             glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light->pos, 1.0f));
 
             glUniform3fv(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].base.color"], 1, &point_light->color[0]);
-            glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].base.strength"], point_light->strength);
             glUniform3fv(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].pos_eye"], 1, &point_light_pos_eye[0]);
             glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].const_atten"], point_light->const_atten);
             glUniform1f(_ent_shader.uniforms["point_lights[" + std::to_string(point_light_i) + "].linear_atten"], point_light->linear_atten);
@@ -230,7 +225,6 @@ void World::draw()
             glm::vec3 spot_light_dir_eye = normal_transform * spot_light->dir;
 
             glUniform3fv(_ent_shader.uniforms["spot_lights[" + std::to_string(spot_light_i) + "].base.color"], 1, &spot_light->color[0]);
-            glUniform1f(_ent_shader.uniforms["spot_lights[" + std::to_string(spot_light_i) + "].base.strength"], spot_light->strength);
             glUniform3fv(_ent_shader.uniforms["spot_lights[" + std::to_string(spot_light_i) + "].pos_eye"], 1, &spot_light_pos_eye[0]);
             glUniform3fv(_ent_shader.uniforms["spot_lights[" + std::to_string(spot_light_i) + "].dir_eye"], 1, &spot_light_dir_eye[0]);
             glUniform1f(_ent_shader.uniforms["spot_lights[" + std::to_string(spot_light_i) + "].cos_cutoff"], spot_light->cos_cutoff);

@@ -36,7 +36,6 @@ struct Base_light
 {
     bool enabled;
     vec3 color;
-    float strength;
 };
 
 struct Point_light

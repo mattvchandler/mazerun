@@ -39,7 +39,6 @@ struct Base_light
 {
     bool enabled;
     vec3 color;
-    float strength;
 };
 
 struct Point_light
@@ -109,7 +108,7 @@ void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
     if(diffuse_mul <= 0.0001)
         specular_mul = 0.0;
     else
-        specular_mul = pow(specular_mul, material.shininess) * base.strength;
+        specular_mul = pow(specular_mul, material.shininess);
 
     // diffuse light color
     scattered = base.color * diffuse_mul * atten;

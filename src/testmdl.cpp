@@ -136,7 +136,7 @@ Entity create_testlight()
     auto model = Model::create("mdl/boring_sphere.dae");
     auto input = Testlight_input::create();
     auto physics = Testlight_physics::create();
-    auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f,
+    auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
 
     Entity ent(model, input, physics, light);
