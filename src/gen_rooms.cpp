@@ -44,9 +44,9 @@ bool attempt_gen_room(const std::vector<std::vector<Grid_cell>> & grid,
         std::uniform_int_distribution<unsigned int>(0, std::max(0, (int)grid.size() - (int)size_out.y - 1))(prng));
 
     // check if overlapping
-    for(size_t row = pos_out.y; row < pos_out.y + size_out.y; ++row)
+    for(std::size_t row = pos_out.y; row < pos_out.y + size_out.y; ++row)
     {
-        for(size_t col = pos_out.x; col < pos_out.x + size_out.x; ++col)
+        for(std::size_t col = pos_out.x; col < pos_out.x + size_out.x; ++col)
         {
             if(grid[row][col].visited)
             {
@@ -63,9 +63,9 @@ void place_room(std::vector<std::vector<Grid_cell>> & grid,
 {
     // mark visited
     // destroy walls, excepting room borders
-    for(size_t row = pos.y; row < pos.y + size.y; ++row)
+    for(std::size_t row = pos.y; row < pos.y + size.y; ++row)
     {
-        for(size_t col = pos.x; col < pos.x + size.x; ++col)
+        for(std::size_t col = pos.x; col < pos.x + size.x; ++col)
         {
             grid[row][col].visited = true;
             grid[row][col].region = region;
@@ -86,9 +86,9 @@ void place_room(std::vector<std::vector<Grid_cell>> & grid,
 std::vector<Wall> find_connectors(const std::vector<std::vector<Grid_cell>> & grid)
 {
     std::vector<Wall> connectors;
-    for(size_t row = 0; row < grid.size() - 1; ++row)
+    for(std::size_t row = 0; row < grid.size() - 1; ++row)
     {
-        for(size_t col = 0; col < grid[0].size() - 1; ++col)
+        for(std::size_t col = 0; col < grid[0].size() - 1; ++col)
         {
             if(grid[row][col].region != grid[row][col + 1].region)
             {
@@ -124,7 +124,7 @@ void join_regions(std::vector<std::vector<Grid_cell>> & grid,
 
     // use Kruskal's alg to find min spanning tree of region graph
     std::vector<int> regions_vec(num_regions);
-    for(size_t i = 0; i < regions_vec.size(); ++i)
+    for(std::size_t i = 0; i < regions_vec.size(); ++i)
         regions_vec[i] = i;
 
     Disjoint_set<int>regions(regions_vec);
@@ -224,9 +224,9 @@ void Grid::gen_rooms(const Mazegen_alg mazegen,
     }
 
     // fill in remaining areas with mazes
-    for(size_t row = 0; row < grid.size(); ++row)
+    for(std::size_t row = 0; row < grid.size(); ++row)
     {
-        for(size_t col = 0; col < grid[0].size(); ++col)
+        for(std::size_t col = 0; col < grid[0].size(); ++col)
         {
             if(!grid[row][col].visited)
             {

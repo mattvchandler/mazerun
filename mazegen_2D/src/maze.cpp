@@ -145,9 +145,9 @@ bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int wid
     double cell_scale_y = height_d / (double)_grid->grid.size();
 
     // draw maze cells
-    for(size_t row = 0; row < _grid->grid.size(); ++row)
+    for(std::size_t row = 0; row < _grid->grid.size(); ++row)
     {
-        for(size_t col = 0; col < _grid->grid[row].size(); ++col)
+        for(std::size_t col = 0; col < _grid->grid[row].size(); ++col)
         {
             sf::Vector2f ul(cell_scale_x * (double)col, cell_scale_y * (double)row);
 

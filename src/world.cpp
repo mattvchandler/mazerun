@@ -118,7 +118,7 @@ World::World():
     _ent_shader.add_uniform("num_point_lights");
     _ent_shader.add_uniform("num_spot_lights");
 
-    for(size_t i = 0; i < max_point_lights; ++i)
+    for(std::size_t i = 0; i < max_point_lights; ++i)
     {
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.color");
@@ -131,7 +131,7 @@ World::World():
         glUniform1i(_ent_shader.uniforms["point_lights[" + std::to_string(i) + "].base.enabled"], true);
     }
 
-    for(size_t i = 0; i < max_spot_lights; ++i)
+    for(std::size_t i = 0; i < max_spot_lights; ++i)
     {
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.color");
@@ -192,8 +192,8 @@ void World::draw()
         glUniform3fv(_ent_shader.uniforms["dir_light.half_vec"], 1, &sunlight_half_vec[0]);
     }
 
-    size_t point_light_i = 0;
-    size_t spot_light_i = 0;
+    std::size_t point_light_i = 0;
+    std::size_t spot_light_i = 0;
     for(auto & ent: _ents)
     {
         std::shared_ptr<Light> light = ent.light();

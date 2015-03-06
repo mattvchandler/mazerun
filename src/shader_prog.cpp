@@ -47,7 +47,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
         if(in)
         {
             in.seekg(0, std::ios::end);
-            size_t in_size = in.tellg();
+            std::size_t in_size = in.tellg();
             in.seekg(0, std::ios::beg);
 
             buff.resize(in_size + 1);

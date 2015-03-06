@@ -173,8 +173,8 @@ void Grid::mazegen_prim(const sf::Vector2u & start, const int region)
 
     while(walls.size() > 0)
     {
-        std::uniform_int_distribution<size_t> rand_wall(0, walls.size() - 1);
-        size_t curr_ind = rand_wall(prng);
+        std::uniform_int_distribution<std::size_t> rand_wall(0, walls.size() - 1);
+        std::size_t curr_ind = rand_wall(prng);
         auto curr_it = walls.begin() + curr_ind;
 
         sf::Vector2u curr = curr_it->cell_1;
@@ -270,7 +270,7 @@ void Grid::mazegen_kruskal(const sf::Vector2u & start, const int region)
     // shuffle walls
     std::shuffle(walls.begin(), walls.end(), prng);
 
-    size_t num_sets = cells.size();
+    std::size_t num_sets = cells.size();
     for(const auto & wall: walls)
     {
         sf::Vector2u set_1 = cell_set.find_rep(wall.cell_1);

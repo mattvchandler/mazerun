@@ -66,7 +66,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
             vert_tangents.push_back(up_tangent);
         }
     }
-    for(size_t row = 0; row < _grid.grid.size(); ++row)
+    for(std::size_t row = 0; row < _grid.grid.size(); ++row)
     {
         glm::vec3 origin(cell_scale.x * (float)_grid.grid[row].size(), 0.0f, cell_scale.z * (float)row);
         origin += base;
@@ -87,9 +87,9 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     }
 
     // draw cell walls
-    for(size_t row = 0; row < _grid.grid.size(); ++row)
+    for(std::size_t row = 0; row < _grid.grid.size(); ++row)
     {
-        for(size_t col = 0; col < _grid.grid[row].size(); ++col)
+        for(std::size_t col = 0; col < _grid.grid[row].size(); ++col)
         {
             glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.y * (float)row);
             origin += base;
@@ -131,7 +131,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     }
 
     // add tex coords
-    for(size_t i = 0; i < vert_pos.size(); i += 6)
+    for(std::size_t i = 0; i < vert_pos.size(); i += 6)
     {
         vert_tex_coords.push_back(glm::vec2(0.0f, 0.0f));
         vert_tex_coords.push_back(glm::vec2(1.0f, 0.0f));

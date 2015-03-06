@@ -161,7 +161,7 @@ Model::Model(const std::string & filename):
         std::cerr<<"multiple meshes"<<std::endl;
     }
 
-    for(size_t mesh_i = 0; mesh_i < scene->mNumMeshes; ++mesh_i)
+    for(std::size_t mesh_i = 0; mesh_i < scene->mNumMeshes; ++mesh_i)
     {
         const aiMesh * mesh = scene->mMeshes[mesh_i];
         if(!mesh->HasTextureCoords(0))
@@ -178,7 +178,7 @@ Model::Model(const std::string & filename):
         }
 
         // Tangets are generated, so we don't need to check them
-        for(size_t vert_i = 0; vert_i < mesh->mNumVertices; ++vert_i)
+        for(std::size_t vert_i = 0; vert_i < mesh->mNumVertices; ++vert_i)
         {
             const aiVector3D & vert = mesh->mVertices[vert_i];
             vert_pos.push_back(glm::vec3(vert.x, vert.y, vert.z));
@@ -194,7 +194,7 @@ Model::Model(const std::string & filename):
         }
 
         // get indexes
-        for(size_t face_i = 0; face_i < mesh->mNumFaces; ++face_i)
+        for(std::size_t face_i = 0; face_i < mesh->mNumFaces; ++face_i)
         {
             const aiFace & face = mesh->mFaces[face_i];
             if(face.mNumIndices != 3)
@@ -204,7 +204,7 @@ Model::Model(const std::string & filename):
                 return;
             }
 
-            for(size_t i = 0; i < face.mNumIndices; ++i)
+            for(std::size_t i = 0; i < face.mNumIndices; ++i)
                 index.push_back(face.mIndices[i]);
         }
     }
