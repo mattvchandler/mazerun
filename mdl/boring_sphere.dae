@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.73.0 commit date:2015-01-20, commit time:18:16, hash:bbf09d9</authoring_tool>
     </contributor>
-    <created>2015-03-06T06:22:19</created>
-    <modified>2015-03-06T06:22:19</modified>
+    <created>2015-03-06T11:38:35</created>
+    <modified>2015-03-06T11:38:35</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -60,7 +60,7 @@
               <texture texture="cracked_E_png-sampler" texcoord="UVMap"/>
             </emission>
             <ambient>
-              <color sid="ambient">0 0 0 1</color>
+              <texture texture="cracked_png-sampler" texcoord="UVMap"/>
             </ambient>
             <diffuse>
               <texture texture="cracked_png-sampler" texcoord="UVMap"/>

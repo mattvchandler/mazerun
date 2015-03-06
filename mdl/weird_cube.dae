@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.73.0 commit date:2015-01-20, commit time:18:16, hash:bbf09d9</authoring_tool>
     </contributor>
-    <created>2015-02-12T11:01:19</created>
-    <modified>2015-02-12T11:01:19</modified>
+    <created>2015-03-06T11:24:13</created>
+    <modified>2015-03-06T11:24:13</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -47,13 +47,13 @@
               <color sid="emission">0 0 0 1</color>
             </emission>
             <ambient>
-              <color sid="ambient">0 0 0 1</color>
+              <texture texture="AncientFlooring_jpg-sampler" texcoord="UVMap"/>
             </ambient>
             <diffuse>
               <texture texture="AncientFlooring_jpg-sampler" texcoord="UVMap"/>
             </diffuse>
             <specular>
-              <color sid="specular">0.5 0.5 0.5 1</color>
+              <color sid="specular">1 1 1 1</color>
             </specular>
             <shininess>
               <float sid="shininess">254</float>

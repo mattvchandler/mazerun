@@ -82,6 +82,16 @@ Texture_2D::Texture_2D(const std::string & filename)
     set_properties();
 }
 
+Texture_2D::Texture_2D(const std::vector<glm::vec4> & data, const GLint width, const GLint height)
+{
+    glBindTexture(GL_TEXTURE_2D, _texid);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
+        0, GL_RGBA, GL_FLOAT, &data.data()[0]);
+
+    set_properties();
+}
+
 Texture_2D::Texture_2D(const glm::vec4 & color, const GLint width, const GLint height)
 {
     glBindTexture(GL_TEXTURE_2D, _texid);
@@ -103,7 +113,7 @@ void Texture_2D::set_properties() const
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::diffuse_fallback()
+std::shared_ptr<Texture_2D> Texture_2D::white_fallback()
 {
     static std::shared_ptr<Texture_2D> fallback;
     if(!fallback)
@@ -113,22 +123,48 @@ std::shared_ptr<Texture_2D> Texture_2D::diffuse_fallback()
     return fallback;
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::normal_fallback()
-{
-    static std::shared_ptr<Texture_2D> fallback;
-    if(!fallback)
-    {
-        fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
-    }
-    return fallback;
-}
-
-std::shared_ptr<Texture_2D> Texture_2D::emissive_fallback()
+std::shared_ptr<Texture_2D> Texture_2D::black_fallback()
 {
     static std::shared_ptr<Texture_2D> fallback;
     if(!fallback)
     {
         fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1, 1));
+    }
+    return fallback;
+}
+
+// black & magenta checkerboard (like source!)
+std::shared_ptr<Texture_2D> Texture_2D::diffuse_map_fallback()
+{
+    static std::shared_ptr<Texture_2D> fallback;
+    if(!fallback)
+    {
+        const unsigned short size = 8;
+        std::vector<glm::vec4> data(size * size);
+        for(unsigned short row = 0; row < size; ++row)
+        {
+            for(unsigned short col = 0; col < size; ++col)
+            {
+                unsigned short i = row * size + col;
+                // odd pixels black, even magenta
+                if((row ^ col) & 1)
+                    data[i] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+                else
+                    data[i] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+            }
+        }
+
+        fallback.reset(new Texture_2D(data, size, size));
+    }
+    return fallback;
+}
+
+std::shared_ptr<Texture_2D> Texture_2D::normal_map_fallback()
+{
+    static std::shared_ptr<Texture_2D> fallback;
+    if(!fallback)
+    {
+        fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
     }
     return fallback;
 }

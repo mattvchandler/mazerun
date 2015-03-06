@@ -27,6 +27,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include <glm/glm.hpp>
 
@@ -55,13 +56,15 @@ class Texture_2D final: public Texture
 {
 public:
     static std::shared_ptr<Texture_2D> create(const std::string & filename);
-    static std::shared_ptr<Texture_2D> diffuse_fallback();
-    static std::shared_ptr<Texture_2D> normal_fallback();
-    static std::shared_ptr<Texture_2D> emissive_fallback();
+    static std::shared_ptr<Texture_2D> white_fallback();
+    static std::shared_ptr<Texture_2D> black_fallback();
+    static std::shared_ptr<Texture_2D> diffuse_map_fallback();
+    static std::shared_ptr<Texture_2D> normal_map_fallback();
     void bind() const override;
 
 private:
     Texture_2D(const std::string & filename);
+    Texture_2D(const std::vector<glm::vec4> & data, const GLint width, const GLint height);
     Texture_2D(const glm::vec4 & color, const GLint width, const GLint height);
     void set_properties() const override;
 };

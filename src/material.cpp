@@ -1,4 +1,4 @@
-// material.hpp
+// material.cpp
 // material structures
 
 // Copyright 2015 Matthew Chandler
@@ -21,33 +21,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef MATERIAL_HPP
-#define MATERIAL_HPP
+#include <material.hpp>
 
-#include <memory>
+Material::Material():
+    ambient_color(1.0f, 1.0f, 1.0f),
+    diffuse_color(1.0f, 1.0f, 1.0f),
+    specular_color(1.0f, 1.0f, 1.0f),
+    shininess(0.0f),
+    emissive_color(0.0f, 0.0f, 0.0f),
+    // reflectivity(0.0f),
 
-#include <glm/glm.hpp>
-
-#include "texture.hpp"
-
-struct Material
+    ambient_map(Texture_2D::white_fallback()),
+    diffuse_map(Texture_2D::diffuse_map_fallback()),
+    specular_map(Texture_2D::white_fallback()),
+    shininess_map(Texture_2D::white_fallback()), // greyscale
+    emissive_map(Texture_2D::white_fallback()),
+    // reflectivity_map(Texture_2D::white_fallback()), // greyscale
+    normal_map(Texture_2D::normal_map_fallback())
 {
-    Material();
-
-    glm::vec3 ambient_color;
-    glm::vec3 diffuse_color;
-    glm::vec3 specular_color;
-    float shininess;
-    glm::vec3 emissive_color;
-    // float reflectivity;
-
-    std::shared_ptr<Texture_2D> ambient_map;
-    std::shared_ptr<Texture_2D> diffuse_map;
-    std::shared_ptr<Texture_2D> specular_map;
-    std::shared_ptr<Texture_2D> shininess_map; // greyscale
-    std::shared_ptr<Texture_2D> emissive_map;
-    // std::shared_ptr<Texture_2D> reflectivity_map; // greyscale
-    std::shared_ptr<Texture_2D> normal_map;
-};
-
-#endif // MATERIAL_HPP
+}

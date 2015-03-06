@@ -25,11 +25,20 @@
 
 struct Material
 {
+    vec3 ambient_color;
+    vec3 diffuse_color;
     vec3 specular_color;
     float shininess;
+    vec3 emissive_color;
+    // float reflectivity;
+
+    sampler2D ambient_map;
     sampler2D diffuse_map;
-    sampler2D normal_map;
+    sampler2D specular_map;
+    sampler2D shininess_map; // greyscale
     sampler2D emissive_map;
+    // sampler2D reflectivity_map; // greyscale
+    sampler2D normal_map;
 };
 
 struct Base_light
@@ -66,16 +75,18 @@ struct Dir_light
     vec3 half_vec;
 };
 
-vec3 norm_map_normal(in vec2 tex_coord, in vec3 normal, in vec3 tangent, in sampler2D normal_map);
+vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, in vec2 tex_coord);
 
 void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in Material material, in Point_light point_light, out vec3 scattered, out vec3 reflected);
+    in Material material, in vec2 tex_coord, in Point_light point_light,
+    out vec3 scattered, out vec3 reflected);
 
 void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in Material material, in Spot_light spot_light, out vec3 scattered, out vec3 reflected);
-
-void calc_dir_lighting(in vec3 normal_vec, in Material material, in Dir_light dir_light,
+    in Material material, in vec2 tex_coord, in Spot_light spot_light,
     out vec3 scattered, out vec3 reflected);
+
+void calc_dir_lighting(in vec3 normal_vec, in Material material, in vec2 tex_coord,
+    in Dir_light dir_light, out vec3 scattered, out vec3 reflected);
 
 in vec3 pos;
 in vec2 tex_coord;
@@ -86,7 +97,7 @@ in vec3 tangent;
 uniform Material material;
 
 // lighting vars
-uniform vec3 ambient_color;
+uniform vec3 ambient_light_color;
 const int max_point_lights = 10; // TODO: set by config?
 const int max_spot_lights = 10; // TODO: set by config?
 uniform int num_point_lights;
@@ -102,33 +113,36 @@ out vec4 frag_color;
 
 void main()
 {
-    vec3 scattered = ambient_color, reflected = vec3(0.0);
+    vec3 scattered = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color;
+    vec3 reflected = vec3(0.0);
     vec3 tmp_scattered, tmp_reflected;
 
-    vec3 mapped_normal = norm_map_normal(tex_coord, normal_vec, tangent, material.normal_map);
+    vec3 mapped_normal = norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord);
 
     for(int i = 0; i < num_point_lights; ++i)
     {
-        calc_point_lighting(pos, cam_light_forward, mapped_normal, material, point_lights[i],
-                tmp_scattered, tmp_reflected);
+        calc_point_lighting(pos, cam_light_forward, mapped_normal, material, tex_coord,
+            point_lights[i], tmp_scattered, tmp_reflected);
         scattered += tmp_scattered;
         reflected += tmp_reflected;
     }
 
     for(int i = 0; i < num_spot_lights; ++i)
     {
-        calc_spot_lighting(pos, cam_light_forward, mapped_normal, material, spot_lights[i],
-                tmp_scattered, tmp_reflected);
+        calc_spot_lighting(pos, cam_light_forward, mapped_normal, material, tex_coord,
+            spot_lights[i], tmp_scattered, tmp_reflected);
         scattered += tmp_scattered;
         reflected += tmp_reflected;
     }
 
-    calc_dir_lighting(mapped_normal, material, dir_light, tmp_scattered, tmp_reflected);
+    calc_dir_lighting(mapped_normal, material, tex_coord, dir_light, tmp_scattered,
+        tmp_reflected);
     scattered += tmp_scattered;
     reflected += tmp_reflected;
 
     // add to material color (from texture) to lighting for final color
-    vec3 rgb = min(texture(material.emissive_map, tex_coord).rgb + texture(material.diffuse_map, tex_coord).rgb * scattered
-        + material.specular_color * reflected, vec3(1.0));
+    vec3 rgb = min(material.emissive_color * texture(material.emissive_map, tex_coord).rgb +
+        material.diffuse_color * texture(material.diffuse_map, tex_coord).rgb * scattered +
+        material.specular_color * texture(material.specular_map, tex_coord).rgb * reflected, vec3(1.0));
     frag_color = vec4(rgb, 1.0);
 }

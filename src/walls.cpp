@@ -47,7 +47,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     glm::vec3 up_tangent(1.0f, 0.0f, 0.0f);
 
     // draw border walls
-    for(size_t col = 0; col < _grid.grid[0].size(); ++col)
+    for(std::size_t col = 0; col < _grid.grid[0].size(); ++col)
     {
         glm::vec3 origin(cell_scale.x * (float)col, 0.0f, cell_scale.z * (float)_grid.grid.size());
         origin += base;
@@ -182,7 +182,6 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
     _mat.diffuse_map = Texture_2D::create(check_in_pwd("img/GroundCover.jpg"));
     _mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"));
-    _mat.emissive_map = Texture_2D::emissive_fallback();
     _mat.shininess = 500.0f;
 
     check_error("Walls::Walls");
@@ -280,7 +279,6 @@ Floor::Floor(const unsigned int width, const unsigned int height):
     _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
     _mat.diffuse_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring.jpg"));
     _mat.normal_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"));
-    _mat.emissive_map = Texture_2D::emissive_fallback();
     _mat.shininess = 500.0f;
 
     check_error("Floor::Floor");
