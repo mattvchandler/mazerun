@@ -34,6 +34,7 @@
 
 #include <glm/glm.hpp>
 
+#include "config.hpp"
 #include "entity.hpp"
 
 std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
@@ -48,7 +49,7 @@ void Testmdl_physics::update(Entity & ent, const float dt)
 
 Entity create_testmdl()
 {
-    Entity testmdl(Model::create("mdl/weird_cube.dae"),
+    Entity testmdl(Model::create(check_in_pwd("mdl/weird_cube.dae")),
         std::shared_ptr<Input>(),
         Testmdl_physics::create(),
         std::shared_ptr<Light>());
@@ -133,7 +134,7 @@ void Testlight_physics::toggle_movement()
 
 Entity create_testlight()
 {
-    auto model = Model::create("mdl/boring_sphere.dae");
+    auto model = Model::create(check_in_pwd("mdl/boring_sphere.dae"));
     auto input = Testlight_input::create();
     auto physics = Testlight_physics::create();
     auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f),

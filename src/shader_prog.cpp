@@ -23,6 +23,8 @@
 
 #include "shader_prog.hpp"
 
+#include <iostream> // TODO: remove
+
 #include <fstream>
 #include <stdexcept>
 #include <system_error>
@@ -37,6 +39,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
     std::vector<GLuint> shaders;
     for(const auto & source: sources)
     {
+        std::cout<<"Loading shader: "<<source.first<<std::endl;
         // open shader file
         std::ifstream in(source.first, std::ios::binary | std::ios::in);
         std::vector <char> buff;
@@ -100,6 +103,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
     for(auto & attr: attribs)
         glBindAttribLocation(_prog, attr.second, attr.first.c_str());
 
+    std::cout<<"Linking shaders"<<std::endl;
     glLinkProgram(_prog);
 
     for(auto & shader: shaders)

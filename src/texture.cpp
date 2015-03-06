@@ -25,6 +25,8 @@
 
 #include "texture.hpp"
 
+#include <iostream> // TODO: remove
+
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 
@@ -65,6 +67,7 @@ std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
 
 Texture_2D::Texture_2D(const std::string & filename)
 {
+    std::cout<<"Loading texture: "<<filename<<std::endl;
     glBindTexture(GL_TEXTURE_2D, _texid);
 
     sf::Image img;
@@ -181,6 +184,7 @@ Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::stri
 
     for(const auto & filename: filenames)
     {
+        std::cout<<"Loading texture: "<<filename.first<<std::endl;
         // load each file
         sf::Image img;
         if(!img.loadFromFile(filename.first))

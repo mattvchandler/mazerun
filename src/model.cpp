@@ -77,6 +77,7 @@ Model::Model(const std::string & filename):
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
+    std::cout<<"Loading model: "<<filename<<std::endl;
     // TODO: check format (COLLADA)
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;
