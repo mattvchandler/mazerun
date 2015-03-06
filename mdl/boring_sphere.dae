@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.73.0 commit date:2015-01-20, commit time:18:16, hash:bbf09d9</authoring_tool>
     </contributor>
-    <created>2015-03-01T16:22:05</created>
-    <modified>2015-03-01T16:22:05</modified>
+    <created>2015-03-06T06:22:19</created>
+    <modified>2015-03-06T06:22:19</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -34,6 +34,16 @@
             <source>cracked_E_png-surface</source>
           </sampler2D>
         </newparam>
+        <newparam sid="cracked_png-surface">
+          <surface type="2D">
+            <init_from>cracked_png</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="cracked_png-sampler">
+          <sampler2D>
+            <source>cracked_png-surface</source>
+          </sampler2D>
+        </newparam>
         <newparam sid="cracked_N_png-surface">
           <surface type="2D">
             <init_from>cracked_N_png</init_from>
@@ -53,7 +63,7 @@
               <color sid="ambient">0 0 0 1</color>
             </ambient>
             <diffuse>
-              <texture texture="cracked_E_png-sampler" texcoord="UVMap"/>
+              <texture texture="cracked_png-sampler" texcoord="UVMap"/>
             </diffuse>
             <specular>
               <color sid="specular">0.25 0.25 0.25 1</color>
