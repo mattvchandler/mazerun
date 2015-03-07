@@ -32,22 +32,20 @@
 
 struct Material
 {
-    Material();
-
-    glm::vec3 ambient_color;
-    glm::vec3 diffuse_color;
-    glm::vec3 specular_color;
-    float shininess;
-    glm::vec3 emissive_color;
+    glm::vec3 ambient_color{1.0f, 1.0f, 1.0f};
+    glm::vec3 diffuse_color{1.0f, 1.0f, 1.0f};
+    glm::vec3 specular_color{1.0f, 1.0f, 1.0f};
+    float shininess = 0.0f;
+    glm::vec3 emissive_color{0.0f, 0.0f, 0.0f};
     // float reflectivity;
 
-    std::shared_ptr<Texture_2D> ambient_map;
-    std::shared_ptr<Texture_2D> diffuse_map;
-    std::shared_ptr<Texture_2D> specular_map;
-    std::shared_ptr<Texture_2D> shininess_map; // greyscale
-    std::shared_ptr<Texture_2D> emissive_map;
-    // std::shared_ptr<Texture_2D> reflectivity_map; // greyscale
-    std::shared_ptr<Texture_2D> normal_map;
+    std::shared_ptr<Texture_2D> ambient_map = Texture_2D::white_fallback();
+    std::shared_ptr<Texture_2D> diffuse_map = Texture_2D::diffuse_map_fallback();
+    std::shared_ptr<Texture_2D> specular_map = Texture_2D::white_fallback();
+    std::shared_ptr<Texture_2D> shininess_map = Texture_2D::white_fallback(); // greyscale
+    std::shared_ptr<Texture_2D> emissive_map = Texture_2D::white_fallback();
+    // std::shared_ptr<Texture_2D> reflectivity_map = Texture_2D::white_fallback(); // greyscale
+    std::shared_ptr<Texture_2D> normal_map = Texture_2D::normal_map_fallback();
 };
 
 #endif // MATERIAL_HPP

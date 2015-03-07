@@ -84,7 +84,6 @@ add_executable(${PROJECT_NAME}
     src/gl_wrappers.cpp
     src/light.cpp
     src/main.cpp
-    src/material.cpp
     src/model.cpp
     src/player.cpp
     src/shader_prog.cpp
