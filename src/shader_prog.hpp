@@ -41,12 +41,13 @@ public:
         const std::vector<std::pair<std::string, GLuint>> & attribs);
     ~Shader_prog();
     void add_uniform(const std::string & uniform);
+    GLuint get_uniform(const std::string & uniform) const;
     void use() const;
     GLuint get_id() const;
     // TODO: probably my own exceptions, rather than use system exceptions
 
-    std::unordered_map<std::string, GLuint> uniforms; // convenience storage for uniform values // TODO: maybe make private and add get method?
 protected:
+    std::unordered_map<std::string, GLuint> _uniforms; // convenience storage for uniform values
     GLuint _prog;
 };
 

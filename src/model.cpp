@@ -142,6 +142,7 @@ Model::Model(const std::string & filename):
         }
 
         // Assimp doesn't have a material reflectivity parameter
+
         aiString tex_path;
         if(mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
         {
@@ -208,6 +209,7 @@ Model::Model(const std::string & filename):
         }
 
         // Tangets are generated, so we don't need to check them
+
         for(std::size_t vert_i = 0; vert_i < mesh->mNumVertices; ++vert_i)
         {
             const aiVector3D & vert = mesh->mVertices[vert_i];

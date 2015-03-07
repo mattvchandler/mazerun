@@ -110,7 +110,7 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 
     glm::mat4 model_view_proj = proj * glm::translate(cam.view_mat(), cam.pos());
 
-    glUniformMatrix4fv(_prog.uniforms["model_view_proj"], 1, GL_FALSE, &model_view_proj[0][0]);
+    glUniformMatrix4fv(_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
     glActiveTexture(GL_TEXTURE0);
     _vao.bind();

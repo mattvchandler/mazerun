@@ -137,9 +137,21 @@ Shader_prog::~Shader_prog()
 void Shader_prog::add_uniform(const std::string & uniform)
 {
     GLint loc = glGetUniformLocation(_prog, uniform.c_str());
-    uniforms[uniform] = loc;
     if(loc == -1)
         throw std::runtime_error(std::string("uniform ") + uniform + std::string(" not found"));
+    _uniforms[uniform] = loc;
+}
+
+GLuint Shader_prog::get_uniform(const std::string & uniform) const
+{
+    try
+    {
+        return _uniforms.at(uniform);
+    }
+    catch(std::out_of_range & e)
+    {
+        throw std::out_of_range("unknown uniform: " + uniform);
+    }
 }
 
 void Shader_prog::use() const
