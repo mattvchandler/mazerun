@@ -33,7 +33,6 @@
 class Testmdl_physics final: public Physics
 {
 public:
-    Testmdl_physics() = default;
     static std::shared_ptr<Testmdl_physics> create();
     void update(Entity & ent, const float dt) override;
 };
@@ -43,7 +42,6 @@ Entity create_testmdl();
 class Testlight_input final: public Input
 {
 public:
-    Testlight_input() = default;
     static std::shared_ptr<Testlight_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
@@ -58,14 +56,28 @@ private:
 class Testlight_physics final: public Physics
 {
 public:
-    Testlight_physics();
     static std::shared_ptr<Testlight_physics> create();
     void update(Entity & ent, const float dt) override;
     void toggle_movement();
 private:
-    bool _moving;
+    bool _moving = true;
+    float _theta = 0.0f;
+
 };
 
 Entity create_testlight();
+
+class Testmonkey_input final: public Input
+{
+public:
+    static std::shared_ptr<Testmonkey_input> create();
+    void update(Entity & ent, const sf::Window & win,
+        const float dt) override;
+    sigc::signal<void> signal_light_toggled();
+private:
+    sigc::signal<void> _signal_light_toggled;
+};
+
+Entity create_testmonkey();
 
 #endif // TESTMDL_HPP

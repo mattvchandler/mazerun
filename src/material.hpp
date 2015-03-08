@@ -40,7 +40,7 @@ struct Material
     // float reflectivity;
 
     std::shared_ptr<Texture_2D> ambient_map = Texture_2D::white_fallback();
-    std::shared_ptr<Texture_2D> diffuse_map = Texture_2D::diffuse_map_fallback();
+    std::shared_ptr<Texture_2D> diffuse_map = Texture_2D::white_fallback();
     std::shared_ptr<Texture_2D> specular_map = Texture_2D::white_fallback();
     std::shared_ptr<Texture_2D> shininess_map = Texture_2D::white_fallback(); // greyscale
     std::shared_ptr<Texture_2D> emissive_map = Texture_2D::white_fallback();

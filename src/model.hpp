@@ -24,6 +24,7 @@
 #ifndef MODEL_HPP
 #define MODEL_HPP
 
+#include <functional>
 #include <string>
 #include <unordered_map>
 
@@ -38,16 +39,24 @@ class Model: public Component, public sf::NonCopyable
 public:
     virtual ~Model();
     static std::shared_ptr<Model> create(const std::string & filename);
-    virtual void draw() const;
-    const Material & get_material() const;
+    virtual void draw(const std::function<void(const Material &)> & set_material) const;
 protected:
+    struct Mesh
+    {
+        GLsizei count = 0;
+        std::size_t index = 0;
+        GLint base_vert = 0;
+        const Material * mat;
+    };
+
     Model(const std::string & filename);
 
     GL_vertex_array _vao;
     GL_buffer _vbo;
     GL_buffer _ebo;
-    GLsizei _num_verts;
-    Material _mat;
+
+    std::vector<Mesh> _meshes;
+    std::vector<Material> _mats;
 
     static std::unordered_map<std::string, std::weak_ptr<Model>> _allocated_mdl;
     std::string _key;

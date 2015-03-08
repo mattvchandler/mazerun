@@ -29,7 +29,6 @@
 class Player_input final: public Input
 {
 public:
-    Player_input() = default;
     static std::shared_ptr<Player_input> create();
     void update(Entity & ent,
         const sf::Window & win, const float dt) override;

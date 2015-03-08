@@ -77,7 +77,7 @@ World::World():
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
-    _ents({create_player(), create_testmdl(), create_testlight()}),
+    _ents({create_player(), create_testmdl(), create_testlight(), create_testmonkey()}),
     _cam(_ents[0]),
     _player(_ents[0])
 {
@@ -273,29 +273,32 @@ void World::draw()
             glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
             glUniformMatrix3fv(_ent_shader.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
-            glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &model->get_material().ambient_color[0]);
-            glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &model->get_material().diffuse_color[0]);
-            glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &model->get_material().specular_color[0]);
-            glUniform1f(_ent_shader.get_uniform("material.shininess"), model->get_material().shininess);
-            glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &model->get_material().emissive_color[0]);
-            // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), model->get_material().reflectivity);
+            auto set_material = [this](const Material & mat)
+            {
+                glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
+                glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
+                glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
+                glUniform1f(_ent_shader.get_uniform("material.shininess"), mat.shininess);
+                glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
+                // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
 
-            glActiveTexture(GL_TEXTURE0);
-            model->get_material().ambient_map->bind();
-            glActiveTexture(GL_TEXTURE1);
-            model->get_material().diffuse_map->bind();
-            glActiveTexture(GL_TEXTURE2);
-            model->get_material().specular_map->bind();
-            glActiveTexture(GL_TEXTURE3);
-            model->get_material().shininess_map->bind();
-            glActiveTexture(GL_TEXTURE4);
-            model->get_material().emissive_map->bind();
-            // glActiveTexture(GL_TEXTURE5);
-            // model->get_material().reflectivity_map->bind();
-            glActiveTexture(GL_TEXTURE6);
-            model->get_material().normal_map->bind();
+                glActiveTexture(GL_TEXTURE0);
+                mat.ambient_map->bind();
+                glActiveTexture(GL_TEXTURE1);
+                mat.diffuse_map->bind();
+                glActiveTexture(GL_TEXTURE2);
+                mat.specular_map->bind();
+                glActiveTexture(GL_TEXTURE3);
+                mat.shininess_map->bind();
+                glActiveTexture(GL_TEXTURE4);
+                mat.emissive_map->bind();
+                // glActiveTexture(GL_TEXTURE5);
+                // mat.reflectivity_map->bind();
+                glActiveTexture(GL_TEXTURE6);
+                mat.normal_map->bind();
+            };
 
-            model->draw();
+            model->draw(set_material);
         }
     }
 

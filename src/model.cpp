@@ -27,6 +27,9 @@
 
 #include <glm/glm.hpp>
 
+#define GLM_FORCE_RADIANS
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <assimp/Importer.hpp>
 #include <assimp/material.h>
 #include <assimp/postprocess.h>
@@ -57,20 +60,19 @@ std::shared_ptr<Model> Model::create(const std::string & filename)
     }
 }
 
-void Model::draw() const
+void Model::draw(const std::function<void(const Material &)> & set_material) const
 {
     _vao.bind();
 
-    glDrawElements(GL_TRIANGLES, _num_verts, GL_UNSIGNED_INT, (GLvoid *)0);
+    for(const auto & mesh: _meshes)
+    {
+        set_material(*mesh.mat);
+        glDrawElementsBaseVertex(GL_TRIANGLES, mesh.count, GL_UNSIGNED_INT, (GLvoid *)mesh.index, mesh.base_vert);
+    }
 
     glBindVertexArray(0); // TODO: get prev val?
 
     check_error("Model::Draw");
-}
-
-const Material & Model::get_material() const
-{
-    return _mat;
 }
 
 Model::Model(const std::string & filename):
@@ -79,129 +81,123 @@ Model::Model(const std::string & filename):
 {
     std::cout<<"Loading model: "<<filename<<std::endl;
     // TODO: check format (COLLADA)
-    std::vector<glm::vec3> vert_pos;
-    std::vector<glm::vec2> vert_tex_coords;
-    std::vector<glm::vec3> vert_normals;
-    std::vector<glm::vec3> vert_tangents;
-    std::vector<GLuint> index;
-
     Assimp::Importer imp;
 
-    // TODO: remove unneeded
-    const aiScene * scene = imp.ReadFile(filename,
+    // TODO: remove unneeded flags
+    const aiScene * ai_scene = imp.ReadFile(filename,
         aiProcess_CalcTangentSpace | aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices | aiProcess_SortByPType |
         aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
 
-    if(!scene)
+    if(!ai_scene)
     {
         // TODO: throw
         std::cerr<<imp.GetErrorString()<<std::endl;
         return;
     }
 
-    // get material
-    if(scene->HasMaterials())
-    {
-        // TODO: should be array of models?
-        if(scene->mNumMaterials > 1)
-        {
-            // TODO: thow
-            std::cerr<<"multiple materials"<<std::endl;
-            return;
-        }
-
-        const aiMaterial * mat = scene->mMaterials[0];
-
-        aiColor3D mat_color;
-        float mat_val;
-
-        if(mat->Get(AI_MATKEY_COLOR_AMBIENT, mat_color) == AI_SUCCESS)
-        {
-            _mat.ambient_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
-        }
-
-        if(mat->Get(AI_MATKEY_COLOR_DIFFUSE, mat_color) == AI_SUCCESS)
-        {
-            _mat.diffuse_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
-        }
-
-        if(mat->Get(AI_MATKEY_COLOR_SPECULAR, mat_color) == AI_SUCCESS)
-        {
-            _mat.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
-        }
-
-        if(mat->Get(AI_MATKEY_SHININESS, mat_val) == AI_SUCCESS)
-        {
-            _mat.shininess = mat_val;
-        }
-
-        if(mat->Get(AI_MATKEY_COLOR_EMISSIVE, mat_color) == AI_SUCCESS)
-        {
-            _mat.emissive_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
-        }
-
-        // Assimp doesn't have a material reflectivity parameter
-
-        aiString tex_path;
-        if(mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
-        {
-            _mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        }
-
-        if(mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) == AI_SUCCESS)
-        {
-            _mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        }
-
-        if(mat->GetTexture(aiTextureType_SPECULAR, 0, &tex_path) == AI_SUCCESS)
-        {
-            _mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        }
-
-        if(mat->GetTexture(aiTextureType_SHININESS, 0, &tex_path) == AI_SUCCESS)
-        {
-            _mat.shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        }
-
-        if(mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS)
-        {
-            _mat.emissive_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-            _mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
-        }
-
-        // if(mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path) == AI_SUCCESS)
-        // {
-        //     _mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        // }
-
-        if(mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS)
-        {
-            _mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        }
-    }
-
-    if(!scene->HasMeshes())
+    if(!ai_scene->HasMeshes())
     {
         // TODO: throw
         std::cerr<<"no meshes"<<std::endl;
         return;
     }
-    if(scene->mNumMeshes > 1)
+
+    // get material
+    for(std::size_t mat_i = 0; mat_i < ai_scene->mNumMaterials; ++mat_i)
     {
-        std::cerr<<"multiple meshes"<<std::endl;
+        const aiMaterial * ai_mat = ai_scene->mMaterials[mat_i];
+
+        _mats.emplace_back();
+        Material & mat = _mats.back();
+
+        aiColor3D mat_color;
+        float mat_val;
+
+        if(ai_mat->Get(AI_MATKEY_COLOR_AMBIENT, mat_color) == AI_SUCCESS)
+        {
+            mat.ambient_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+        }
+
+        if(ai_mat->Get(AI_MATKEY_COLOR_DIFFUSE, mat_color) == AI_SUCCESS)
+        {
+            mat.diffuse_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+        }
+
+        if(ai_mat->Get(AI_MATKEY_COLOR_SPECULAR, mat_color) == AI_SUCCESS)
+        {
+            mat.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+        }
+
+        if(ai_mat->Get(AI_MATKEY_SHININESS, mat_val) == AI_SUCCESS)
+        {
+            mat.shininess = mat_val;
+        }
+
+        if(ai_mat->Get(AI_MATKEY_COLOR_EMISSIVE, mat_color) == AI_SUCCESS)
+        {
+            mat.emissive_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+        }
+
+        // Assimp doesn't have a material reflectivity parameter
+
+        aiString tex_path;
+        if(ai_mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
+        {
+            mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        }
+
+        if(ai_mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) == AI_SUCCESS)
+        {
+            mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        }
+
+        if(ai_mat->GetTexture(aiTextureType_SPECULAR, 0, &tex_path) == AI_SUCCESS)
+        {
+            mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        }
+
+        if(ai_mat->GetTexture(aiTextureType_SHININESS, 0, &tex_path) == AI_SUCCESS)
+        {
+            mat.shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        }
+
+        if(ai_mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS)
+        {
+            mat.emissive_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
+        }
+
+        // if(ai_mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path) == AI_SUCCESS)
+        // {
+        //     mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        // }
+
+        if(ai_mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS)
+        {
+            mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        }
     }
 
-    for(std::size_t mesh_i = 0; mesh_i < scene->mNumMeshes; ++mesh_i)
+    std::vector<glm::vec3> vert_pos;
+    std::vector<glm::vec2> vert_tex_coords;
+    std::vector<glm::vec3> vert_normals;
+    std::vector<glm::vec3> vert_tangents;
+    std::vector<GLuint> index;
+
+    glm::mat3 rot_mat(glm::rotate(glm::mat4(1.0f), -0.5f * (float)M_PI, glm::vec3(1.0f, 0.0f, 0.0f))); // converts from Z-up to Y-up
+
+    for(std::size_t mesh_i = 0; mesh_i < ai_scene->mNumMeshes; ++mesh_i)
     {
-        const aiMesh * mesh = scene->mMeshes[mesh_i];
-        if(!mesh->HasTextureCoords(0))
+        const aiMesh * ai_mesh = ai_scene->mMeshes[mesh_i];
+
+        if(!ai_mesh->HasTextureCoords(0))
         {
             // TODO: throw
             std::cerr<<"no tex coords"<<std::endl;
             return;
         }
-        if(!mesh->HasNormals())
+        if(!ai_mesh->HasNormals())
         {
             // TODO: throw
             std::cerr<<"no normals"<<std::endl;
@@ -210,38 +206,53 @@ Model::Model(const std::string & filename):
 
         // Tangets are generated, so we don't need to check them
 
-        for(std::size_t vert_i = 0; vert_i < mesh->mNumVertices; ++vert_i)
+        _meshes.emplace_back();
+        Mesh & mesh = _meshes.back();
+
+        mesh.index = sizeof(GLint) * index.size();
+        mesh.base_vert = vert_pos.size();
+
+        if(ai_mesh->mMaterialIndex < _mats.size())
+            mesh.mat = &_mats[ai_mesh->mMaterialIndex];
+        else
         {
-            const aiVector3D & vert = mesh->mVertices[vert_i];
-            vert_pos.push_back(glm::vec3(vert.x, vert.y, vert.z));
+            // TODO: throw
+            std::cerr<<"mesh "<<mesh_i<<" refers to non-existant material: "<<ai_mesh->mMaterialIndex<<std::endl;
+            return;
+        }
 
-            const aiVector3D & tex = mesh->mTextureCoords[0][vert_i];
-            vert_tex_coords.push_back(glm::vec2(tex.x, tex.y));
+        for(std::size_t vert_i = 0; vert_i < ai_mesh->mNumVertices; ++vert_i)
+        {
+            const aiVector3D & ai_vert = ai_mesh->mVertices[vert_i];
+            vert_pos.push_back(rot_mat * glm::vec3(ai_vert.x, ai_vert.y, ai_vert.z));
 
-            const aiVector3D & norm = mesh->mNormals[vert_i];
-            vert_normals.push_back(glm::vec3(norm.x, norm.y, norm.z));
+            const aiVector3D & ai_tex = ai_mesh->mTextureCoords[0][vert_i];
+            vert_tex_coords.push_back(glm::vec2(ai_tex.x, ai_tex.y));
 
-            const aiVector3D & tangent = mesh->mTangents[vert_i];
-            vert_tangents.push_back(glm::vec3(tangent.x, tangent.y, tangent.z));
+            const aiVector3D & ai_norm = ai_mesh->mNormals[vert_i];
+            vert_normals.push_back(rot_mat * glm::vec3(ai_norm.x, ai_norm.y, ai_norm.z));
+
+            const aiVector3D & ai_tangent = ai_mesh->mTangents[vert_i];
+            vert_tangents.push_back(rot_mat * glm::vec3(ai_tangent.x, ai_tangent.y, ai_tangent.z));
         }
 
         // get indexes
-        for(std::size_t face_i = 0; face_i < mesh->mNumFaces; ++face_i)
+        for(std::size_t face_i = 0; face_i < ai_mesh->mNumFaces; ++face_i)
         {
-            const aiFace & face = mesh->mFaces[face_i];
-            if(face.mNumIndices != 3)
+            const aiFace & ai_face = ai_mesh->mFaces[face_i];
+            if(ai_face.mNumIndices != 3)
             {
                 // TODO: throw
                 std::cerr<<"non-triangular polygon"<<std::endl;
                 return;
             }
 
-            for(std::size_t i = 0; i < face.mNumIndices; ++i)
-                index.push_back(face.mIndices[i]);
+            for(std::size_t i = 0; i < ai_face.mNumIndices; ++i)
+                index.push_back(ai_face.mIndices[i]);
+
+            mesh.count += ai_face.mNumIndices;
         }
     }
-
-    _num_verts = index.size();
 
     // create OpenGL vertex objects
     _vao.bind();
@@ -284,4 +295,3 @@ Model::Model(const std::string & filename):
 
     check_error("Model::Model");
 }
-

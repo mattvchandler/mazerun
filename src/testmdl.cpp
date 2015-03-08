@@ -37,6 +37,8 @@
 #include "config.hpp"
 #include "entity.hpp"
 
+// TODO: keyboard signals to replace static maps
+
 std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
 {
     return std::make_shared<Testmdl_physics>();
@@ -102,10 +104,6 @@ sigc::signal<void> Testlight_input::signal_move_toggled()
     return _signal_move_toggled;
 }
 
-Testlight_physics::Testlight_physics(): _moving(true)
-{
-}
-
 std::shared_ptr<Testlight_physics> Testlight_physics::create()
 {
     return std::make_shared<Testlight_physics>();
@@ -116,14 +114,12 @@ void Testlight_physics::update(Entity & ent, const float dt)
     if(!_moving)
         return;
 
-    static float theta = 0.0f;
+    ent.set_pos(glm::vec3(10.0f * std::cos(_theta), 3.0f, 10.0f * std::sin(_theta)));
 
-    ent.set_pos(glm::vec3(10.0f * std::cos(theta), 3.0f, 10.0f * std::sin(theta)));
-
-    theta += dt * 0.0625f * M_PI;
-    if(theta >= 2.0f * M_PI)
+    _theta += dt * 0.0625f * M_PI;
+    if(_theta >= 2.0f * M_PI)
     {
-        theta -= 2.0f * M_PI;
+        _theta -= 2.0f * M_PI;
     }
 }
 
@@ -144,6 +140,52 @@ Entity create_testlight()
 
     input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
     input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testlight_physics::toggle_movement));
+
+    return ent;
+}
+
+std::shared_ptr<Testmonkey_input> Testmonkey_input::create()
+{
+    return std::make_shared<Testmonkey_input>();
+}
+
+void Testmonkey_input::update(Entity & ent, const sf::Window & win,
+    const float dt)
+{
+    static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
+
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::U) && !key_lock[sf::Keyboard::U])
+    {
+        key_lock[sf::Keyboard::U] = true;
+        _signal_light_toggled();
+    }
+    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::U) && key_lock[sf::Keyboard::U])
+    {
+        key_lock[sf::Keyboard::U] = false;
+    }
+}
+
+sigc::signal<void> Testmonkey_input::signal_light_toggled()
+{
+    return _signal_light_toggled;
+}
+
+Entity create_testmonkey()
+{
+    auto model = Model::create(check_in_pwd("mdl/monkey.dae"));
+    auto input = Testmonkey_input::create();
+    auto physics = std::shared_ptr<Physics>();
+    auto light = Spot_light::create(true, glm::vec3(0.0f, 1.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f), std::cos(0.001f * M_PI / 180.0f), 40.0f,
+        1.0f, 0.5f, 0.0f);
+
+    Entity ent(model, input, physics, light);
+
+    ent.set_pos(glm::vec3(-10.0f, 10.0f, -10.0f));
+    ent.set_facing(ent.pos(), glm::reflect(-ent.pos(), glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
 
     return ent;
 }
