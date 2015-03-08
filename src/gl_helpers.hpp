@@ -24,6 +24,16 @@
 #ifndef GL_HELPERS_HPP
 #define GL_HELPERS_HPP
 
+#include <iostream>
+
+#include <glm/glm.hpp>
+
 void check_error(const char * at);
+
+std::ostream & operator<<(std::ostream & out, const glm::vec2 & v);
+std::ostream & operator<<(std::ostream & out, const glm::vec3 & v);
+std::ostream & operator<<(std::ostream & out, const glm::vec4 & v);
+std::ostream & operator<<(std::ostream & out, const glm::mat3 & m);
+std::ostream & operator<<(std::ostream & out, const glm::mat4 & m);
 
 #endif // GL_HELPERS_HPP

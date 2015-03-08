@@ -23,7 +23,7 @@
 
 #include "gl_helpers.hpp"
 
-#include <iostream>
+#include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
 
@@ -35,4 +35,34 @@ void check_error(const char * at)
     if(e == GL_NO_ERROR)
         return;
     std::cerr<<"OpenGL Error at "<<at<<": "<<gluErrorString(e)<<std::endl;
+}
+
+std::ostream & operator<<(std::ostream & out, const glm::vec2 & v)
+{
+    return out<<"("<<v.x<<","<<v.y<<")";
+}
+
+std::ostream & operator<<(std::ostream & out, const glm::vec3 & v)
+{
+    return out<<"("<<v.x<<","<<v.y<<","<<v.z<<")";
+}
+
+std::ostream & operator<<(std::ostream & out, const glm::vec4 & v)
+{
+    return out<<"("<<v.x<<","<<v.y<<","<<v.z<<","<<v.w<<")";
+}
+
+std::ostream & operator<<(std::ostream & out, const glm::mat3 & m)
+{
+    out<<"[["<<m[0].x<<","<<m[1].x<<","<<m[2].x<<"\n";
+    out<<" ["<<m[0].y<<","<<m[1].y<<","<<m[2].y<<"\n";
+    return out<<" ["<<m[0].z<<","<<m[1].z<<","<<m[2].z<<"]]";
+}
+
+std::ostream & operator<<(std::ostream & out, const glm::mat4 & m)
+{
+    out<<"[["<<m[0].x<<","<<m[1].x<<","<<m[2].x<<","<<m[3].x<<"]\n";
+    out<<" ["<<m[0].y<<","<<m[1].y<<","<<m[2].y<<","<<m[3].y<<"]\n";
+    out<<" ["<<m[0].z<<","<<m[1].z<<","<<m[2].z<<","<<m[3].z<<"]\n";
+    return out<<" ["<<m[0].w<<","<<m[1].w<<","<<m[2].w<<","<<m[3].w<<"]]";
 }
