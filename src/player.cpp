@@ -23,7 +23,6 @@
 
 #include "player.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <system_error>
 #include <unordered_map>

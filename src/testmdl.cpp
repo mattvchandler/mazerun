@@ -23,7 +23,6 @@
 
 #include "testmdl.hpp"
 
-#include <iostream>
 #include <unordered_map>
 
 #define _USE_MATH_DEFINES
@@ -36,6 +35,7 @@
 
 #include "config.hpp"
 #include "entity.hpp"
+#include "gl_helpers.hpp"
 
 // TODO: keyboard signals to replace static maps
 
@@ -177,13 +177,14 @@ Entity create_testmonkey()
     auto physics = std::shared_ptr<Physics>();
     auto light = Spot_light::create(true, glm::vec3(0.0f, 1.0f, 1.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f), std::cos(0.001f * M_PI / 180.0f), 40.0f,
-        1.0f, 0.5f, 0.0f);
+        glm::vec3(0.0f, 0.0f, 1.0f), std::cos(10.0f * M_PI / 180.0f), 90.0f,
+        0.0f, 0.1f, 0.0f);
 
     Entity ent(model, input, physics, light);
 
     ent.set_pos(glm::vec3(-10.0f, 10.0f, -10.0f));
-    ent.set_facing(ent.pos(), glm::reflect(-ent.pos(), glm::vec3(0.0f, 1.0f, 0.0f)));
+    ent.rotate(0.25f * M_PI, ent.up());
+    ent.rotate(0.25f * M_PI, ent.right());
 
     input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
 

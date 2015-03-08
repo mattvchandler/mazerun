@@ -237,7 +237,7 @@ void World::draw()
             glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
 
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-            glm::vec3 spot_light_dir_eye = normal_transform * spot_light->dir;
+            glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
 
             glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].base.color"), 1, &spot_light->color[0]);
             glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].pos_eye"), 1, &spot_light_pos_eye[0]);
