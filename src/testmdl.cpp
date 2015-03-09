@@ -35,7 +35,7 @@
 
 #include "config.hpp"
 #include "entity.hpp"
-#include "gl_helpers.hpp"
+#include "logger.hpp"
 
 // TODO: keyboard signals to replace static maps
 

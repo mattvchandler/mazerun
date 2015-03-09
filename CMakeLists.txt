@@ -80,9 +80,9 @@ add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
     src/config.cpp
     src/entity.cpp
-    src/gl_helpers.cpp
     src/gl_wrappers.cpp
     src/light.cpp
+    src/logger.cpp
     src/main.cpp
     src/model.cpp
     src/player.cpp

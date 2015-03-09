@@ -27,7 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "config.hpp"
-#include "gl_helpers.hpp"
+#include "logger.hpp"
 
 // TODO: replace bottom half of skybox with ground (if doing environment mapping)
 

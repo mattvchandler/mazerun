@@ -1,5 +1,5 @@
-// gl_helpers.hpp
-// common OpenGL utils
+// logger.cpp
+// logging and error-reporting
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "gl_helpers.hpp"
+#include "logger.hpp"
 
 #include <GL/glew.h>
 

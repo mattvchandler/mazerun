@@ -26,7 +26,7 @@
 #include <glm/glm.hpp>
 
 #include "config.hpp"
-#include "gl_helpers.hpp"
+#include "logger.hpp"
 
 Walls::Walls(const unsigned int width, const unsigned int height):
     _grid(width, height, Grid::MAZEGEN_DFS, 25, 100),

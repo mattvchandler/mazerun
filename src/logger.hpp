@@ -1,5 +1,5 @@
-// gl_helpers.hpp
-// common OpenGL utils
+// logger.hpp
+// logging and error-reporting
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef GL_HELPERS_HPP
-#define GL_HELPERS_HPP
+#ifndef LOGGER_HPP
+#define LOGGER_HPP
 
 #include <iostream>
 
@@ -36,4 +36,4 @@ std::ostream & operator<<(std::ostream & out, const glm::vec4 & v);
 std::ostream & operator<<(std::ostream & out, const glm::mat3 & m);
 std::ostream & operator<<(std::ostream & out, const glm::mat4 & m);
 
-#endif // GL_HELPERS_HPP
+#endif // LOGGER_HPP
