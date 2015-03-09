@@ -28,6 +28,9 @@
 
 #include <glm/glm.hpp>
 
+#define GLM_FORCE_RADIANS
+#include <glm/gtc/quaternion.hpp>
+
 #include "input.hpp"
 #include "light.hpp"
 #include "model.hpp"
@@ -63,7 +66,8 @@ public:
 
     // rotate around an axis
     // angles in radians
-    void rotate(const float angle, const glm::vec3 & axis);
+    void rotate_local(const float angle, const glm::vec3 & axis);
+    void rotate_world(const float angle, const glm::vec3 & axis);
 
     glm::mat4 view_mat() const;
     glm::mat4 model_mat() const;
@@ -73,7 +77,8 @@ public:
     glm::vec3 up() const;
     glm::vec3 right() const;
 protected:
-    glm::mat4 _model_mat;
+    glm::quat _rot;
+    glm::vec3 _pos;
 
     // components
     std::shared_ptr<Model> _model;

@@ -25,6 +25,9 @@
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+
+#include <logger.hpp>
 
 Entity::Entity(std::shared_ptr<Model> model,
     std::shared_ptr<Input> input,
@@ -68,7 +71,7 @@ void Entity::set(const glm::vec3 & pos, const glm::vec3 & forward,
 
 void Entity::set_pos(const glm::vec3 & pos)
 {
-    _model_mat[3] = glm::vec4(pos, 1.0f);
+    _pos = pos;
 }
 
 void Entity::set_facing(const glm::vec3 & forward, const glm::vec3 & up)
@@ -77,56 +80,65 @@ void Entity::set_facing(const glm::vec3 & forward, const glm::vec3 & up)
     glm::vec3 norm_up = glm::normalize(up);
     glm::vec3 norm_right = glm::cross(norm_forward, norm_up);
 
-    _model_mat[0] = glm::vec4(norm_right, 0.0f);
-    _model_mat[1] = glm::vec4(norm_up, 0.0f);
-    _model_mat[2] = glm::vec4(-norm_forward, 0.0f);
+    _rot = glm::quat(glm::mat3(norm_right, norm_up, -norm_forward));
 }
 
 // move the position acoording to a vector
 void Entity::translate(const glm::vec3 & translation)
 {
-    set_pos(pos() + translation);
+    _pos += translation;
 }
 
 // rotate around an axis (in world space)
 // angles in radians
-void Entity::rotate(const float angle, const glm::vec3 & axis)
+void Entity::rotate_world(const float angle, const glm::vec3 & axis)
 {
-    // using Rodrigues' rotation formula
-    // http://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
-    glm::vec3 new_forward = forward() * cosf(angle) + glm::cross(axis, forward()) * sinf(angle)
-        + axis * glm::dot(axis, forward()) * (1.0f - cosf(angle));
-    glm::vec3 new_up = up() * cosf(angle) + glm::cross(axis, up()) * sinf(angle)
-        + axis * glm::dot(axis, up()) * (1.0f - cosf(angle));
-    set_facing(new_forward, new_up);
+    _rot = glm::normalize(glm::angleAxis(angle, glm::normalize(axis)) * _rot);
+}
+
+void Entity::rotate_local(const float angle, const glm::vec3 & axis)
+{
+    _rot = glm::normalize(_rot * glm::angleAxis(angle, glm::normalize(axis)));
 }
 
 glm::mat4 Entity::view_mat() const
 {
-    return glm::lookAt(pos(), pos() + forward(), up());
+    return glm::inverse(model_mat());
 }
 
 glm::mat4 Entity::model_mat() const
 {
-    return _model_mat;
+    glm::mat4 mdl(glm::mat3_cast(_rot));
+    mdl[3] = glm::vec4(_pos, 1.0f);
+    return mdl;
 }
 
 glm::vec3 Entity::pos() const
 {
-    return glm::vec3(_model_mat[3]);
+    return _pos;
 }
 
+// we get component vectors by doing only the relevant part of the quat->matrix conversion
 glm::vec3 Entity::forward() const
 {
-    return -glm::normalize(glm::vec3(_model_mat[2]));
+    return -glm::vec3(
+        2.0f * _rot.x * _rot.z + 2.0f * _rot.y * _rot.w,
+        2.0f * _rot.y * _rot.z - 2.0f * _rot.x * _rot.w,
+        1.0f - 2.0f * _rot.x * _rot.x - 2.0f * _rot.y * _rot.y);
 }
 
 glm::vec3 Entity::up() const
 {
-    return glm::normalize(glm::vec3(_model_mat[1]));
+    return glm::vec3(
+        2.0f * _rot.x * _rot.y - 2.0f * _rot.z * _rot.w,
+        1.0f - 2.0f * _rot.x * _rot.x - 2.0f * _rot.z * _rot.z,
+        2.0f * _rot.y * _rot.z + 2.0f * _rot.x * _rot.w);
 }
 
 glm::vec3 Entity::right() const
 {
-    return glm::normalize(glm::vec3(_model_mat[0]));
+    return glm::vec3(
+        1.0f - 2.0f * _rot.y * _rot.y - 2.0f * _rot.z * _rot.z,
+        2.0f * _rot.x * _rot.y + 2.0f * _rot.z * _rot.w,
+        2.0f * _rot.x * _rot.z - 2.0f * _rot.y * _rot.w);
 }

@@ -46,7 +46,7 @@ std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
 
 void Testmdl_physics::update(Entity & ent, const float dt)
 {
-    ent.rotate(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+    ent.rotate_world(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 Entity create_testmdl()
@@ -57,8 +57,8 @@ Entity create_testmdl()
         std::shared_ptr<Light>());
 
     testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
-    testmdl.rotate(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    testmdl.rotate(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    testmdl.rotate_world(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    testmdl.rotate_world(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     return testmdl;
 }
@@ -183,8 +183,8 @@ Entity create_testmonkey()
     Entity ent(model, input, physics, light);
 
     ent.set_pos(glm::vec3(-10.0f, 10.0f, -10.0f));
-    ent.rotate(0.25f * M_PI, ent.up());
-    ent.rotate(0.25f * M_PI, ent.right());
+    ent.rotate_world(0.25f * M_PI, ent.up());
+    ent.rotate_world(0.25f * M_PI, ent.right());
 
     input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
 

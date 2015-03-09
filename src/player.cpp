@@ -120,8 +120,8 @@ void Player_input::update(Entity & ent,
         int d_x = new_mouse_pos.x - old_mouse_pos.x;
         int d_y = new_mouse_pos.y - old_mouse_pos.y;
 
-        ent.rotate(0.001f * d_y, ent.right());
-        ent.rotate(0.001f * d_x, glm::vec3(0.0f, 1.0f, 0.0f));
+        ent.rotate_local(0.001f * d_y, glm::vec3(1.0f, 0.0f, 0.0f));
+        ent.rotate_world(0.001f * d_x, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     old_mouse_pos = new_mouse_pos;
