@@ -66,3 +66,8 @@ std::ostream & operator<<(std::ostream & out, const glm::mat4 & m)
     out<<" ["<<m[0].z<<","<<m[1].z<<","<<m[2].z<<","<<m[3].z<<"]\n";
     return out<<" ["<<m[0].w<<","<<m[1].w<<","<<m[2].w<<","<<m[3].w<<"]]";
 }
+
+std::ostream & operator<<(std::ostream & out, const glm::quat & q)
+{
+    return out<<"("<<q.x<<","<<q.y<<","<<q.z<<","<<q.w<<")";
+}
