@@ -25,7 +25,6 @@
 
 #include "texture.hpp"
 
-
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 
@@ -143,7 +142,7 @@ std::shared_ptr<Texture_2D> Texture_2D::black_fallback()
 }
 
 // black & magenta checkerboard (like source!)
-std::shared_ptr<Texture_2D> Texture_2D::diffuse_map_fallback()
+std::shared_ptr<Texture_2D> Texture_2D::missing_fallback()
 {
     static std::shared_ptr<Texture_2D> fallback;
     if(!fallback)
@@ -164,7 +163,7 @@ std::shared_ptr<Texture_2D> Texture_2D::diffuse_map_fallback()
         }
 
         fallback.reset(new Texture_2D(data, size, size));
-        Logger_locator::get()(Logger::DBG, "Generated diffuse_map fallback texture");
+        Logger_locator::get()(Logger::DBG, "Generated missing fallback texture");
     }
     return fallback;
 }
