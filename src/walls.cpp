@@ -33,6 +33,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     _grid(width, height, Grid::MAZEGEN_DFS, 25, 100),
     _vbo(GL_ARRAY_BUFFER)
 {
+    Logger_locator::get()(Logger::DBG, "Creating walls");
 
     std::vector<glm::vec3> vert_pos;
     std::vector<glm::vec2> vert_tex_coords;
@@ -206,6 +207,7 @@ const Material & Walls::get_material() const
 Floor::Floor(const unsigned int width, const unsigned int height):
     _vbo(GL_ARRAY_BUFFER)
 {
+    Logger_locator::get()(Logger::DBG, "Creating floor");
     glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);
     glm::vec2 ur(0.5f * (float)width, -0.5f * (float)height);
 

@@ -33,6 +33,8 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/separator.h>
 
+#include "logger.hpp"
+
 Maze::Maze(const unsigned int width, const unsigned int height):
     _grid_width(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0)),
     _grid_height(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0)),
@@ -171,6 +173,7 @@ bool Maze::draw(const Cairo::RefPtr<Cairo::Context> & cr, const unsigned int wid
 
 void Maze::regen()
 {
+    Logger_locator::get()(Logger::DBG, "Generating new maze...");
     unsigned int grid_width = _grid_width.get_value_as_int();
     unsigned int grid_height = _grid_height.get_value_as_int();
     unsigned int room_attempts = _room_attempts.get_value_as_int();
@@ -185,7 +188,10 @@ void Maze::regen()
     else if(mazegen_txt == "Kruskal's Algorithm")
         mazegen = Grid::MAZEGEN_KRUSKAL;
     else
+    {
+        Logger_locator::get()(Logger::ERROR, std::string("Unknown maze algorithm: ") + mazegen_txt);
         throw std::invalid_argument(std::string("Unknown maze algorithm: ") + mazegen_txt);
+    }
 
     _grid.reset(new Grid(grid_width, grid_height, mazegen, room_attempts, wall_rm_attempts));
 
@@ -260,9 +266,11 @@ void Maze::save()
     {
         Gdk::Pixbuf::create(render_target, 0, 0, width, height)->
             save(chooser.get_filename(), chooser.get_filter()->get_name());
+        Logger_locator::get()(Logger::DBG, "Saved to " + chooser.get_filename());
     }
     catch(const Glib::Error & e)
     {
+        Logger_locator::get()(Logger::WARN, std::string("Error saving to ") + chooser.get_filename());
         Gtk::MessageDialog error_box(*this, std::string("Error saving to ") + chooser.get_filename(),
             false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK, true);
         error_box.set_secondary_text(e.what());

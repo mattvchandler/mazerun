@@ -25,6 +25,8 @@
 
 #include <stdexcept>
 
+#include "logger.hpp"
+
 Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
 {
     for(int i = 0; i < 4; ++i)
@@ -34,6 +36,8 @@ Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
 Grid::Grid(const unsigned int width, const unsigned int height,
     const Mazegen_alg mazegen, const unsigned int room_attempts, const unsigned int wall_rm_attempts)
 {
+    Logger_locator::get()(Logger::TRACE, "Generating maze grid...");
+
     if(height == 0)
     {
         throw std::invalid_argument("grid_size.y == 0");

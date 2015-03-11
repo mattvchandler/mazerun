@@ -23,8 +23,6 @@
 
 #include "model.hpp"
 
-#include <iostream> // TODO: remove
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 #ifndef M_PI
@@ -56,6 +54,7 @@ std::shared_ptr<Model> Model::create(const std::string & filename)
 {
     if(Model::_allocated_mdl.count(filename) > 0)
     {
+        Logger_locator::get()(Logger::DBG, "Reusing model: " + filename);
         return _allocated_mdl[filename].lock();
     }
     else
@@ -86,7 +85,7 @@ Model::Model(const std::string & filename):
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
-    std::cout<<"Loading model: "<<filename<<std::endl;
+    Logger_locator::get()(Logger::DBG, "Loading model: " + filename);
     // TODO: check format (COLLADA)
     Assimp::Importer imp;
 
@@ -99,14 +98,14 @@ Model::Model(const std::string & filename):
     if(!ai_scene)
     {
         // TODO: throw
-        std::cerr<<imp.GetErrorString()<<std::endl;
+        Logger_locator::get()(Logger::ERROR, "Could not load model (" + filename + "): " + imp.GetErrorString());
         return;
     }
 
     if(!ai_scene->HasMeshes())
     {
         // TODO: throw
-        std::cerr<<"no meshes"<<std::endl;
+        Logger_locator::get()(Logger::ERROR, "no meshes");
         return;
     }
 
@@ -201,13 +200,13 @@ Model::Model(const std::string & filename):
         if(!ai_mesh->HasTextureCoords(0))
         {
             // TODO: throw
-            std::cerr<<"no tex coords"<<std::endl;
+            Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] has no tex coords");
             return;
         }
         if(!ai_mesh->HasNormals())
         {
             // TODO: throw
-            std::cerr<<"no normals"<<std::endl;
+            Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] has no normals");
             return;
         }
 
@@ -224,7 +223,7 @@ Model::Model(const std::string & filename):
         else
         {
             // TODO: throw
-            std::cerr<<"mesh "<<mesh_i<<" refers to non-existant material: "<<ai_mesh->mMaterialIndex<<std::endl;
+            Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] refers to non-existant material: " + std::to_string(ai_mesh->mMaterialIndex));
             return;
         }
 
@@ -250,7 +249,7 @@ Model::Model(const std::string & filename):
             if(ai_face.mNumIndices != 3)
             {
                 // TODO: throw
-                std::cerr<<"non-triangular polygon"<<std::endl;
+                Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] has non-triangular face: " + std::to_string(face_i));
                 return;
             }
 

@@ -23,15 +23,19 @@
 
 #include "gl_wrappers.hpp"
 
+#include "logger.hpp"
+
 GL_buffer::GL_buffer(const GLenum type):
     _type(type)
 {
     glGenBuffers(1, &_buf);
+    Logger_locator::get()(Logger::TRACE, "Generated GL buffer " + std::to_string(_buf) + " type: " + std::to_string(_type));
 }
 
 GL_buffer::~GL_buffer()
 {
     glDeleteBuffers(1, &_buf);
+    Logger_locator::get()(Logger::TRACE, "Deleted GL buffer " + std::to_string(_buf) + " type: " + std::to_string(_type));
 }
 
 void GL_buffer::bind() const
@@ -52,11 +56,13 @@ GLuint GL_buffer::get_id() const
 GL_vertex_array::GL_vertex_array()
 {
     glGenVertexArrays(1, &_arr);
+    Logger_locator::get()(Logger::TRACE, "Generated GL vertex array " + std::to_string(_arr));
 }
 
 GL_vertex_array::~GL_vertex_array()
 {
     glDeleteVertexArrays(1, &_arr);
+    Logger_locator::get()(Logger::TRACE, "Deleted GL vertex array " + std::to_string(_arr));
 }
 
 void GL_vertex_array::bind() const

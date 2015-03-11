@@ -21,11 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "world.hpp"
+#include "world.hpp" // includes SFML, must be included before Xlib
 
 #ifdef __linux
 #include <X11/Xlib.h>
 #endif
+
+#include "logger.hpp"
 
 int main(int argc, char * argv[])
 {
@@ -33,10 +35,17 @@ int main(int argc, char * argv[])
     XInitThreads(); // needed for multithreaded window access on Linux
     #endif
 
-    // initialize wworld
+    // TODO: get app name from config
+    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazerun.log", std::cerr, Logger::TRACE);
+    Logger_locator::init(log);
+
+    // initialize world
+    Logger_locator::get()(Logger::INFO, "Initializing...");
     World world;
 
+    Logger_locator::get()(Logger::INFO, "Running...");
     world.game_loop();
 
+    Logger_locator::get()(Logger::INFO, "Shutdown...");
     return EXIT_SUCCESS;
 }

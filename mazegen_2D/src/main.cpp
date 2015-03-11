@@ -28,6 +28,7 @@
 
 #include <gtkmm/application.h>
 
+#include "logger.hpp"
 #include "maze.hpp"
 
 #ifndef __MINGW32__
@@ -37,6 +38,10 @@ thread_local std::mt19937 prng;
 
 int main(int argc, char * argv[])
 {
+    // TODO: get app name from config
+    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
+    Logger_locator::init(log);
+
     // random_device curently not working in windows GCC
     #ifdef __MINGW32__
         prng.seed(time(NULL));
@@ -48,7 +53,9 @@ int main(int argc, char * argv[])
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
         Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
 
+    Logger_locator::get()(Logger::INFO, "Initializing...");
     Maze maze(32, 32);
 
+    Logger_locator::get()(Logger::INFO, "Running...");
     return app->run(maze);
 }

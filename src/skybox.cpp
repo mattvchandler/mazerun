@@ -41,6 +41,7 @@ Skybox::Skybox():
     _prog({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)})
 {
+    Logger_locator::get()(Logger::DBG, "Creating skybox");
     // TODO: a sphere might look better
     std::vector<glm::vec3> vert_pos =
     {

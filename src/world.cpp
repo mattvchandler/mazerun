@@ -59,9 +59,10 @@ Glew_init::Glew_init()
         // TODO: throw
     }
     Glew_init::_initialized = true;
+    Logger_locator::get()(Logger::TRACE, "GLEW initialized");
     if(glewInit() != GLEW_OK)
     {
-        std::cerr<<"Error loading glew"<<std::endl;
+        Logger_locator::get()(Logger::ERROR, "Error loading GLEW");
         // TODO: throw
     }
 }
@@ -82,6 +83,7 @@ World::World():
     _cam(_ents[0]),
     _player(_ents[0])
 {
+    Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
 
     _win.setKeyRepeatEnabled(false);

@@ -23,8 +23,6 @@
 
 #include "shader_prog.hpp"
 
-#include <iostream> // TODO: remove
-
 #include <fstream>
 #include <stdexcept>
 #include <system_error>
@@ -33,13 +31,15 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "logger.hpp"
+
 Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sources,
     const std::vector<std::pair<std::string, GLuint>> & attribs)
 {
     std::vector<GLuint> shaders;
     for(const auto & source: sources)
     {
-        std::cout<<"Loading shader: "<<source.first<<std::endl;
+        Logger_locator::get()(Logger::DBG, "Loading shader: " + source.first);
         // open shader file
         std::ifstream in(source.first, std::ios::binary | std::ios::in);
         std::vector <char> buff;
@@ -58,6 +58,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
             {
                 for(auto & shader: shaders)
                     glDeleteShader(shader);
+                Logger_locator::get()(Logger::ERROR, std::string("Error reading shader file: ") + source.first);
                 throw std::ios_base::failure(std::string("Error reading shader file: ") + source.first);
             }
         }
@@ -65,6 +66,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
         {
             for(auto & shader: shaders)
                 glDeleteShader(shader);
+            Logger_locator::get()(Logger::ERROR, std::string("Error opening shader file: ") + source.first);
             throw std::ios_base::failure(std::string("Error opening shader file: ") + source.first);
         }
 
@@ -89,6 +91,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
             for(auto & shader: shaders)
                 glDeleteShader(shader);
 
+            Logger_locator::get()(Logger::ERROR, std::string("Error compiling shader: ") + source.first + std::string("\n") + std::string(log.data()));
             throw std::system_error(compile_status, std::system_category(), std::string("Error compiling shader: ") +
                 source.first + std::string("\n") + std::string(log.data()));
         }
@@ -103,7 +106,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
     for(auto & attr: attribs)
         glBindAttribLocation(_prog, attr.second, attr.first.c_str());
 
-    std::cout<<"Linking shaders"<<std::endl;
+    Logger_locator::get()(Logger::DBG, "Linking shaders");
     glLinkProgram(_prog);
 
     for(auto & shader: shaders)
@@ -123,6 +126,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
         glDeleteProgram(_prog);
         _prog = 0;
 
+        Logger_locator::get()(Logger::ERROR, std::string("Error linking shader program:\n") + std::string(log.data()));
         throw std::system_error(link_status, std::system_category(), std::string("Error linking shader program:\n") +
             std::string(log.data()));
     }
@@ -138,7 +142,10 @@ void Shader_prog::add_uniform(const std::string & uniform)
 {
     GLint loc = glGetUniformLocation(_prog, uniform.c_str());
     if(loc == -1)
+    {
+        Logger_locator::get()(Logger::WARN, std::string("uniform ") + uniform + std::string(" not found"));
         throw std::runtime_error(std::string("uniform ") + uniform + std::string(" not found"));
+    }
     _uniforms[uniform] = loc;
 }
 
@@ -150,6 +157,7 @@ GLuint Shader_prog::get_uniform(const std::string & uniform) const
     }
     catch(std::out_of_range & e)
     {
+        Logger_locator::get()(Logger::WARN, "unknown uniform: " + uniform);
         throw std::out_of_range("unknown uniform: " + uniform);
     }
 }

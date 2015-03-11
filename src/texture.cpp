@@ -25,17 +25,21 @@
 
 #include "texture.hpp"
 
-#include <iostream> // TODO: remove
 
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
+
+#include "logger.hpp"
 
 std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::_allocated_tex;
 
 Texture::~Texture()
 {
     glDeleteTextures(1, &_texid);
-    _allocated_tex.erase(_key);
+
+    if(_key.size() > 0)
+        _allocated_tex.erase(_key);
+    Logger_locator::get()(Logger::TRACE, "Deleted GL texture: " + std::to_string(_texid) + " (" + _key + ")");
 }
 
 GLuint Texture::get_id() const
@@ -46,6 +50,7 @@ GLuint Texture::get_id() const
 Texture::Texture()
 {
     glGenTextures(1, &_texid);
+    Logger_locator::get()(Logger::TRACE, "Generated GL texture: " + std::to_string(_texid));
 }
 
 std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
@@ -54,6 +59,7 @@ std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
 
     if(Texture::_allocated_tex.count(key) > 0)
     {
+        Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
         return std::dynamic_pointer_cast<Texture_2D>(Texture::_allocated_tex[key].lock());
     }
     else
@@ -67,12 +73,13 @@ std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
 
 Texture_2D::Texture_2D(const std::string & filename)
 {
-    std::cout<<"Loading texture: "<<filename<<std::endl;
+    Logger_locator::get()(Logger::DBG, "Loading 2D texture: " + filename);
     glBindTexture(GL_TEXTURE_2D, _texid);
 
     sf::Image img;
     if(!img.loadFromFile(filename))
     {
+        Logger_locator::get()(Logger::ERROR, std::string("Error reading image file: ") + filename);
         throw std::ios_base::failure(std::string("Error reading image file: ") + filename);
     }
 
@@ -119,6 +126,7 @@ std::shared_ptr<Texture_2D> Texture_2D::white_fallback()
     if(!fallback)
     {
         fallback.reset(new Texture_2D(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated white fallback texture");
     }
     return fallback;
 }
@@ -129,6 +137,7 @@ std::shared_ptr<Texture_2D> Texture_2D::black_fallback()
     if(!fallback)
     {
         fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated black fallback texture");
     }
     return fallback;
 }
@@ -155,6 +164,7 @@ std::shared_ptr<Texture_2D> Texture_2D::diffuse_map_fallback()
         }
 
         fallback.reset(new Texture_2D(data, size, size));
+        Logger_locator::get()(Logger::DBG, "Generated diffuse_map fallback texture");
     }
     return fallback;
 }
@@ -165,6 +175,7 @@ std::shared_ptr<Texture_2D> Texture_2D::normal_map_fallback()
     if(!fallback)
     {
         fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated normal map fallback texture");
     }
     return fallback;
 }
@@ -185,6 +196,7 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & lef
 
     if(Texture::_allocated_tex.count(key) > 0)
     {
+        Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
         return std::dynamic_pointer_cast<Texture_cubemap>(Texture::_allocated_tex[key].lock());
     }
     else
@@ -220,11 +232,12 @@ Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::stri
 
     for(const auto & filename: filenames)
     {
-        std::cout<<"Loading texture: "<<filename.first<<std::endl;
+        Logger_locator::get()(Logger::DBG, "Loading Cubemap texture: " + filename.first);
         // load each file
         sf::Image img;
         if(!img.loadFromFile(filename.first))
         {
+            Logger_locator::get()(Logger::ERROR, std::string("Error reading image file: ") + filename.first);
             throw std::ios_base::failure(std::string("Error reading image file: ") + filename.first);
         }
 
@@ -275,6 +288,7 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::env_fallback()
     if(!fallback)
     {
         fallback.reset(new Texture_cubemap(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated cubemap fallback texture");
     }
     return fallback;
 }
