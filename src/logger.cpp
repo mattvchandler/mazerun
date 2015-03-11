@@ -69,20 +69,21 @@ std::string Logger::level_to_str(const Level lvl)
 
 std::string Logger::timestamp(unsigned int dec_places)
 {
-    std::time_t now = std::time(nullptr);
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_t = std::chrono::system_clock::to_time_t(now);
     char buff[9] = {0};
 
     if(dec_places == 0)
     {
-        std::strftime(buff, sizeof(buff), "%T", std::localtime(&now));
+        std::strftime(buff, sizeof(buff), "%T", std::localtime(&now_t));
         return std::string(buff);
     }
 
-    std::strftime(buff, sizeof(buff), "%H:%M", std::localtime(&now));
+    std::strftime(buff, sizeof(buff), "%H:%M", std::localtime(&now_t));
 
-    auto now_chrono = std::chrono::system_clock::now().time_since_epoch();
-    auto now_s = std::chrono::duration_cast<std::chrono::duration<double>>(now_chrono);
-    auto now_m = std::chrono::duration_cast<std::chrono::minutes>(now_chrono);
+    auto now_epoch = now.time_since_epoch();
+    auto now_s = std::chrono::duration_cast<std::chrono::duration<double>>(now_epoch);
+    auto now_m = std::chrono::duration_cast<std::chrono::minutes>(now_epoch);
 
     now_s -= now_m;
 
