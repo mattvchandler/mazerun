@@ -163,13 +163,13 @@ void Tee_log::operator()(const Level lvl, const std::string & msg)
     }
 }
 
-Logger * Logger_locator::_log;
-Null_log Logger_locator::_default_logger;
+std::shared_ptr<Logger> Logger_locator::_log;
+std::shared_ptr<Logger> Logger_locator::_default_logger = std::make_shared<Null_log>();
 
-void Logger_locator::init(Logger * log)
+void Logger_locator::init(std::shared_ptr<Logger> log)
 {
     if(!log)
-        _log = &_default_logger;
+        _log = _default_logger;
     else
         _log = log;
 }

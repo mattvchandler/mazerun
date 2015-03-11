@@ -26,6 +26,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -81,12 +82,13 @@ class Logger_locator
 {
 public:
     Logger_locator() = delete;
-    static void init(Logger * log = &_default_logger);
+    ~Logger_locator() = delete;
+    static void init(std::shared_ptr<Logger> log = _default_logger);
     static Logger & get();
 
 private:
-    static Logger * _log;
-    static Null_log  _default_logger;
+    static std::shared_ptr<Logger> _log;
+    static std::shared_ptr<Logger> _default_logger;
 };
 
 #endif // LOGGER_HPP
