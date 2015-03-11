@@ -24,36 +24,33 @@
 #ifndef WALLS_HPP
 #define WALLS_HPP
 
-#include "gl_wrappers.hpp"
 #include "grid.hpp"
-#include "material.hpp"
+#include "model.hpp"
 
-// TODO, be a type of entity?
-class Walls final
+class Walls final: public Model
 {
 public:
+    static std::shared_ptr<Walls> create(const unsigned int width, const unsigned int height);
+    void draw(const std::function<void(const Material &)> & set_material) const;
+
+private:
     Walls(const unsigned int width, const unsigned int height);
-    void draw() const;
-    const Material & get_material() const;
-private:
+
     Grid _grid;
-    GL_vertex_array _vao;
-    GL_buffer _vbo;
-    GLsizei _num_verts;
-    Material _mat;
 };
 
-class Floor final
+Entity create_walls(const unsigned int width, const unsigned int height);
+
+class Floor final: public Model
 {
 public:
-    Floor(const unsigned int width, const unsigned int height);
-    void draw() const;
-    const Material & get_material() const;
+static std::shared_ptr<Floor> create(const unsigned int width, const unsigned int height);
+    void draw(const std::function<void(const Material &)> & set_material) const;
+
 private:
-    GL_vertex_array _vao;
-    GL_buffer _vbo;
-    GLsizei _num_verts;
-    Material _mat;
+    Floor(const unsigned int width, const unsigned int height);
 };
+
+Entity create_floor(const unsigned int width, const unsigned int height);
 
 #endif // WALLS_HPP

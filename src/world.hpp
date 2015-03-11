@@ -75,8 +75,6 @@ private:
 
     Skybox _skybox;
     Dir_light _sunlight;
-    Walls _walls;
-    Floor _floor;
     Shader_prog _ent_shader;
 
     // entity tables

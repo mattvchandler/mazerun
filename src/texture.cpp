@@ -32,7 +32,6 @@
 
 std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::_allocated_tex;
 
-
 std::shared_ptr<Texture_2D> Texture_2D::_white_fallback;
 std::shared_ptr<Texture_2D> Texture_2D::_black_fallback;
 std::shared_ptr<Texture_2D> Texture_2D::_missing_fallback;

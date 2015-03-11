@@ -49,6 +49,7 @@ protected:
         const Material * mat;
     };
 
+    Model();
     Model(const std::string & filename);
 
     GL_vertex_array _vao;

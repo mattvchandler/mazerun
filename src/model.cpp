@@ -47,7 +47,8 @@ std::unordered_map<std::string, std::weak_ptr<Model>> Model::_allocated_mdl;
 
 Model::~Model()
 {
-    _allocated_mdl.erase(_key);
+    if(_key.size() > 0)
+        _allocated_mdl.erase(_key);
 }
 
 std::shared_ptr<Model> Model::create(const std::string & filename)
@@ -60,7 +61,7 @@ std::shared_ptr<Model> Model::create(const std::string & filename)
     else
     {
         std::shared_ptr<Model> ret(new Model(filename));
-        ret->_key = filename;
+        ret->_key = "MDL:" + filename;
         _allocated_mdl[filename] = ret;
         return ret;
     }
@@ -79,6 +80,12 @@ void Model::draw(const std::function<void(const Material &)> & set_material) con
     glBindVertexArray(0); // TODO: get prev val?
 
     check_error("Model::Draw");
+}
+
+Model::Model():
+    _vbo(GL_ARRAY_BUFFER),
+    _ebo(GL_ELEMENT_ARRAY_BUFFER)
+{
 }
 
 Model::Model(const std::string & filename):

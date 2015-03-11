@@ -26,12 +26,30 @@
 #include <glm/glm.hpp>
 
 #include "config.hpp"
+#include "entity.hpp"
 #include "gl_helpers.hpp"
 #include "logger.hpp"
 
+std::shared_ptr<Walls> Walls::create(const unsigned int width, const unsigned int height)
+{
+    std::shared_ptr<Walls> ret(new Walls(width, height));
+    return ret;
+}
+
+void Walls::draw(const std::function<void(const Material &)> & set_material) const
+{
+    _vao.bind();
+
+    set_material(*_meshes[0].mat);
+    glDrawArrays(GL_TRIANGLES, 0, _meshes[0].count);
+
+    glBindVertexArray(0); // TODO: get prev val?
+
+    check_error("Walls::Draw");
+}
+
 Walls::Walls(const unsigned int width, const unsigned int height):
-    _grid(width, height, Grid::MAZEGEN_DFS, 25, 100),
-    _vbo(GL_ARRAY_BUFFER)
+    _grid(width, height, Grid::MAZEGEN_DFS, 25, 100)
 {
     Logger_locator::get()(Logger::DBG, "Creating walls");
 
@@ -39,6 +57,9 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     std::vector<glm::vec2> vert_tex_coords;
     std::vector<glm::vec3> vert_normals;
     std::vector<glm::vec3> vert_tangents;
+
+    _meshes.emplace_back();
+    Mesh & mesh = _meshes.back();
 
     glm::vec3 cell_scale(1.0f, 1.0f, 1.0f);
     glm::vec3 base(-0.5f * (float)_grid.grid[0].size(), 0.0f, -0.5f * (float)_grid.grid.size());
@@ -144,7 +165,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
         vert_tex_coords.push_back(glm::vec2(1.0f, 1.0f));
     }
 
-    _num_verts = vert_pos.size();
+    mesh.count = vert_pos.size();
 
     _vao.bind();
     _vbo.bind();
@@ -181,31 +202,47 @@ Walls::Walls(const unsigned int width, const unsigned int height):
 
     glBindVertexArray(0);
 
-    _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
-    _mat.diffuse_map = Texture_2D::create(check_in_pwd("img/GroundCover.jpg"));
-    _mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"));
-    _mat.shininess = 500.0f;
+    _mats.emplace_back();
+    Material & mat = _mats.back();
+    mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
+    mat.diffuse_map = Texture_2D::create(check_in_pwd("img/GroundCover.jpg"));
+    mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"));
+    mat.shininess = 500.0f;
+
+    mesh.mat = &_mats.back();
 
     check_error("Walls::Walls");
 }
 
-void Walls::draw() const
+Entity create_walls(const unsigned int width, const unsigned int height)
+{
+    Entity walls(Walls::create(width, height),
+        std::shared_ptr<Input>(),
+        std::shared_ptr<Physics>(),
+        std::shared_ptr<Light>());
+
+    return walls;
+}
+
+std::shared_ptr<Floor> Floor::create(const unsigned int width, const unsigned int height)
+{
+    std::shared_ptr<Floor> ret(new Floor(width, height));
+    return ret;
+}
+
+void Floor::draw(const std::function<void(const Material &)> & set_material) const
 {
     _vao.bind();
 
-    glDrawArrays(GL_TRIANGLES, 0, _num_verts);
+    set_material(*_meshes[0].mat);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, _meshes[0].count);
+
     glBindVertexArray(0); // TODO: get prev val?
 
-    check_error("Walls::Draw");
+    check_error("Floor::Draw");
 }
 
-const Material & Walls::get_material() const
-{
-    return _mat;
-}
-
-Floor::Floor(const unsigned int width, const unsigned int height):
-    _vbo(GL_ARRAY_BUFFER)
+Floor::Floor(const unsigned int width, const unsigned int height)
 {
     Logger_locator::get()(Logger::DBG, "Creating floor");
     glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);
@@ -243,7 +280,10 @@ Floor::Floor(const unsigned int width, const unsigned int height):
         glm::vec3(1.0f, 0.0f, 0.0f)
     };
 
-    _num_verts = vert_pos.size();
+    _meshes.emplace_back();
+    Mesh & mesh = _meshes.back();
+
+    mesh.count = vert_pos.size();
 
     _vao.bind();
     _vbo.bind();
@@ -279,26 +319,24 @@ Floor::Floor(const unsigned int width, const unsigned int height):
     glEnableVertexAttribArray(3);
     glBindVertexArray(0);
 
-    _mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
-    _mat.diffuse_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring.jpg"));
-    _mat.normal_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"));
-    _mat.shininess = 500.0f;
+    _mats.emplace_back();
+    Material & mat = _mats.back();
+    mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
+    mat.diffuse_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring.jpg"));
+    mat.normal_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"));
+    mat.shininess = 500.0f;
+
+    mesh.mat = &_mats.back();
 
     check_error("Floor::Floor");
 }
 
-void Floor::draw() const
+Entity create_floor(const unsigned int width, const unsigned int height)
 {
-    _vao.bind();
+    Entity floor(Floor::create(width, height),
+        std::shared_ptr<Input>(),
+        std::shared_ptr<Physics>(),
+        std::shared_ptr<Light>());
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, _num_verts);
-
-    glBindVertexArray(0); // TODO: get prev val?
-
-    check_error("Floor::Draw");
-}
-
-const Material & Floor::get_material() const
-{
-    return _mat;
+    return floor;
 }

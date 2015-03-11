@@ -73,13 +73,12 @@ World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
     _running(true), _focused(true), _do_resize(false),
     _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), glm::normalize(glm::vec3(-1.0f))),
-    _walls(32, 32), _floor(32, 32),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
-    _ents({create_player(), create_testmdl(), create_testlight(), create_testmonkey()}),
+    _ents({create_player(), create_testmdl(), create_testlight(), create_testmonkey(), create_walls(32, 32), create_floor(32, 32)}),
     _cam(_ents[0]),
     _player(_ents[0])
 {
@@ -304,63 +303,6 @@ void World::draw()
             model->draw(set_material);
         }
     }
-
-    glm::mat4 model_view = _cam.view_mat();
-    glm::mat4 model_view_proj = _proj * model_view;
-    glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-
-    // sunlight vars
-    glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
-    glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
-    glUniformMatrix3fv(_ent_shader.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
-
-    glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &_walls.get_material().ambient_color[0]);
-    glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &_walls.get_material().diffuse_color[0]);
-    glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &_walls.get_material().specular_color[0]);
-    glUniform1f(_ent_shader.get_uniform("material.shininess"), _walls.get_material().shininess);
-    glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &_walls.get_material().emissive_color[0]);
-    // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), _walls.get_material().reflectivity);
-
-    glActiveTexture(GL_TEXTURE0);
-    _walls.get_material().ambient_map->bind();
-    glActiveTexture(GL_TEXTURE1);
-    _walls.get_material().diffuse_map->bind();
-    glActiveTexture(GL_TEXTURE2);
-    _walls.get_material().specular_map->bind();
-    glActiveTexture(GL_TEXTURE3);
-    _walls.get_material().shininess_map->bind();
-    glActiveTexture(GL_TEXTURE4);
-    _walls.get_material().emissive_map->bind();
-    // glActiveTexture(GL_TEXTURE5);
-    // _walls.get_material().reflectivity_map->bind();
-    glActiveTexture(GL_TEXTURE6);
-    _walls.get_material().normal_map->bind();
-
-    _walls.draw();
-
-    glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &_floor.get_material().ambient_color[0]);
-    glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &_floor.get_material().diffuse_color[0]);
-    glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &_floor.get_material().specular_color[0]);
-    glUniform1f(_ent_shader.get_uniform("material.shininess"), _floor.get_material().shininess);
-    glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &_floor.get_material().emissive_color[0]);
-    // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), _floor.get_material().reflectivity);
-
-    glActiveTexture(GL_TEXTURE0);
-    _floor.get_material().ambient_map->bind();
-    glActiveTexture(GL_TEXTURE1);
-    _floor.get_material().diffuse_map->bind();
-    glActiveTexture(GL_TEXTURE2);
-    _floor.get_material().specular_map->bind();
-    glActiveTexture(GL_TEXTURE3);
-    _floor.get_material().shininess_map->bind();
-    glActiveTexture(GL_TEXTURE4);
-    _floor.get_material().emissive_map->bind();
-    // glActiveTexture(GL_TEXTURE5);
-    // _floor.get_material().reflectivity_map->bind();
-    glActiveTexture(GL_TEXTURE6);
-    _floor.get_material().normal_map->bind();
-
-    _floor.draw();
 
     _skybox.draw(_cam, _proj);
 
