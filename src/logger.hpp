@@ -24,13 +24,16 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-void check_error(const char * at);
+void check_error(const std::string & at);
 
 std::ostream & operator<<(std::ostream & out, const glm::vec2 & v);
 std::ostream & operator<<(std::ostream & out, const glm::vec3 & v);
@@ -38,5 +41,52 @@ std::ostream & operator<<(std::ostream & out, const glm::vec4 & v);
 std::ostream & operator<<(std::ostream & out, const glm::mat3 & m);
 std::ostream & operator<<(std::ostream & out, const glm::mat4 & m);
 std::ostream & operator<<(std::ostream & out, const glm::quat & q);
+
+class Logger
+{
+public:
+    typedef enum {TRACE, DBG, INFO, WARN, ERROR} Level;
+
+    Logger(const Level lvl = INFO);
+    virtual ~Logger() = default;
+    virtual void operator()(const Level lvl, const std::string & msg);
+    void set_level(const Level lvl);
+    Level get_level();
+
+protected:
+    std::string level_to_str(const Level lvl);
+    std::string timestamp(unsigned int dec_places = 4);
+    std::string preamble(const Level lvl);
+    Level _lvl;
+};
+
+class Tee_log final: public Logger
+{
+public:
+    Tee_log(const std::string & filename, std::ostream & stream = std::cerr, const Level lvl = INFO);
+    void operator()(const Level lvl, const std::string & msg);
+
+private:
+    std::ofstream _file;
+    std::ostream & _stream;
+};
+
+class Null_log final: public Logger
+{
+public:
+    void operator()(const Level lvl, const std::string msg);
+};
+
+class Logger_locator
+{
+public:
+    Logger_locator() = delete;
+    static void init(Logger * log = &_default_logger);
+    static Logger & get();
+
+private:
+    static Logger * _log;
+    static Null_log  _default_logger;
+};
 
 #endif // LOGGER_HPP
