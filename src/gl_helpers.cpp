@@ -23,6 +23,8 @@
 
 #include "gl_helpers.hpp"
 
+#include <sstream>
+
 #include <GL/glew.h>
 
 #include <SFML/OpenGL.hpp>
@@ -74,4 +76,46 @@ std::ostream & operator<<(std::ostream & out, const glm::mat4 & m)
 std::ostream & operator<<(std::ostream & out, const glm::quat & q)
 {
     return out<<"("<<q.x<<","<<q.y<<","<<q.z<<","<<q.w<<")";
+}
+
+std::string to_string(const glm::vec2 & v)
+{
+    std::ostringstream str;
+    str<<v;
+    return str.str();
+}
+
+std::string to_string(const glm::vec3 & v)
+{
+    std::ostringstream str;
+    str<<v;
+    return str.str();
+}
+
+std::string to_string(const glm::vec4 & v)
+{
+    std::ostringstream str;
+    str<<v;
+    return str.str();
+}
+
+std::string to_string(const glm::mat3 & m)
+{
+    std::ostringstream str;
+    str<<m;
+    return str.str();
+}
+
+std::string to_string(const glm::mat4 & m)
+{
+    std::ostringstream str;
+    str<<m;
+    return str.str();
+}
+
+std::string to_string(const glm::quat & q)
+{
+    std::ostringstream str;
+    str<<q;
+    return str.str();
 }

@@ -40,6 +40,11 @@ std::ostream & operator<<(std::ostream & out, const glm::mat3 & m);
 std::ostream & operator<<(std::ostream & out, const glm::mat4 & m);
 std::ostream & operator<<(std::ostream & out, const glm::quat & q);
 
-// TODO: to_string for the above?
+std::string to_string(const glm::vec2 & v);
+std::string to_string(const glm::vec3 & v);
+std::string to_string(const glm::vec4 & v);
+std::string to_string(const glm::mat3 & m);
+std::string to_string(const glm::mat4 & m);
+std::string to_string(const glm::quat & q);
 
 #endif // GL_HELPERS_HPP
