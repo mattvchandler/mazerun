@@ -67,6 +67,11 @@ private:
     Texture_2D(const std::vector<glm::vec4> & data, const GLint width, const GLint height);
     Texture_2D(const glm::vec4 & color, const GLint width, const GLint height);
     void set_properties() const override;
+
+    static std::shared_ptr<Texture_2D> _white_fallback;
+    static std::shared_ptr<Texture_2D> _black_fallback;
+    static std::shared_ptr<Texture_2D> _missing_fallback;
+    static std::shared_ptr<Texture_2D> _normal_map_fallback;
 };
 
 class Texture_cubemap final: public Texture
@@ -84,6 +89,8 @@ private:
         const std::string & down_fname, const std::string & up_fname);
     Texture_cubemap(const glm::vec4 & color, const GLint width, const GLint height);
     void set_properties() const override;
+
+    static std::shared_ptr<Texture_cubemap> _env_fallback;
 };
 
 #endif // TEXTURE_HPP

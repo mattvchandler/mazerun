@@ -32,6 +32,14 @@
 
 std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::_allocated_tex;
 
+
+std::shared_ptr<Texture_2D> Texture_2D::_white_fallback;
+std::shared_ptr<Texture_2D> Texture_2D::_black_fallback;
+std::shared_ptr<Texture_2D> Texture_2D::_missing_fallback;
+std::shared_ptr<Texture_2D> Texture_2D::_normal_map_fallback;
+
+std::shared_ptr<Texture_cubemap> Texture_cubemap::_env_fallback;
+
 Texture::~Texture()
 {
     glDeleteTextures(1, &_texid);
@@ -68,6 +76,67 @@ std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
         Texture::_allocated_tex[key] = ret;
         return ret;
     }
+}
+
+std::shared_ptr<Texture_2D> Texture_2D::white_fallback()
+{
+    if(!_white_fallback)
+    {
+        _white_fallback.reset(new Texture_2D(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated white fallback texture");
+    }
+    return _white_fallback;
+}
+
+std::shared_ptr<Texture_2D> Texture_2D::black_fallback()
+{
+    if(!_black_fallback)
+    {
+        _black_fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated black fallback texture");
+    }
+    return _black_fallback;
+}
+
+// black & magenta checkerboard (like source!)
+std::shared_ptr<Texture_2D> Texture_2D::missing_fallback()
+{
+    if(!_missing_fallback)
+    {
+        const unsigned short size = 8;
+        std::vector<glm::vec4> data(size * size);
+        for(unsigned short row = 0; row < size; ++row)
+        {
+            for(unsigned short col = 0; col < size; ++col)
+            {
+                unsigned short i = row * size + col;
+                // odd pixels black, even magenta
+                if((row ^ col) & 1)
+                    data[i] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+                else
+                    data[i] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+            }
+        }
+
+        _missing_fallback.reset(new Texture_2D(data, size, size));
+        Logger_locator::get()(Logger::DBG, "Generated missing fallback texture");
+    }
+    return _missing_fallback;
+}
+
+std::shared_ptr<Texture_2D> Texture_2D::normal_map_fallback()
+{
+    if(!_normal_map_fallback)
+    {
+        _normal_map_fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated normal map fallback texture");
+    }
+    return _normal_map_fallback;
+}
+
+void Texture_2D::bind() const
+{
+    glBindTexture(GL_TEXTURE_2D, _texid);
 }
 
 Texture_2D::Texture_2D(const std::string & filename)
@@ -119,71 +188,6 @@ void Texture_2D::set_properties() const
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::white_fallback()
-{
-    static std::shared_ptr<Texture_2D> fallback;
-    if(!fallback)
-    {
-        fallback.reset(new Texture_2D(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
-        Logger_locator::get()(Logger::DBG, "Generated white fallback texture");
-    }
-    return fallback;
-}
-
-std::shared_ptr<Texture_2D> Texture_2D::black_fallback()
-{
-    static std::shared_ptr<Texture_2D> fallback;
-    if(!fallback)
-    {
-        fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1, 1));
-        Logger_locator::get()(Logger::DBG, "Generated black fallback texture");
-    }
-    return fallback;
-}
-
-// black & magenta checkerboard (like source!)
-std::shared_ptr<Texture_2D> Texture_2D::missing_fallback()
-{
-    static std::shared_ptr<Texture_2D> fallback;
-    if(!fallback)
-    {
-        const unsigned short size = 8;
-        std::vector<glm::vec4> data(size * size);
-        for(unsigned short row = 0; row < size; ++row)
-        {
-            for(unsigned short col = 0; col < size; ++col)
-            {
-                unsigned short i = row * size + col;
-                // odd pixels black, even magenta
-                if((row ^ col) & 1)
-                    data[i] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-                else
-                    data[i] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-            }
-        }
-
-        fallback.reset(new Texture_2D(data, size, size));
-        Logger_locator::get()(Logger::DBG, "Generated missing fallback texture");
-    }
-    return fallback;
-}
-
-std::shared_ptr<Texture_2D> Texture_2D::normal_map_fallback()
-{
-    static std::shared_ptr<Texture_2D> fallback;
-    if(!fallback)
-    {
-        fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
-        Logger_locator::get()(Logger::DBG, "Generated normal map fallback texture");
-    }
-    return fallback;
-}
-
-void Texture_2D::bind() const
-{
-    glBindTexture(GL_TEXTURE_2D, _texid);
-}
-
 std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & left_fname, const std::string & right_fname,
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname)
@@ -207,6 +211,21 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & lef
         Texture::_allocated_tex[key] = ret;
         return ret;
     }
+}
+
+std::shared_ptr<Texture_cubemap> Texture_cubemap::env_fallback()
+{
+    if(!_env_fallback)
+    {
+        _env_fallback.reset(new Texture_cubemap(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
+        Logger_locator::get()(Logger::DBG, "Generated cubemap fallback texture");
+    }
+    return _env_fallback;
+}
+
+void Texture_cubemap::bind() const
+{
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
 }
 
 // create a cubemap texture from 6 filenames
@@ -279,20 +298,4 @@ void Texture_cubemap::set_properties() const
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-}
-
-std::shared_ptr<Texture_cubemap> Texture_cubemap::env_fallback()
-{
-    static std::shared_ptr<Texture_cubemap> fallback;
-    if(!fallback)
-    {
-        fallback.reset(new Texture_cubemap(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
-        Logger_locator::get()(Logger::DBG, "Generated cubemap fallback texture");
-    }
-    return fallback;
-}
-
-void Texture_cubemap::bind() const
-{
-    glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
 }
