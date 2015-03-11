@@ -30,19 +30,6 @@
 #include <sstream>
 #include <string>
 
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-
-void check_error(const std::string & at);
-
-std::ostream & operator<<(std::ostream & out, const glm::vec2 & v);
-std::ostream & operator<<(std::ostream & out, const glm::vec3 & v);
-std::ostream & operator<<(std::ostream & out, const glm::vec4 & v);
-std::ostream & operator<<(std::ostream & out, const glm::mat3 & m);
-std::ostream & operator<<(std::ostream & out, const glm::mat4 & m);
-std::ostream & operator<<(std::ostream & out, const glm::quat & q);
-
 class Logger
 {
 public:

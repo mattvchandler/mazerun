@@ -67,6 +67,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
 add_library(mazegen OBJECT
     src/gen_rooms.cpp
     src/grid.cpp
+    src/logger.cpp
     src/mazegen.cpp
     )
 
@@ -80,9 +81,9 @@ add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
     src/config.cpp
     src/entity.cpp
+    src/gl_helpers.cpp
     src/gl_wrappers.cpp
     src/light.cpp
-    src/logger.cpp
     src/main.cpp
     src/model.cpp
     src/player.cpp

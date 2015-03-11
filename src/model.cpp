@@ -42,6 +42,7 @@
 #include <assimp/scene.h>
 
 #include "config.hpp"
+#include "gl_helpers.hpp"
 #include "logger.hpp"
 
 std::unordered_map<std::string, std::weak_ptr<Model>> Model::_allocated_mdl;

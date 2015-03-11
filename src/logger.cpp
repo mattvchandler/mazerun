@@ -26,57 +26,6 @@
 #include <chrono>
 #include <iomanip>
 
-#include <GL/glew.h>
-
-#include <SFML/OpenGL.hpp>
-
-// check for OpenGL error and print message
-void check_error(const std::string & at)
-{
-    // TODO: disable checks in release mode
-    GLenum e = glGetError();
-    if(e == GL_NO_ERROR)
-        return;
-
-    Logger_locator::get()(Logger::WARN,
-        "OpenGL Error at " + at + ": " + (const char *)(gluErrorString(e)));
-}
-
-std::ostream & operator<<(std::ostream & out, const glm::vec2 & v)
-{
-    return out<<"("<<v.x<<","<<v.y<<")";
-}
-
-std::ostream & operator<<(std::ostream & out, const glm::vec3 & v)
-{
-    return out<<"("<<v.x<<","<<v.y<<","<<v.z<<")";
-}
-
-std::ostream & operator<<(std::ostream & out, const glm::vec4 & v)
-{
-    return out<<"("<<v.x<<","<<v.y<<","<<v.z<<","<<v.w<<")";
-}
-
-std::ostream & operator<<(std::ostream & out, const glm::mat3 & m)
-{
-    out<<"[["<<m[0].x<<","<<m[1].x<<","<<m[2].x<<"\n";
-    out<<" ["<<m[0].y<<","<<m[1].y<<","<<m[2].y<<"\n";
-    return out<<" ["<<m[0].z<<","<<m[1].z<<","<<m[2].z<<"]]";
-}
-
-std::ostream & operator<<(std::ostream & out, const glm::mat4 & m)
-{
-    out<<"[["<<m[0].x<<","<<m[1].x<<","<<m[2].x<<","<<m[3].x<<"]\n";
-    out<<" ["<<m[0].y<<","<<m[1].y<<","<<m[2].y<<","<<m[3].y<<"]\n";
-    out<<" ["<<m[0].z<<","<<m[1].z<<","<<m[2].z<<","<<m[3].z<<"]\n";
-    return out<<" ["<<m[0].w<<","<<m[1].w<<","<<m[2].w<<","<<m[3].w<<"]]";
-}
-
-std::ostream & operator<<(std::ostream & out, const glm::quat & q)
-{
-    return out<<"("<<q.x<<","<<q.y<<","<<q.z<<","<<q.w<<")";
-}
-
 Logger::Logger(const Level lvl): _lvl(lvl)
 {
 }
