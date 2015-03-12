@@ -30,6 +30,8 @@
 #include <chrono>
 #include <iostream>
 #include <random>
+#include <stdexcept>
+#include <system_error>
 #include <thread>
 
 #define _USE_MATH_DEFINES
@@ -56,14 +58,17 @@ Glew_init::Glew_init()
 {
     if(Glew_init::_initialized)
     {
-        // TODO: throw
+        Logger_locator::get()(Logger::WARN, "Attempted re-initialization of GLEW");
+        throw std::runtime_error("Attempted re-initialization of GLEW");
     }
+
     Glew_init::_initialized = true;
     Logger_locator::get()(Logger::TRACE, "GLEW initialized");
+
     if(glewInit() != GLEW_OK)
     {
         Logger_locator::get()(Logger::ERROR, "Error loading GLEW");
-        // TODO: throw
+        throw std::runtime_error("Error loading GLEW");
     }
 }
 
@@ -168,7 +173,6 @@ World::World():
     _ent_shader.add_uniform("cam_light_forward");
 
     // set up static uniform vals
-    // TODO: replace uniform bracket op w/ at so exceptions are thrown
     glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 0);
     glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 1);
     glUniform1i(_ent_shader.get_uniform("material.specular_map"), 2);
@@ -322,8 +326,6 @@ void World::draw()
             // Pros: easy, no extra library dep
             // cons: no special FX
         // use SFML
-
-// TODO: logging
 
 void World::resize()
 {

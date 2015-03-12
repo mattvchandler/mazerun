@@ -23,6 +23,9 @@
 
 #include "model.hpp"
 
+#include <stdexcept>
+#include <system_error>
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 #ifndef M_PI
@@ -104,16 +107,14 @@ Model::Model(const std::string & filename):
 
     if(!ai_scene)
     {
-        // TODO: throw
         Logger_locator::get()(Logger::ERROR, "Could not load model (" + filename + "): " + imp.GetErrorString());
-        return;
+        throw std::ios_base::failure("Could not load model (" + filename + "): " + imp.GetErrorString());
     }
 
     if(!ai_scene->HasMeshes())
     {
-        // TODO: throw
         Logger_locator::get()(Logger::ERROR, "no meshes");
-        return;
+        throw std::runtime_error("no meshes");
     }
 
     // get material
@@ -206,15 +207,13 @@ Model::Model(const std::string & filename):
 
         if(!ai_mesh->HasTextureCoords(0))
         {
-            // TODO: throw
             Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] has no tex coords");
-            return;
+            throw std::runtime_error(filename + " - mesh[" + std::to_string(mesh_i) + "] has no tex coords");
         }
         if(!ai_mesh->HasNormals())
         {
-            // TODO: throw
             Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] has no normals");
-            return;
+            throw std::runtime_error(filename + " - mesh[" + std::to_string(mesh_i) + "] has no normals");
         }
 
         // Tangets are generated, so we don't need to check them
@@ -229,8 +228,8 @@ Model::Model(const std::string & filename):
             mesh.mat = &_mats[ai_mesh->mMaterialIndex];
         else
         {
-            // TODO: throw
             Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] refers to non-existant material: " + std::to_string(ai_mesh->mMaterialIndex));
+            throw std::runtime_error(filename + " - mesh[" + std::to_string(mesh_i) + "] refers to non-existant material: " + std::to_string(ai_mesh->mMaterialIndex));
             return;
         }
 
@@ -255,9 +254,8 @@ Model::Model(const std::string & filename):
             const aiFace & ai_face = ai_mesh->mFaces[face_i];
             if(ai_face.mNumIndices != 3)
             {
-                // TODO: throw
                 Logger_locator::get()(Logger::ERROR, filename + " - mesh[" + std::to_string(mesh_i) + "] has non-triangular face: " + std::to_string(face_i));
-                return;
+                throw std::runtime_error(filename + " - mesh[" + std::to_string(mesh_i) + "] has non-triangular face: " + std::to_string(face_i));
             }
 
             for(std::size_t i = 0; i < ai_face.mNumIndices; ++i)
