@@ -27,6 +27,7 @@
 
 #include "world.hpp"
 
+#include <atomic>
 #include <chrono>
 #include <iostream>
 #include <random>
@@ -50,6 +51,8 @@
 
 thread_local std::mt19937 prng;
 thread_local std::random_device rng;
+
+extern std::atomic_bool interrupted; // defined in main.cpp
 
 const unsigned int max_point_lights = 10; // TODO: get from config?
 const unsigned int max_spot_lights = 10;
@@ -357,7 +360,7 @@ void World::event_loop()
     {
         // handle events
         sf::Event ev;
-        if(_win.waitEvent(ev)) // blocking call
+        if(_win.pollEvent(ev)) // non-blocking call - needed so interrupted can properly quit
         {
             _lock.lock();
             // TODO: have events trigger signals that listeners can recieve?
@@ -379,7 +382,7 @@ void World::event_loop()
                     break;
             }
         }
-        if(!_running)
+        if(!_running || interrupted)
         {
             _lock.unlock();
             break;
@@ -405,7 +408,7 @@ void World::main_loop()
             _do_resize = false;
         }
 
-        if(!_running)
+        if(!_running || interrupted)
         {
             _lock.unlock();
             break;

@@ -21,6 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <atomic>
+#include <csignal>
+
 #include "world.hpp" // includes SFML, must be included before Xlib
 
 #ifdef __linux
@@ -28,6 +31,13 @@
 #endif
 
 #include "logger.hpp"
+
+std::atomic_bool interrupted(false);
+
+void sigint_handler(int)
+{
+    interrupted = true;
+}
 
 int main(int argc, char * argv[])
 {
@@ -38,6 +48,9 @@ int main(int argc, char * argv[])
     // TODO: get app name from config
     std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazerun.log", std::cerr, Logger::TRACE);
     Logger_locator::init(log);
+
+    // set up sigint (^C) handler
+    std::signal(SIGINT, &sigint_handler);
 
     // initialize world
     Logger_locator::get()(Logger::INFO, "Initializing...");
