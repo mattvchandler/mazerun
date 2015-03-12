@@ -34,13 +34,18 @@ void Logger::operator()(const Level lvl, const std::string & msg)
 {
     if(lvl >= _lvl)
     {
+        _lock.lock();
         std::cerr<<preamble(lvl)<<" "<<msg<<std::endl;
+        _lock.unlock();
     }
+
 }
 
 void Logger::set_level(const Level lvl)
 {
+    _lock.lock();
     _lvl = lvl;
+    _lock.unlock();
 }
 
 Logger::Level Logger::get_level()
@@ -108,8 +113,10 @@ void Tee_log::operator()(const Level lvl, const std::string & msg)
 
     if(lvl >= _lvl)
     {
+        _lock.lock();
         _stream<<preamble_str<<" "<<msg<<std::endl;
         _file<<preamble_str<<" "<<msg<<std::endl;
+        _lock.unlock();
     }
 }
 

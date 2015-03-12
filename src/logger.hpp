@@ -27,6 +27,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 
@@ -45,6 +46,8 @@ protected:
     std::string level_to_str(const Level lvl);
     std::string timestamp(unsigned int dec_places = 4);
     std::string preamble(const Level lvl);
+
+    std::mutex _lock;
     Level _lvl;
 };
 
