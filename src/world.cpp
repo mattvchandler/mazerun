@@ -436,6 +436,17 @@ void World::main_loop()
 
         // TODO should we make more threads for input, physics, messages, etc?
         // TODO: AI
+            // State machine: Idle, attack, flee, travel
+                // some states have a target entity (attack this, or flee from this or travel to that
+            // goal: overrides state:
+                // defend: keep target in sight at all times, attack any foe in sight, prioritize by dist to target
+                    // given entity (can be invisible marker node)
+            // relationship db.
+                // if ent not in db, neutral, otherwise positive score is friendly, negative is hostile
+                // attacking will lower relationship. giving items will increase?
+                // relationships in/decrease toward defalt value with time
+            // pathfinding
+                // subdivide mazegrid && Dijkstra's
         draw();
         _lock.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
