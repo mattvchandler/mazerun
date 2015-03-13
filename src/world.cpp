@@ -360,7 +360,7 @@ void World::event_loop()
     {
         // handle events
         sf::Event ev;
-        if(_win.pollEvent(ev)) // non-blocking call - needed so interrupted can properly quit
+        if(_win.waitEvent(ev)) // blocking call
         {
             _lock.lock();
             // TODO: have events trigger signals that listeners can recieve?
