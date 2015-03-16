@@ -187,8 +187,8 @@ World::World():
     glUseProgram(0); // TODO get prev val
     check_error("World::World");
 
-    std::dynamic_pointer_cast<Player_input>(_player.input())->signal_sunlight_toggled().connect(
-        [this]() { _sunlight.enabled = !_sunlight.enabled; });
+    Message::add_event("sun_toggle");
+    Message::add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
 }
 
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
@@ -346,10 +346,12 @@ void World::game_loop()
 
     // rendering, physics, input, etc to be handled in this thread
     std::thread main_loop_t(&World::main_loop, this);
+    std::thread message_loop_t(&World::message_loop, this);
 
     event_loop(); // handle events
 
     main_loop_t.join();
+    message_loop_t.join();
     _win.close();
 }
 
@@ -451,5 +453,24 @@ void World::main_loop()
         _lock.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
         // TODO: framerate display
+    }
+}
+
+void World::message_loop()
+{
+    prng.seed(rng());
+    while(true)
+    {
+        if(!_running || interrupted)
+        {
+            break;
+        }
+        if(!Message::queue_empty())
+        {
+            _lock.lock();
+            Message::process_events();
+            _lock.unlock();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }

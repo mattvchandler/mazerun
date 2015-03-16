@@ -38,6 +38,7 @@
 
 #include "entity.hpp"
 #include "light.hpp"
+#include "message.hpp"
 #include "skybox.hpp"
 #include "shader_prog.hpp"
 #include "walls.hpp"
@@ -64,10 +65,11 @@ public:
 private:
     void event_loop();
     void main_loop();
+    void message_loop();
 
     bool _running;
     bool _focused;
-    bool _do_resize; // TODO: find a better way (prob. messages/signals)
+    bool _do_resize;
 
     std::mutex _lock; // TODO more descriptive name
 

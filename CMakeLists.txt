@@ -85,6 +85,7 @@ add_executable(${PROJECT_NAME}
     src/gl_wrappers.cpp
     src/light.cpp
     src/main.cpp
+    src/message.cpp
     src/model.cpp
     src/player.cpp
     src/shader_prog.cpp

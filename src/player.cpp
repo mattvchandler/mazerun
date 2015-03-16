@@ -40,6 +40,7 @@
 #include <SFML/OpenGL.hpp>
 
 #include "entity.hpp"
+#include "message.hpp"
 
 std::shared_ptr<Player_input> Player_input::create()
 {
@@ -107,7 +108,7 @@ void Player_input::update(Entity & ent,
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::I) && !key_lock[sf::Keyboard::I])
     {
         key_lock[sf::Keyboard::I] = true;
-        _signal_sunlight_toggled();
+        Message::queue_event_empty("sun_toggle");
     }
     else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::I) && key_lock[sf::Keyboard::I])
     {
@@ -130,11 +131,6 @@ void Player_input::update(Entity & ent,
 sigc::signal<void> Player_input::signal_spotlight_toggled()
 {
     return _signal_spotlight_toggled;
-}
-
-sigc::signal<void> Player_input::signal_sunlight_toggled()
-{
-    return _signal_sunlight_toggled;
 }
 
 Entity create_player()
