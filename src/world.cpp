@@ -187,7 +187,6 @@ World::World():
     glUseProgram(0); // TODO get prev val
     check_error("World::World");
 
-    Message::add_event("sun_toggle");
     Message::add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
 }
 

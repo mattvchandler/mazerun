@@ -45,7 +45,6 @@ public:
         virtual ~Packet() = default;
     };
 
-    static void add_event(const std::string & event);
     static void rm_event(const std::string & event);
 
     static sigc::connection add_callback(const std::string & event,

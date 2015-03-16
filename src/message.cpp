@@ -27,18 +27,6 @@ std::unordered_map<std::string, sigc::signal<void, const Message::Packet &>> Mes
 std::vector<std::pair<std::string, std::unique_ptr<Message::Packet>>> Message::_queue;
 std::mutex Message::_lock;
 
-void Message::add_event(const std::string & event)
-{
-    _lock.lock();
-    if(_signals.count(event) > 0)
-    {
-        return;
-    }
-
-    _signals[event];
-    _lock.unlock();
-}
-
 void Message::rm_event(const std::string & event)
 {
     _lock.lock();
@@ -52,7 +40,7 @@ sigc::connection Message::add_callback(const std::string & event,
     const sigc::slot<void, const Packet &> & callback)
 {
     _lock.lock();
-    sigc::connection conn = _signals.at(event).connect(callback);
+    sigc::connection conn = _signals[event].connect(callback);
     _lock.unlock();
     return conn;
 }
@@ -61,7 +49,7 @@ sigc::connection Message::add_callback_empty(const std::string & event,
     const sigc::slot<void> & callback)
 {
     _lock.lock();
-    sigc::connection conn = _signals.at(event).connect(sigc::hide(callback));
+    sigc::connection conn = _signals[event].connect(sigc::hide(callback));
     _lock.unlock();
     return conn;
 }
@@ -75,13 +63,14 @@ void Message::queue_event_empty(const std::string & event)
 
 void Message::process_events()
 {
+    std::vector<std::pair<std::string, std::unique_ptr<Packet>>> new_queue;
     _lock.lock();
-    for(const auto & event: _queue)
+    std::swap(_queue, new_queue);
+    _lock.unlock();
+    for(const auto & event: new_queue)
     {
         _signals.at(event.first)(*event.second);
     }
-    _queue.clear();
-    _lock.unlock();
 }
 
 bool Message::queue_empty()
