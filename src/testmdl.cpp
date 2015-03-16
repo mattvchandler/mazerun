@@ -37,8 +37,6 @@
 #include "entity.hpp"
 #include "logger.hpp"
 
-// TODO: keyboard signals to replace static maps
-
 std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
 {
     return std::make_shared<Testmdl_physics>();
@@ -71,27 +69,15 @@ std::shared_ptr<Testlight_input> Testlight_input::create()
 void Testlight_input::update(Entity & ent, const sf::Window & win,
     const float dt)
 {
-    static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
+}
 
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && !key_lock[sf::Keyboard::P])
-    {
-        key_lock[sf::Keyboard::P] = true;
+void Testlight_input::key_down(const Message::Packet & pkt)
+{
+    const sf::Keyboard::Key & key = Message::get_packet<sf::Keyboard::Key>(pkt);
+    if(key == sf::Keyboard::P)
         _signal_light_toggled();
-    }
-    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::P) && key_lock[sf::Keyboard::P])
-    {
-        key_lock[sf::Keyboard::P] = false;
-    }
-
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::O) && !key_lock[sf::Keyboard::O])
-    {
-        key_lock[sf::Keyboard::O] = true;
+    else if(key == sf::Keyboard::O)
         _signal_move_toggled();
-    }
-    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::O) && key_lock[sf::Keyboard::O])
-    {
-        key_lock[sf::Keyboard::O] = false;
-    }
 }
 
 sigc::signal<void> Testlight_input::signal_light_toggled()
@@ -140,6 +126,7 @@ Entity create_testlight()
 
     input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
     input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testlight_physics::toggle_movement));
+    Message::add_callback("key_down", sigc::mem_fun(*input, &Testlight_input::key_down));
 
     return ent;
 }
@@ -152,17 +139,13 @@ std::shared_ptr<Testmonkey_input> Testmonkey_input::create()
 void Testmonkey_input::update(Entity & ent, const sf::Window & win,
     const float dt)
 {
-    static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
+}
 
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::U) && !key_lock[sf::Keyboard::U])
-    {
-        key_lock[sf::Keyboard::U] = true;
+void Testmonkey_input::key_down(const Message::Packet & pkt)
+{
+    const sf::Keyboard::Key & key = Message::get_packet<sf::Keyboard::Key>(pkt);
+    if(key == sf::Keyboard::U)
         _signal_light_toggled();
-    }
-    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::U) && key_lock[sf::Keyboard::U])
-    {
-        key_lock[sf::Keyboard::U] = false;
-    }
 }
 
 sigc::signal<void> Testmonkey_input::signal_light_toggled()
@@ -187,6 +170,7 @@ Entity create_testmonkey()
     ent.rotate_world(0.25f * M_PI, ent.right());
 
     input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
+    Message::add_callback("key_down", sigc::mem_fun(*input, &Testmonkey_input::key_down));
 
     return ent;
 }

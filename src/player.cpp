@@ -40,7 +40,6 @@
 #include <SFML/OpenGL.hpp>
 
 #include "entity.hpp"
-#include "message.hpp"
 
 std::shared_ptr<Player_input> Player_input::create()
 {
@@ -50,7 +49,6 @@ std::shared_ptr<Player_input> Player_input::create()
 void Player_input::update(Entity & ent,
     const sf::Window & win, const float dt)
 {
-    static std::unordered_map<sf::Keyboard::Key, bool, std::hash<int>> key_lock;
     static sf::Vector2i old_mouse_pos = sf::Mouse::getPosition(win);
 
     float mov_scale = 5.0f;
@@ -93,28 +91,6 @@ void Player_input::update(Entity & ent,
         ent.translate(-mov_scale * glm::vec3(0.0f, 1.0f, 0.0f) * dt);
     }
 
-    // toggle spotlight
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::F) && !key_lock[sf::Keyboard::F])
-    {
-        key_lock[sf::Keyboard::F] = true;
-        _signal_spotlight_toggled();
-    }
-    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::F) && key_lock[sf::Keyboard::F])
-    {
-        key_lock[sf::Keyboard::F] = false;
-    }
-
-    // Toggle sunlight
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::I) && !key_lock[sf::Keyboard::I])
-    {
-        key_lock[sf::Keyboard::I] = true;
-        Message::queue_event_empty("sun_toggle");
-    }
-    else if(!sf::Keyboard::isKeyPressed(sf::Keyboard::I) && key_lock[sf::Keyboard::I])
-    {
-        key_lock[sf::Keyboard::I] = false;
-    }
-
     // rotate view with mouse click & drag
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
     {
@@ -126,6 +102,17 @@ void Player_input::update(Entity & ent,
     }
 
     old_mouse_pos = new_mouse_pos;
+}
+
+void Player_input::key_down(const Message::Packet & pkt)
+{
+    // toggle spotlight
+    const sf::Keyboard::Key & key = Message::get_packet<sf::Keyboard::Key>(pkt);
+    if(key == sf::Keyboard::F)
+        _signal_spotlight_toggled();
+    // Toggle sunlight
+    else if(key == sf::Keyboard::I)
+        Message::queue_event_empty("sun_toggle");
 }
 
 sigc::signal<void> Player_input::signal_spotlight_toggled()
@@ -147,6 +134,7 @@ Entity create_player()
     player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     input->signal_spotlight_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
+    Message::add_callback("key_down", sigc::mem_fun(*input, &Player_input::key_down));
 
     return player;
 }

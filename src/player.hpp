@@ -25,6 +25,7 @@
 #define PLAYER_HPP
 
 #include "input.hpp"
+#include "message.hpp"
 
 class Player_input final: public Input
 {
@@ -32,6 +33,7 @@ public:
     static std::shared_ptr<Player_input> create();
     void update(Entity & ent,
         const sf::Window & win, const float dt) override;
+    void key_down(const Message::Packet & pkt);
     sigc::signal<void> signal_spotlight_toggled();
 private:
     sigc::signal<void> _signal_spotlight_toggled;

@@ -379,6 +379,8 @@ void World::event_loop()
                 case sf::Event::Resized:
                     _do_resize = true;
                     break;
+                case sf::Event::KeyPressed:
+                    Message::queue_event<sf::Keyboard::Key>("key_down", ev.key.code);
                 default:
                     break;
             }

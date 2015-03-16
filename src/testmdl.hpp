@@ -28,6 +28,7 @@
 
 #include "input.hpp"
 #include "light.hpp"
+#include "message.hpp"
 #include "physics.hpp"
 
 class Testmdl_physics final: public Physics
@@ -45,6 +46,7 @@ public:
     static std::shared_ptr<Testlight_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
+    void key_down(const Message::Packet & pkt);
     sigc::signal<void> signal_light_toggled();
     sigc::signal<void> signal_move_toggled();
 
@@ -73,6 +75,7 @@ public:
     static std::shared_ptr<Testmonkey_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
+    void key_down(const Message::Packet & pkt);
     sigc::signal<void> signal_light_toggled();
 private:
     sigc::signal<void> _signal_light_toggled;
