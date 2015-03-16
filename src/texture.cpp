@@ -45,7 +45,6 @@ Texture::~Texture()
 
     if(_key.size() > 0)
         _allocated_tex.erase(_key);
-    Logger_locator::get()(Logger::TRACE, "Deleted GL texture: " + std::to_string(_texid) + " (" + _key + ")");
 }
 
 GLuint Texture::get_id() const
