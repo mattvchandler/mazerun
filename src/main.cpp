@@ -30,6 +30,7 @@
 #include <X11/Xlib.h>
 #endif
 
+#include "audio.hpp"
 #include "logger.hpp"
 
 std::atomic_bool interrupted(false);
@@ -59,6 +60,7 @@ int main(int argc, char * argv[])
     Logger_locator::get()(Logger::INFO, "Running...");
     world.game_loop();
 
+    Jukebox::unload_all();
     Logger_locator::get()(Logger::INFO, "Shutdown...");
     return EXIT_SUCCESS;
 }

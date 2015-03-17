@@ -126,6 +126,15 @@ void Jukebox::unload_sound(const std::string & filename)
     _lock.unlock();
 }
 
+void Jukebox::unload_all()
+{
+    _lock.lock();
+    for(const auto & buffer: _store)
+        Logger_locator::get()(Logger::DBG, "Unloading sound: " + buffer.first);
+    _store.clear();
+    _lock.unlock();
+}
+
 sf::Sound Jukebox::get_sound(const std::string & filename)
 {
     _lock.lock();

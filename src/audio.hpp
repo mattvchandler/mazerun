@@ -61,6 +61,7 @@ class Jukebox
 public:
     static void preload_sound(const std::string & filename);
     static void unload_sound(const std::string & filename);
+    static void unload_all();
     static sf::Sound get_sound(const std::string & filename);
 
 private:
