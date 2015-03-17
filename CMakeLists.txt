@@ -29,7 +29,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(ASSIMP assimp REQUIRED)
 pkg_check_modules(SIGC sigc++-2.0 REQUIRED)
 
-find_package(SFML 2 COMPONENTS graphics system window REQUIRED)
+find_package(SFML 2 COMPONENTS audio graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
@@ -79,6 +79,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
+    src/audio.cpp
     src/config.cpp
     src/entity.cpp
     src/gl_helpers.cpp

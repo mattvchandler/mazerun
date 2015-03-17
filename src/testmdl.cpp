@@ -52,7 +52,8 @@ Entity create_testmdl()
     Entity testmdl(Model::create(check_in_pwd("mdl/weird_cube.dae")),
         std::shared_ptr<Input>(),
         Testmdl_physics::create(),
-        std::shared_ptr<Light>());
+        std::shared_ptr<Light>(),
+        std::shared_ptr<Audio>());
 
     testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
     testmdl.rotate_world(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -121,12 +122,19 @@ Entity create_testlight()
     auto physics = Testlight_physics::create();
     auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
+    auto audio = Audio::create(glm::vec3(0.0f));
 
-    Entity ent(model, input, physics, light);
+    Entity ent(model, input, physics, light, audio);
 
-    input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
+    input->signal_light_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
+    {
+        light->enabled = !light->enabled;
+        audio->play_sound(check_in_pwd("sound/clickclick.ogg"));
+    }, *light), *audio));
     input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testlight_physics::toggle_movement));
     Message::add_callback("key_down", sigc::mem_fun(*input, &Testlight_input::key_down));
+
+    Jukebox::preload_sound(check_in_pwd("sound/clickclick.ogg"));
 
     return ent;
 }
@@ -162,15 +170,25 @@ Entity create_testmonkey()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f), std::cos(10.0f * M_PI / 180.0f), 90.0f,
         0.0f, 0.1f, 0.0f);
+    auto audio = Audio::create(glm::vec3(0.0f));
 
-    Entity ent(model, input, physics, light);
+    Entity ent(model, input, physics, light, audio);
 
     ent.set_pos(glm::vec3(-10.0f, 10.0f, -10.0f));
     ent.rotate_world(0.25f * M_PI, ent.up());
     ent.rotate_world(0.25f * M_PI, ent.right());
 
-    input->signal_light_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
+    audio->set_pos(ent.pos());
+
+    input->signal_light_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
+    {
+        light->enabled = !light->enabled;
+        audio->play_sound(check_in_pwd("sound/tack.ogg"));
+    }, *light), *audio));
     Message::add_callback("key_down", sigc::mem_fun(*input, &Testmonkey_input::key_down));
+
+    Jukebox::preload_sound(check_in_pwd("sound/tack.ogg"));
+    audio->play_music(check_in_pwd("sound/Monkeys_Spinning_Monkeys.ogg"), 100.0f, true);
 
     return ent;
 }

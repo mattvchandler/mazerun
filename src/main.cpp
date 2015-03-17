@@ -45,7 +45,7 @@ int main(int argc, char * argv[])
     XInitThreads(); // needed for multithreaded window access on Linux
     #endif
 
-    // TODO: get app name from config
+    // TODO: get app name  & log level from config
     std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazerun.log", std::cerr, Logger::TRACE);
     Logger_locator::init(log);
 

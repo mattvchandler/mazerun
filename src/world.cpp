@@ -1,4 +1,4 @@
-// world.hpp
+// world.cpp
 // world object
 
 // Copyright 2015 Matthew Chandler
@@ -43,6 +43,8 @@
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <SFML/Audio.hpp>
 
 #include "gl_helpers.hpp"
 #include "logger.hpp"
@@ -436,6 +438,23 @@ void World::main_loop()
                 physics->update(ent, dt);
             }
         }
+
+        for(auto & ent: _ents)
+        {
+            auto audio = ent.audio();
+            if(audio)
+            {
+                audio->update(ent);
+            }
+        }
+
+        // set audio listener
+        glm::vec3 cam_pos = _cam.pos();
+        glm::vec3 cam_forward = _cam.forward();
+        // glm::vec3 cam_up = _cam.up();
+        sf::Listener::setPosition(cam_pos.x, cam_pos.y, cam_pos.z);
+        sf::Listener::setDirection(cam_forward.x, cam_forward.y, cam_forward.z);
+        // sf::Listener::setUpVector(cam_up.x, cam_up.y, cam_up.z); // TODO: available in SFML 2.2
 
         // TODO should we make more threads for input, physics, messages, etc?
         // TODO: AI

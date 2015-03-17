@@ -39,6 +39,7 @@
 
 #include <SFML/OpenGL.hpp>
 
+#include "config.hpp"
 #include "entity.hpp"
 
 std::shared_ptr<Player_input> Player_input::create()
@@ -128,13 +129,21 @@ Entity create_player()
     auto light = Spot_light::create(true, glm::vec3(1.0f, 1.0f, 0.75f),
         glm::vec3(0.02f, -0.1f, 0.0f), glm::normalize(glm::vec3(-0.1f, 0.0f, -1.0f)),
         std::cos(20.0f * M_PI / 180.0), 90.0f, 0.3f, 0.2f, 0.0f);
+    auto audio = Audio::create(glm::vec3(0.0f));
 
-    Entity player(model, input, physics, light);
+    Entity player(model, input, physics, light, audio);
 
     player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    audio->set_pos(player.pos());
 
-    input->signal_spotlight_toggled().connect(sigc::track_obj([light](){ light->enabled = !light->enabled; }, *light));
+    input->signal_spotlight_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
+    {
+        light->enabled = !light->enabled;
+        audio->play_sound(check_in_pwd("sound/bip.ogg"));
+    }, *light), *audio));
     Message::add_callback("key_down", sigc::mem_fun(*input, &Player_input::key_down));
+
+    Jukebox::preload_sound(check_in_pwd("sound/bip.ogg"));
 
     return player;
 }

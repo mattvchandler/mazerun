@@ -32,11 +32,13 @@
 Entity::Entity(std::shared_ptr<Model> model,
     std::shared_ptr<Input> input,
     std::shared_ptr<Physics> physics,
-    std::shared_ptr<Light> light):
+    std::shared_ptr<Light> light,
+    std::shared_ptr<Audio> audio):
     _model(model),
     _input(input),
     _physics(physics),
-    _light(light)
+    _light(light),
+    _audio(audio)
 {
     set();
 }
@@ -59,6 +61,11 @@ std::shared_ptr <Physics> Entity::physics()
 std::shared_ptr <Light> Entity::light()
 {
     return _light;
+}
+
+std::shared_ptr <Audio> Entity::audio()
+{
+    return _audio;
 }
 
 // set / reset pos / orientation
