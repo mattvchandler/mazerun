@@ -30,19 +30,8 @@ Logger::Logger(const Level lvl): _lvl(lvl)
 {
 }
 
-Logger::~Logger()
-{
-    this->operator()(Logger::DBG, "Deleting logger");
-}
-
 void Logger::operator()(const Level lvl, const std::string & msg)
 {
-    if(lvl >= _lvl)
-    {
-        _lock.lock();
-        std::cerr<<preamble(lvl)<<" "<<msg<<std::endl;
-        _lock.unlock();
-    }
 }
 
 void Logger::set_level(const Level lvl)
@@ -125,7 +114,7 @@ void Tee_log::operator()(const Level lvl, const std::string & msg)
 }
 
 std::shared_ptr<Logger> Logger_locator::_log;
-std::shared_ptr<Logger> Logger_locator::_default_logger = std::make_shared<Null_log>();
+std::shared_ptr<Logger> Logger_locator::_default_logger = std::make_shared<Logger>();
 
 void Logger_locator::init(std::shared_ptr<Logger> log)
 {
