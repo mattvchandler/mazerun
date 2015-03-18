@@ -60,7 +60,12 @@ int main(int argc, char * argv[])
     Logger_locator::get()(Logger::INFO, "Running...");
     world.game_loop();
 
-    Jukebox::unload_all();
     Logger_locator::get()(Logger::INFO, "Shutdown...");
+
+    Model::unload_all();
+    unload_all_textures();
+    Jukebox::unload_all();
+    Message::unload_all();
+
     return EXIT_SUCCESS;
 }

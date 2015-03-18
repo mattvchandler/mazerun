@@ -38,6 +38,7 @@ class Model: public Component, public sf::NonCopyable
 {
 public:
     virtual ~Model();
+    static void unload_all();
     static std::shared_ptr<Model> create(const std::string & filename);
     virtual void draw(const std::function<void(const Material &)> & set_material) const;
 protected:

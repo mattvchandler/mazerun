@@ -30,6 +30,11 @@ Logger::Logger(const Level lvl): _lvl(lvl)
 {
 }
 
+Logger::~Logger()
+{
+    this->operator()(Logger::DBG, "Deleting logger");
+}
+
 void Logger::operator()(const Level lvl, const std::string & msg)
 {
     if(lvl >= _lvl)
@@ -38,7 +43,6 @@ void Logger::operator()(const Level lvl, const std::string & msg)
         std::cerr<<preamble(lvl)<<" "<<msg<<std::endl;
         _lock.unlock();
     }
-
 }
 
 void Logger::set_level(const Level lvl)

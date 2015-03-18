@@ -34,6 +34,7 @@ GL_buffer::GL_buffer(const GLenum type):
 
 GL_buffer::~GL_buffer()
 {
+    Logger_locator::get()(Logger::TRACE, "Deleted GL buffer " + std::to_string(_buf) + " type: " + std::to_string(_type));
     glDeleteBuffers(1, &_buf);
 }
 
@@ -60,6 +61,7 @@ GL_vertex_array::GL_vertex_array()
 
 GL_vertex_array::~GL_vertex_array()
 {
+    Logger_locator::get()(Logger::TRACE, "Deleted GL vertex array " + std::to_string(_arr));
     glDeleteVertexArrays(1, &_arr);
 }
 

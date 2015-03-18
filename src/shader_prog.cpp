@@ -98,6 +98,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
     }
 
     _prog = glCreateProgram();
+    Logger_locator::get()(Logger::TRACE, "Generating shader prog id: " + std::to_string(_prog));
 
     for(auto & shader: shaders)
         glAttachShader(_prog, shader);
@@ -135,6 +136,7 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
 
 Shader_prog::~Shader_prog()
 {
+    Logger_locator::get()(Logger::TRACE, "Deleting shader prog id: " + std::to_string(_prog));
     glDeleteProgram(_prog);
 }
 

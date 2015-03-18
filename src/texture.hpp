@@ -40,6 +40,7 @@ class Texture: public sf::NonCopyable
 {
 public:
     virtual ~Texture();
+    static void unload_all();
     virtual void bind() const = 0;
     GLuint get_id() const;
 
@@ -60,6 +61,7 @@ public:
     static std::shared_ptr<Texture_2D> black_fallback();
     static std::shared_ptr<Texture_2D> missing_fallback();
     static std::shared_ptr<Texture_2D> normal_map_fallback();
+    static void unload_all();
     void bind() const override;
 
 private:
@@ -81,6 +83,7 @@ public:
         const std::string & back_fname, const std::string & front_fname,
         const std::string & down_fname, const std::string & up_fname);
     static std::shared_ptr<Texture_cubemap> env_fallback();
+    static void unload_all();
     void bind() const override;
 
 private:
@@ -92,5 +95,7 @@ private:
 
     static std::shared_ptr<Texture_cubemap> _env_fallback;
 };
+
+void unload_all_textures();
 
 #endif // TEXTURE_HPP

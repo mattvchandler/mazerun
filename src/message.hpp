@@ -32,6 +32,8 @@
 
 #include <sigc++/sigc++.h>
 
+#include "logger.hpp"
+
 class Message
 {
 private:
@@ -45,6 +47,7 @@ public:
         virtual ~Packet() = default;
     };
 
+    static void unload_all();
     static void rm_event(const std::string & event);
 
     static sigc::connection add_callback(const std::string & event,
@@ -96,7 +99,9 @@ template<typename T>
 void Message::queue_event(const std::string & event, T && t)
 {
     _lock.lock();
+
     _queue.push_back(std::make_pair(event, std::unique_ptr<Packet>(new Typed_packet<T>(std::forward<T>(t)))));
+
     _lock.unlock();
 }
 
@@ -104,7 +109,9 @@ template<typename T>
 void Message::queue_event(const std::string & event, const T & t)
 {
     _lock.lock();
+
     _queue.push_back(std::make_pair(event, std::unique_ptr<Packet>(new Typed_packet<T>(t))));
+
     _lock.unlock();
 }
 

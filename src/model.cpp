@@ -51,7 +51,15 @@ std::unordered_map<std::string, std::weak_ptr<Model>> Model::_allocated_mdl;
 Model::~Model()
 {
     if(_key.size() > 0)
+    {
+        Logger_locator::get()(Logger::DBG, "Unloading model: " + _key);
         _allocated_mdl.erase(_key);
+    }
+}
+
+void Model::unload_all()
+{
+    _allocated_mdl.clear();
 }
 
 std::shared_ptr<Model> Model::create(const std::string & filename)

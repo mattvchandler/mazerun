@@ -27,12 +27,31 @@ std::unordered_map<std::string, sigc::signal<void, const Message::Packet &>> Mes
 std::vector<std::pair<std::string, std::unique_ptr<Message::Packet>>> Message::_queue;
 std::mutex Message::_lock;
 
+void Message::unload_all()
+{
+    _lock.lock();
+
+    for(const auto & sig: _signals)
+    {
+        Logger_locator::get()(Logger::DBG, "Deleting message event " + sig.first);
+    }
+    _queue.clear();
+    _signals.clear();
+
+    _lock.unlock();
+}
+
 void Message::rm_event(const std::string & event)
 {
     _lock.lock();
+
     auto it = _signals.find(event);
     if(it != _signals.end())
+    {
+        Logger_locator::get()(Logger::DBG, "Deleting message event " + it->first);
         _signals.erase(it);
+    }
+
     _lock.unlock();
 }
 
@@ -40,7 +59,10 @@ sigc::connection Message::add_callback(const std::string & event,
     const sigc::slot<void, const Packet &> & callback)
 {
     _lock.lock();
+
+    Logger_locator::get()(Logger::DBG, "Add callback for message event " + event);
     sigc::connection conn = _signals[event].connect(callback);
+
     _lock.unlock();
     return conn;
 }
@@ -49,7 +71,10 @@ sigc::connection Message::add_callback_empty(const std::string & event,
     const sigc::slot<void> & callback)
 {
     _lock.lock();
+
+    Logger_locator::get()(Logger::DBG, "Add callback for message event " + event);
     sigc::connection conn = _signals[event].connect(sigc::hide(callback));
+
     _lock.unlock();
     return conn;
 }
@@ -57,7 +82,9 @@ sigc::connection Message::add_callback_empty(const std::string & event,
 void Message::queue_event_empty(const std::string & event)
 {
     _lock.lock();
+
     _queue.push_back(std::make_pair(event, std::unique_ptr<Packet>()));
+
     _lock.unlock();
 }
 

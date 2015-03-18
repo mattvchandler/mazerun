@@ -37,7 +37,7 @@ public:
     typedef enum {TRACE, DBG, INFO, WARN, ERROR} Level;
 
     Logger(const Level lvl = INFO);
-    virtual ~Logger() = default;
+    virtual ~Logger();
     virtual void operator()(const Level lvl, const std::string & msg);
     void set_level(const Level lvl);
     Level get_level();

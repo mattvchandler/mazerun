@@ -41,10 +41,19 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::_env_fallback;
 
 Texture::~Texture()
 {
+    Logger_locator::get()(Logger::TRACE, "Deleting GL texture: " + std::to_string(_texid));
     glDeleteTextures(1, &_texid);
 
     if(_key.size() > 0)
+    {
+        Logger_locator::get()(Logger::DBG, "Unloading texture: " + _key);
         _allocated_tex.erase(_key);
+    }
+}
+
+void Texture::unload_all()
+{
+    _allocated_tex.clear();
 }
 
 GLuint Texture::get_id() const
@@ -130,6 +139,14 @@ std::shared_ptr<Texture_2D> Texture_2D::normal_map_fallback()
         Logger_locator::get()(Logger::DBG, "Generated normal map fallback texture");
     }
     return _normal_map_fallback;
+}
+
+void Texture_2D::unload_all()
+{
+    _white_fallback.reset();
+    _black_fallback.reset();
+    _missing_fallback.reset();
+    _normal_map_fallback.reset();
 }
 
 void Texture_2D::bind() const
@@ -221,6 +238,11 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::env_fallback()
     return _env_fallback;
 }
 
+void Texture_cubemap::unload_all()
+{
+    _env_fallback.reset();
+}
+
 void Texture_cubemap::bind() const
 {
     glBindTexture(GL_TEXTURE_CUBE_MAP, _texid);
@@ -296,4 +318,11 @@ void Texture_cubemap::set_properties() const
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+void unload_all_textures()
+{
+    Texture::unload_all();
+    Texture_2D::unload_all();
+    Texture_cubemap::unload_all();
 }
