@@ -30,7 +30,7 @@
 
 #include "logger.hpp"
 
-std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::_allocated_tex;
+std::unordered_map<std::string, std::shared_ptr<Texture>> Texture::_allocated_tex;
 
 std::shared_ptr<Texture_2D> Texture_2D::_white_fallback;
 std::shared_ptr<Texture_2D> Texture_2D::_black_fallback;
@@ -74,7 +74,7 @@ std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
     if(Texture::_allocated_tex.count(key) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
-        return std::dynamic_pointer_cast<Texture_2D>(Texture::_allocated_tex[key].lock());
+        return std::dynamic_pointer_cast<Texture_2D>(Texture::_allocated_tex[key]);
     }
     else
     {
@@ -215,7 +215,7 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & lef
     if(Texture::_allocated_tex.count(key) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
-        return std::dynamic_pointer_cast<Texture_cubemap>(Texture::_allocated_tex[key].lock());
+        return std::dynamic_pointer_cast<Texture_cubemap>(Texture::_allocated_tex[key]);
     }
     else
     {

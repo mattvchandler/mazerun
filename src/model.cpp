@@ -46,7 +46,7 @@
 #include "gl_helpers.hpp"
 #include "logger.hpp"
 
-std::unordered_map<std::string, std::weak_ptr<Model>> Model::_allocated_mdl;
+std::unordered_map<std::string, std::shared_ptr<Model>> Model::_allocated_mdl;
 
 Model::~Model()
 {
@@ -67,7 +67,7 @@ std::shared_ptr<Model> Model::create(const std::string & filename)
     if(Model::_allocated_mdl.count(filename) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing model: " + filename);
-        return _allocated_mdl[filename].lock();
+        return _allocated_mdl[filename];
     }
     else
     {

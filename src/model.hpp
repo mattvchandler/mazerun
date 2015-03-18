@@ -60,7 +60,7 @@ protected:
     std::vector<Mesh> _meshes;
     std::vector<Material> _mats;
 
-    static std::unordered_map<std::string, std::weak_ptr<Model>> _allocated_mdl;
+    static std::unordered_map<std::string, std::shared_ptr<Model>> _allocated_mdl;
     std::string _key;
 };
 

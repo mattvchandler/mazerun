@@ -50,7 +50,7 @@ protected:
 
     GLuint _texid;
     std::string _key;
-    static std::unordered_map<std::string, std::weak_ptr<Texture>> _allocated_tex;
+    static std::unordered_map<std::string, std::shared_ptr<Texture>> _allocated_tex;
 };
 
 class Texture_2D final: public Texture
