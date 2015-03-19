@@ -52,7 +52,7 @@ void Audio::set_pos(const glm::vec3 & pos)
 std::shared_ptr<sf::Sound> Audio::play_sound(const std::string & filename, const float volume,
     const bool loop)
 {
-    std::shared_ptr<sf::Sound> sound = std::make_shared<sf::Sound>(Jukebox::get_sound(filename));
+    std::shared_ptr<sf::Sound> sound = std::make_shared<sf::Sound>(Jukebox_locator::get().get_sound(filename));
     _sound_players.push_back(sound);
 
     sound->setPosition(_pos);
@@ -97,8 +97,27 @@ void Audio::update(const Entity & ent)
     set_pos(ent.pos());
 }
 
-std::mutex Jukebox::_lock;
-std::unordered_map<std::string, sf::SoundBuffer> Jukebox::_store;
+void Jukebox_base::preload_sound(const std::string & filename)
+{
+}
+
+void Jukebox_base::unload_sound(const std::string & filename)
+{
+}
+
+sf::Sound Jukebox_base::get_sound(const std::string & filename)
+{
+    return sf::Sound();
+}
+
+Jukebox::~Jukebox()
+{
+    _lock.lock();
+    for(const auto & buffer: _store)
+        Logger_locator::get()(Logger::DBG, "Unloading sound: " + buffer.first);
+    _store.clear();
+    _lock.unlock();
+}
 
 void Jukebox::preload_sound(const std::string & filename)
 {
@@ -126,19 +145,26 @@ void Jukebox::unload_sound(const std::string & filename)
     _lock.unlock();
 }
 
-void Jukebox::unload_all()
-{
-    _lock.lock();
-    for(const auto & buffer: _store)
-        Logger_locator::get()(Logger::DBG, "Unloading sound: " + buffer.first);
-    _store.clear();
-    _lock.unlock();
-}
-
 sf::Sound Jukebox::get_sound(const std::string & filename)
 {
     _lock.lock();
     sf::Sound sound(_store.at(filename));
     _lock.unlock();
     return sound;
+}
+
+std::shared_ptr<Jukebox_base> Jukebox_locator::_jukebox;
+std::shared_ptr<Jukebox_base> Jukebox_locator::_default_jukebox = std::make_shared<Jukebox_base>();
+
+void Jukebox_locator::init(std::shared_ptr<Jukebox_base> jukebox)
+{
+    if(!jukebox)
+        _jukebox = _default_jukebox;
+    else
+        _jukebox = jukebox;
+}
+
+Jukebox_base & Jukebox_locator::get()
+{
+    return *_jukebox;
 }

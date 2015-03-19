@@ -46,34 +46,23 @@
 #include "gl_helpers.hpp"
 #include "logger.hpp"
 
-std::unordered_map<std::string, std::shared_ptr<Model>> Model::_allocated_mdl;
-
 Model::~Model()
 {
-    if(_key.size() > 0)
-    {
-        Logger_locator::get()(Logger::DBG, "Unloading model: " + _key);
-        _allocated_mdl.erase(_key);
-    }
-}
-
-void Model::unload_all()
-{
-    _allocated_mdl.clear();
+    Logger_locator::get()(Logger::DBG, "Deleting model: " + _key);
 }
 
 std::shared_ptr<Model> Model::create(const std::string & filename)
 {
-    if(Model::_allocated_mdl.count(filename) > 0)
+    if(Model_cache_locator::get().allocated_mdl.count(filename) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing model: " + filename);
-        return _allocated_mdl[filename];
+        return Model_cache_locator::get().allocated_mdl[filename];
     }
     else
     {
         std::shared_ptr<Model> ret(new Model(filename));
-        ret->_key = "MDL:" + filename;
-        _allocated_mdl[filename] = ret;
+        ret->_key = filename;
+        Model_cache_locator::get().allocated_mdl[filename] = ret;
         return ret;
     }
 }
@@ -313,4 +302,19 @@ Model::Model(const std::string & filename):
     glBindVertexArray(0);
 
     check_error("Model::Model");
+}
+
+std::shared_ptr<Model_cache> Model_cache_locator::_cache = std::make_shared<Model_cache>();
+
+void Model_cache_locator::init(std::shared_ptr<Model_cache> cache)
+{
+    if(!cache)
+        _cache = std::make_shared<Model_cache>();
+    else
+        _cache = cache;
+}
+
+Model_cache & Model_cache_locator::get()
+{
+    return *_cache;
 }

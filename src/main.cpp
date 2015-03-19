@@ -32,6 +32,9 @@
 
 #include "audio.hpp"
 #include "logger.hpp"
+#include "message.hpp"
+#include "model.hpp"
+#include "texture.hpp"
 
 std::atomic_bool interrupted(false);
 
@@ -46,26 +49,39 @@ int main(int argc, char * argv[])
     XInitThreads(); // needed for multithreaded window access on Linux
     #endif
 
-    // TODO: get app name  & log level from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazerun.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
-
     // set up sigint (^C) handler
     std::signal(SIGINT, &sigint_handler);
 
-    // initialize world
+    // set up logging service
+    // TODO: get app name  & log level from config
+    Logger_locator::init(std::make_shared<Tee_log>("mazerun.log", std::cerr, Logger::TRACE));
+
     Logger_locator::get()(Logger::INFO, "Initializing...");
-    World world;
+
+    // create other services
+    Message_locator::init();
+    Model_cache_locator::init();
+    Texture_cache_locator::init();
+    Jukebox_locator::init(std::make_shared<Jukebox>());
+
+    // initialize world - using a pointer so we can destroy it manually
+    std::unique_ptr<World> world(new World);
 
     Logger_locator::get()(Logger::INFO, "Running...");
-    world.game_loop();
+    world->game_loop();
 
+    Logger_locator::get()(Logger::INFO, "Deinitializing...");
+    world.reset();
+
+    // destroy services
+    Jukebox_locator::init();
+    Texture_cache_locator::init();
+    Model_cache_locator::init();
+    Message_locator::init();
+
+    // destroy log service
     Logger_locator::get()(Logger::INFO, "Shutdown...");
-
-    Model::unload_all();
-    unload_all_textures();
-    Jukebox::unload_all();
-    Message::unload_all();
+    Logger_locator::init();
 
     return EXIT_SUCCESS;
 }

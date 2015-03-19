@@ -40,7 +40,6 @@ class Texture: public sf::NonCopyable
 {
 public:
     virtual ~Texture();
-    static void unload_all();
     virtual void bind() const = 0;
     GLuint get_id() const;
 
@@ -50,7 +49,6 @@ protected:
 
     GLuint _texid;
     std::string _key;
-    static std::unordered_map<std::string, std::shared_ptr<Texture>> _allocated_tex;
 };
 
 class Texture_2D final: public Texture
@@ -61,7 +59,6 @@ public:
     static std::shared_ptr<Texture_2D> black_fallback();
     static std::shared_ptr<Texture_2D> missing_fallback();
     static std::shared_ptr<Texture_2D> normal_map_fallback();
-    static void unload_all();
     void bind() const override;
 
 private:
@@ -69,11 +66,6 @@ private:
     Texture_2D(const std::vector<glm::vec4> & data, const GLint width, const GLint height);
     Texture_2D(const glm::vec4 & color, const GLint width, const GLint height);
     void set_properties() const override;
-
-    static std::shared_ptr<Texture_2D> _white_fallback;
-    static std::shared_ptr<Texture_2D> _black_fallback;
-    static std::shared_ptr<Texture_2D> _missing_fallback;
-    static std::shared_ptr<Texture_2D> _normal_map_fallback;
 };
 
 class Texture_cubemap final: public Texture
@@ -83,7 +75,6 @@ public:
         const std::string & back_fname, const std::string & front_fname,
         const std::string & down_fname, const std::string & up_fname);
     static std::shared_ptr<Texture_cubemap> env_fallback();
-    static void unload_all();
     void bind() const override;
 
 private:
@@ -93,9 +84,31 @@ private:
     Texture_cubemap(const glm::vec4 & color, const GLint width, const GLint height);
     void set_properties() const override;
 
-    static std::shared_ptr<Texture_cubemap> _env_fallback;
 };
 
-void unload_all_textures();
+struct Texture_cache
+{
+    std::unordered_map<std::string, std::shared_ptr<Texture>> allocated_tex;
+
+    std::shared_ptr<Texture_2D> white_fallback;
+    std::shared_ptr<Texture_2D> black_fallback;
+    std::shared_ptr<Texture_2D> missing_fallback;
+    std::shared_ptr<Texture_2D> normal_map_fallback;
+
+    std::shared_ptr<Texture_cubemap> env_fallback;
+};
+
+class Texture_cache_locator
+{
+public:
+    Texture_cache_locator() = delete;
+    ~Texture_cache_locator() = delete;
+
+    static void init(std::shared_ptr<Texture_cache> cache = std::make_shared<Texture_cache>());
+    static Texture_cache & get();
+
+private:
+    static std::shared_ptr<Texture_cache> _cache;
+};
 
 #endif // TEXTURE_HPP

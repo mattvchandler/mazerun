@@ -189,7 +189,7 @@ World::World():
     glUseProgram(0); // TODO get prev val
     check_error("World::World");
 
-    Message::add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
+    Message_locator::get().add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
 }
 
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
@@ -382,7 +382,7 @@ void World::event_loop()
                     _do_resize = true;
                     break;
                 case sf::Event::KeyPressed:
-                    Message::queue_event<sf::Keyboard::Key>("key_down", ev.key.code);
+                    Message_locator::get().queue_event<sf::Keyboard::Key>("key_down", ev.key.code);
                 default:
                     break;
             }
@@ -485,10 +485,10 @@ void World::message_loop()
         {
             break;
         }
-        if(!Message::queue_empty())
+        if(!Message_locator::get().queue_empty())
         {
             _lock.lock();
-            Message::process_events();
+            Message_locator::get().process_events();
             _lock.unlock();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

@@ -38,7 +38,6 @@ class Model: public Component, public sf::NonCopyable
 {
 public:
     virtual ~Model();
-    static void unload_all();
     static std::shared_ptr<Model> create(const std::string & filename);
     virtual void draw(const std::function<void(const Material &)> & set_material) const;
 protected:
@@ -60,8 +59,25 @@ protected:
     std::vector<Mesh> _meshes;
     std::vector<Material> _mats;
 
-    static std::unordered_map<std::string, std::shared_ptr<Model>> _allocated_mdl;
     std::string _key;
+};
+
+struct Model_cache
+{
+    std::unordered_map<std::string, std::shared_ptr<Model>> allocated_mdl;
+};
+
+class Model_cache_locator
+{
+public:
+    Model_cache_locator() = delete;
+    ~Model_cache_locator() = delete;
+
+    static void init(std::shared_ptr<Model_cache> cache = std::make_shared<Model_cache>());
+    static Model_cache & get();
+
+private:
+    static std::shared_ptr<Model_cache> _cache;
 };
 
 #endif // MODEL_HPP

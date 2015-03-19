@@ -113,7 +113,7 @@ void Player_input::key_down(const Message::Packet & pkt)
         _signal_spotlight_toggled();
     // Toggle sunlight
     else if(key == sf::Keyboard::I)
-        Message::queue_event_empty("sun_toggle");
+        Message_locator::get().queue_event_empty("sun_toggle");
 }
 
 sigc::signal<void> Player_input::signal_spotlight_toggled()
@@ -141,9 +141,9 @@ Entity create_player()
         light->enabled = !light->enabled;
         audio->play_sound(check_in_pwd("sound/bip.ogg"));
     }, *light), *audio));
-    Message::add_callback("key_down", sigc::mem_fun(*input, &Player_input::key_down));
+    Message_locator::get().add_callback("key_down", sigc::mem_fun(*input, &Player_input::key_down));
 
-    Jukebox::preload_sound(check_in_pwd("sound/bip.ogg"));
+    Jukebox_locator::get().preload_sound(check_in_pwd("sound/bip.ogg"));
 
     return player;
 }

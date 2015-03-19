@@ -56,17 +56,39 @@ private:
     sf::Music _music_player;
 };
 
-class Jukebox
+class Jukebox_base
 {
 public:
-    static void preload_sound(const std::string & filename);
-    static void unload_sound(const std::string & filename);
-    static void unload_all();
-    static sf::Sound get_sound(const std::string & filename);
+    virtual ~Jukebox_base() = default;
+    virtual void preload_sound(const std::string & filename);
+    virtual void unload_sound(const std::string & filename);
+    virtual sf::Sound get_sound(const std::string & filename);
+};
+
+class Jukebox: public Jukebox_base
+{
+public:
+    ~Jukebox();
+    void preload_sound(const std::string & filename);
+    void unload_sound(const std::string & filename);
+    sf::Sound get_sound(const std::string & filename);
 
 private:
-    static std::mutex _lock;
-    static std::unordered_map<std::string, sf::SoundBuffer> _store;
+    std::mutex _lock;
+    std::unordered_map<std::string, sf::SoundBuffer> _store;
+};
+
+class Jukebox_locator
+{
+public:
+    Jukebox_locator() = delete;
+    ~Jukebox_locator() = delete;
+    static void init(std::shared_ptr<Jukebox_base> jukebox = _default_jukebox);
+    static Jukebox_base & get();
+
+private:
+    static std::shared_ptr<Jukebox_base> _jukebox;
+    static std::shared_ptr<Jukebox_base> _default_jukebox;
 };
 
 #endif // AUDIO_HPP

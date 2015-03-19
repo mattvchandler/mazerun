@@ -47,34 +47,34 @@ public:
         virtual ~Packet() = default;
     };
 
-    static void unload_all();
-    static void rm_event(const std::string & event);
+    ~Message();
+    void rm_event(const std::string & event);
 
-    static sigc::connection add_callback(const std::string & event,
+    sigc::connection add_callback(const std::string & event,
         const sigc::slot<void, const Packet &> & callback);
 
-    static sigc::connection add_callback_empty(const std::string & event,
+    sigc::connection add_callback_empty(const std::string & event,
         const sigc::slot<void> & callback);
 
     template<typename T>
-    static void queue_event(const std::string & event, T && t);
+    void queue_event(const std::string & event, T && t);
 
     template<typename T>
-    static void queue_event(const std::string & event, const T & t);
+    void queue_event(const std::string & event, const T & t);
 
-    static void queue_event_empty(const std::string & event);
+    void queue_event_empty(const std::string & event);
 
-    static void process_events();
+    bool queue_empty();
+
+    void process_events();
 
     template<typename T>
     static const T & get_packet(const Packet & pkt);
 
-    static bool queue_empty();
-
 private:
-    static std::unordered_map<std::string, sigc::signal<void, const Packet &>> _signals;
-    static std::vector<std::pair<std::string, std::unique_ptr<Packet>>> _queue;
-    static std::mutex _lock;
+    std::unordered_map<std::string, sigc::signal<void, const Packet &>> _signals;
+    std::vector<std::pair<std::string, std::unique_ptr<Packet>>> _queue;
+    std::mutex _lock;
 };
 
 template<typename T>
@@ -121,5 +121,18 @@ const T & Message::get_packet(const Packet & pkt)
     const T & data = dynamic_cast<const Typed_packet<T> &>(pkt).get();
     return data;
 }
+
+class Message_locator
+{
+    public:
+        Message_locator() = delete;
+        ~Message_locator() = delete;
+
+        static void init(std::shared_ptr<Message> msg = std::make_shared<Message>());
+        static Message & get();
+
+    private:
+        static std::shared_ptr<Message> _msg;
+};
 
 #endif // MESSAGE_HPP

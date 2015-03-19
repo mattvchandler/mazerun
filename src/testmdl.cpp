@@ -132,9 +132,10 @@ Entity create_testlight()
         audio->play_sound(check_in_pwd("sound/clickclick.ogg"));
     }, *light), *audio));
     input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testlight_physics::toggle_movement));
-    Message::add_callback("key_down", sigc::mem_fun(*input, &Testlight_input::key_down));
 
-    Jukebox::preload_sound(check_in_pwd("sound/clickclick.ogg"));
+    Message_locator::get().add_callback("key_down", sigc::mem_fun(*input, &Testlight_input::key_down));
+
+    Jukebox_locator::get().preload_sound(check_in_pwd("sound/clickclick.ogg"));
 
     return ent;
 }
@@ -185,9 +186,9 @@ Entity create_testmonkey()
         light->enabled = !light->enabled;
         audio->play_sound(check_in_pwd("sound/tack.ogg"));
     }, *light), *audio));
-    Message::add_callback("key_down", sigc::mem_fun(*input, &Testmonkey_input::key_down));
+    Message_locator::get().add_callback("key_down", sigc::mem_fun(*input, &Testmonkey_input::key_down));
 
-    Jukebox::preload_sound(check_in_pwd("sound/tack.ogg"));
+    Jukebox_locator::get().preload_sound(check_in_pwd("sound/tack.ogg"));
     audio->play_music(check_in_pwd("sound/Monkeys_Spinning_Monkeys.ogg"), 100.0f, true);
 
     return ent;

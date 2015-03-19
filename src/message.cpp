@@ -23,11 +23,7 @@
 
 #include "message.hpp"
 
-std::unordered_map<std::string, sigc::signal<void, const Message::Packet &>> Message::_signals;
-std::vector<std::pair<std::string, std::unique_ptr<Message::Packet>>> Message::_queue;
-std::mutex Message::_lock;
-
-void Message::unload_all()
+Message::~Message()
 {
     _lock.lock();
 
@@ -106,4 +102,19 @@ bool Message::queue_empty()
     bool empty = _queue.empty();
     _lock.unlock();
     return empty;
+}
+
+std::shared_ptr<Message> Message_locator::_msg = std::make_shared<Message>();
+
+void Message_locator::init(std::shared_ptr<Message> msg)
+{
+    if(!msg)
+        _msg = std::make_shared<Message>();
+    else
+        _msg = msg;
+}
+
+Message & Message_locator::get()
+{
+    return *_msg;
 }
