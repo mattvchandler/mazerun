@@ -38,7 +38,7 @@ class Model: public Component, public sf::NonCopyable
 {
 public:
     virtual ~Model();
-    static std::shared_ptr<Model> create(const std::string & filename);
+    static std::shared_ptr<Model> create(const std::string & filename, const bool casts_shadow);
     virtual void draw(const std::function<void(const Material &)> & set_material) const;
 protected:
     struct Mesh
@@ -49,8 +49,10 @@ protected:
         const Material * mat;
     };
 
-    Model();
-    Model(const std::string & filename);
+    Model(const bool casts_shadow);
+    Model(const std::string & filename, const bool casts_shadow);
+
+    bool _casts_shadow = true;
 
     GL_vertex_array _vao;
     GL_buffer _vbo;

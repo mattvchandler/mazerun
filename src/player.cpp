@@ -126,7 +126,7 @@ Entity create_player()
     auto model = std::shared_ptr<Model>();
     auto input = Player_input::create();
     auto physics = std::shared_ptr<Physics>();
-    auto light = Spot_light::create(true, glm::vec3(1.0f, 1.0f, 0.75f),
+    auto light = Spot_light::create(true, glm::vec3(1.0f, 1.0f, 0.75f), true,
         glm::vec3(0.02f, -0.1f, 0.0f), glm::normalize(glm::vec3(-0.1f, 0.0f, -1.0f)),
         std::cos(20.0f * M_PI / 180.0), 90.0f, 0.3f, 0.2f, 0.0f);
     auto audio = Audio::create(glm::vec3(0.0f));

@@ -25,43 +25,47 @@
 
 #include "light.hpp"
 
-Light::Light(const bool enabled, const glm::vec3 & color):
-    enabled(enabled), color(color)
+Light::Light(const bool enabled, const glm::vec3 & color, const bool casts_shadow):
+    enabled(enabled), color(color), casts_shadow(casts_shadow)
 {
 }
 
-Point_light::Point_light(const bool enabled, const glm::vec3 & color, const glm::vec3 & pos,
-    const float const_atten, const float linear_atten, const float quad_atten):
-    Light(enabled, color), pos(pos),
+Point_light::Point_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
+    const glm::vec3 & pos, const float const_atten, const float linear_atten,
+    const float quad_atten):
+    Light(enabled, color, casts_shadow), pos(pos),
     const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
 {
 }
 
 std::shared_ptr<Point_light> Point_light::create(const bool enabled, const glm::vec3 & color,
-    const glm::vec3 & pos, const float const_atten, const float linear_atten,
-    const float quad_atten)
+    const bool casts_shadow, const glm::vec3 & pos, const float const_atten,
+    const float linear_atten, const float quad_atten)
 {
-    return std::make_shared<Point_light>(enabled, color, pos, const_atten, linear_atten,
-        quad_atten);
+    return std::make_shared<Point_light>(enabled, color, casts_shadow, pos, const_atten,
+        linear_atten, quad_atten);
 }
 
-Spot_light::Spot_light(const bool enabled, const glm::vec3 & color, const glm::vec3 & pos,
-    const glm::vec3 & dir, const float cos_cutoff, const float exponent,
-    const float const_atten, const float linear_atten, const float quad_atten):
-    Light(enabled, color), pos(pos), dir(dir), cos_cutoff(cos_cutoff), exponent(exponent),
-    const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
+Spot_light::Spot_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
+    const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff,
+    const float exponent, const float const_atten, const float linear_atten,
+    const float quad_atten):
+    Light(enabled, color, casts_shadow), pos(pos), dir(dir), cos_cutoff(cos_cutoff),
+    exponent(exponent), const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
 {
 }
 
 std::shared_ptr<Spot_light> Spot_light::create(const bool enabled, const glm::vec3 & color,
-    const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff, const float exponent,
-    const float const_atten, const float linear_atten, const float quad_atten)
+    const bool casts_shadow, const glm::vec3 & pos, const glm::vec3 & dir,
+    const float cos_cutoff, const float exponent, const float const_atten,
+    const float linear_atten, const float quad_atten)
 {
-    return std::make_shared<Spot_light>(enabled, color, pos, dir, cos_cutoff, exponent,
-        const_atten, linear_atten, quad_atten);
+    return std::make_shared<Spot_light>(enabled, color, casts_shadow, pos, dir,
+        cos_cutoff, exponent, const_atten, linear_atten, quad_atten);
 }
 
-Dir_light::Dir_light(const bool enabled, const glm::vec3 & color, const glm::vec3 & dir):
-    Light(enabled, color), dir(dir)
+Dir_light::Dir_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
+    const glm::vec3 & dir):
+    Light(enabled, color, casts_shadow), dir(dir)
 {
 }

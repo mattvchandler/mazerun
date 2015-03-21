@@ -39,20 +39,23 @@ public:
     bool enabled;
     glm::vec3 color;
 
+    bool casts_shadow;
+
 protected:
-    Light(const bool enabled, const glm::vec3 & color);
+    Light(const bool enabled, const glm::vec3 & color, const bool casts_shadow);
 };
 
 class Point_light: public Light
 {
 public:
-    Point_light(const bool enabled, const glm::vec3 & color, const glm::vec3 & pos,
-        const float const_atten, const float linear_atten, const float quad_atten);
+    Point_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
+        const glm::vec3 & pos, const float const_atten, const float linear_atten,
+        const float quad_atten);
     virtual ~Point_light() = default;
 
     static std::shared_ptr<Point_light> create(const bool enabled, const glm::vec3 & color,
-        const glm::vec3 & pos, const float const_atten, const float linear_atten,
-        const float quad_atten);
+        const bool casts_shadow, const glm::vec3 & pos, const float const_atten,
+        const float linear_atten, const float quad_atten);
 
     glm::vec3 pos;
     // attenuation properties
@@ -64,13 +67,15 @@ public:
 class Spot_light:public Light
 {
 public:
-    Spot_light(const bool enabled, const glm::vec3 & color, const glm::vec3 & pos,
-        const glm::vec3 & dir, const float cos_cutoff, const float exponent,
-        const float const_atten, const float linear_atten, const float quad_atten);
+    Spot_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
+        const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff,
+        const float exponent, const float const_atten, const float linear_atten,
+        const float quad_atten);
 
     static std::shared_ptr<Spot_light> create(const bool enabled, const glm::vec3 & color,
-       const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff, const float exponent,
-       const float const_atten, const float linear_atten, const float quad_atten);
+        const bool casts_shadow, const glm::vec3 & pos, const glm::vec3 & dir,
+        const float cos_cutoff, const float exponent, const float const_atten,
+        const float linear_atten, const float quad_atten);
 
     glm::vec3 pos;
     glm::vec3 dir;
@@ -85,7 +90,8 @@ public:
 class Dir_light: public Light
 {
 public:
-    Dir_light(const bool enabled, const glm::vec3 & color, const glm::vec3 & dir);
+    Dir_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
+        const glm::vec3 & dir);
     virtual ~Dir_light() = default;
 
     glm::vec3 dir;

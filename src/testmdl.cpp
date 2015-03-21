@@ -49,7 +49,7 @@ void Testmdl_physics::update(Entity & ent, const float dt)
 
 Entity create_testmdl()
 {
-    Entity testmdl(Model::create(check_in_pwd("mdl/weird_cube.dae")),
+    Entity testmdl(Model::create(check_in_pwd("mdl/weird_cube.dae"), true),
         std::shared_ptr<Input>(),
         Testmdl_physics::create(),
         std::shared_ptr<Light>(),
@@ -101,7 +101,7 @@ void Testlight_physics::update(Entity & ent, const float dt)
     if(!_moving)
         return;
 
-    ent.set_pos(glm::vec3(10.0f * std::cos(_theta), 3.0f, 10.0f * std::sin(_theta)));
+    ent.set_pos(glm::vec3(8.0f * std::cos(_theta), 3.0f, 8.0f * std::sin(_theta)));
 
     _theta += dt * 0.0625f * M_PI;
     if(_theta >= 2.0f * M_PI)
@@ -117,10 +117,10 @@ void Testlight_physics::toggle_movement()
 
 Entity create_testlight()
 {
-    auto model = Model::create(check_in_pwd("mdl/boring_sphere.dae"));
+    auto model = Model::create(check_in_pwd("mdl/boring_sphere.dae"), true);
     auto input = Testlight_input::create();
     auto physics = Testlight_physics::create();
-    auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f),
+    auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
     auto audio = Audio::create(glm::vec3(0.0f));
 
@@ -164,10 +164,10 @@ sigc::signal<void> Testmonkey_input::signal_light_toggled()
 
 Entity create_testmonkey()
 {
-    auto model = Model::create(check_in_pwd("mdl/monkey.dae"));
+    auto model = Model::create(check_in_pwd("mdl/monkey.dae"), true);
     auto input = Testmonkey_input::create();
     auto physics = std::shared_ptr<Physics>();
-    auto light = Spot_light::create(true, glm::vec3(0.0f, 1.0f, 1.0f),
+    auto light = Spot_light::create(true, glm::vec3(0.0f, 1.0f, 1.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f), std::cos(10.0f * M_PI / 180.0f), 90.0f,
         0.0f, 0.1f, 0.0f);

@@ -49,6 +49,7 @@ void Walls::draw(const std::function<void(const Material &)> & set_material) con
 }
 
 Walls::Walls(const unsigned int width, const unsigned int height):
+    Model(true),
     _grid(width, height, Grid::MAZEGEN_DFS, 25, 100)
 {
     Logger_locator::get()(Logger::DBG, "Creating walls");
@@ -243,7 +244,8 @@ void Floor::draw(const std::function<void(const Material &)> & set_material) con
     check_error("Floor::Draw");
 }
 
-Floor::Floor(const unsigned int width, const unsigned int height)
+Floor::Floor(const unsigned int width, const unsigned int height):
+    Model(false)
 {
     Logger_locator::get()(Logger::DBG, "Creating floor");
     glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);

@@ -51,7 +51,7 @@ Model::~Model()
     Logger_locator::get()(Logger::DBG, "Deleting model: " + _key);
 }
 
-std::shared_ptr<Model> Model::create(const std::string & filename)
+std::shared_ptr<Model> Model::create(const std::string & filename, const bool casts_shadow)
 {
     if(Model_cache_locator::get().allocated_mdl.count(filename) > 0)
     {
@@ -60,7 +60,7 @@ std::shared_ptr<Model> Model::create(const std::string & filename)
     }
     else
     {
-        std::shared_ptr<Model> ret(new Model(filename));
+        std::shared_ptr<Model> ret(new Model(filename, casts_shadow));
         ret->_key = filename;
         Model_cache_locator::get().allocated_mdl[filename] = ret;
         return ret;
@@ -82,13 +82,15 @@ void Model::draw(const std::function<void(const Material &)> & set_material) con
     check_error("Model::Draw");
 }
 
-Model::Model():
+Model::Model(const bool casts_shadow):
+    _casts_shadow(casts_shadow),
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
 }
 
-Model::Model(const std::string & filename):
+Model::Model(const std::string & filename, const bool casts_shadow):
+    _casts_shadow(casts_shadow),
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
