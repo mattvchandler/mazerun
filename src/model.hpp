@@ -40,6 +40,9 @@ public:
     virtual ~Model();
     static std::shared_ptr<Model> create(const std::string & filename, const bool casts_shadow);
     virtual void draw(const std::function<void(const Material &)> & set_material) const;
+
+    bool casts_shadow = true;
+
 protected:
     struct Mesh
     {
@@ -51,8 +54,6 @@ protected:
 
     Model(const bool casts_shadow);
     Model(const std::string & filename, const bool casts_shadow);
-
-    bool _casts_shadow = true;
 
     GL_vertex_array _vao;
     GL_buffer _vbo;

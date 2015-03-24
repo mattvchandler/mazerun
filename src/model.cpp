@@ -83,14 +83,14 @@ void Model::draw(const std::function<void(const Material &)> & set_material) con
 }
 
 Model::Model(const bool casts_shadow):
-    _casts_shadow(casts_shadow),
+    casts_shadow(casts_shadow),
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
 }
 
 Model::Model(const std::string & filename, const bool casts_shadow):
-    _casts_shadow(casts_shadow),
+    casts_shadow(casts_shadow),
     _vbo(GL_ARRAY_BUFFER),
     _ebo(GL_ELEMENT_ARRAY_BUFFER)
 {
