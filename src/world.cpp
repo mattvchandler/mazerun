@@ -270,6 +270,31 @@ void World::draw()
 
     check_error("World::draw - light setup");
 
+    auto set_material = [this](const Material & mat)
+    {
+        glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
+        glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
+        glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
+        glUniform1f(_ent_shader.get_uniform("material.shininess"), mat.shininess);
+        glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
+        // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
+
+        glActiveTexture(GL_TEXTURE0);
+        mat.ambient_map->bind();
+        glActiveTexture(GL_TEXTURE1);
+        mat.diffuse_map->bind();
+        glActiveTexture(GL_TEXTURE2);
+        mat.specular_map->bind();
+        glActiveTexture(GL_TEXTURE3);
+        mat.shininess_map->bind();
+        glActiveTexture(GL_TEXTURE4);
+        mat.emissive_map->bind();
+        // glActiveTexture(GL_TEXTURE5);
+        // mat.reflectivity_map->bind();
+        glActiveTexture(GL_TEXTURE6);
+        mat.normal_map->bind();
+    };
+
     for(auto & ent: _ents)
     {
         auto model = ent.model();
@@ -283,31 +308,6 @@ void World::draw()
             glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
             glUniformMatrix3fv(_ent_shader.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
-            auto set_material = [this](const Material & mat)
-            {
-                glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
-                glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
-                glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
-                glUniform1f(_ent_shader.get_uniform("material.shininess"), mat.shininess);
-                glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
-                // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
-
-                glActiveTexture(GL_TEXTURE0);
-                mat.ambient_map->bind();
-                glActiveTexture(GL_TEXTURE1);
-                mat.diffuse_map->bind();
-                glActiveTexture(GL_TEXTURE2);
-                mat.specular_map->bind();
-                glActiveTexture(GL_TEXTURE3);
-                mat.shininess_map->bind();
-                glActiveTexture(GL_TEXTURE4);
-                mat.emissive_map->bind();
-                // glActiveTexture(GL_TEXTURE5);
-                // mat.reflectivity_map->bind();
-                glActiveTexture(GL_TEXTURE6);
-                mat.normal_map->bind();
-            };
-
             model->draw(set_material);
         }
     }
@@ -317,19 +317,6 @@ void World::draw()
     _win.display();
     check_error("World::draw - end");
 }
-
-// TODO: sound sys
-    // need: sound service locator
-    // listener
-    // sound source component
-    // OpenAL directly or SFML Audio?
-        // OpenAL:
-            // Pros: doppler, HRTF / other effects
-            // Cons: more involved, no easy streaming, no load from file
-        // SFML audio
-            // Pros: easy, no extra library dep
-            // cons: no special FX
-        // use SFML
 
 void World::resize()
 {
