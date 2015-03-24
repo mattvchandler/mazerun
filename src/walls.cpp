@@ -38,6 +38,7 @@ std::shared_ptr<Walls> Walls::create(const unsigned int width, const unsigned in
 
 void Walls::draw(const std::function<void(const Material &)> & set_material) const
 {
+    glDisable(GL_CULL_FACE); // TODO: remove when 3D
     _vao.bind();
 
     set_material(*_meshes[0].mat);
@@ -46,6 +47,7 @@ void Walls::draw(const std::function<void(const Material &)> & set_material) con
     glBindVertexArray(0); // TODO: get prev val?
 
     check_error("Walls::Draw");
+    glEnable(GL_CULL_FACE);
 }
 
 Walls::Walls(const unsigned int width, const unsigned int height):

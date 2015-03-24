@@ -103,9 +103,8 @@ World::World():
     glDepthRangef(0.0f, 1.0f);
     glLineWidth(5.0f);
 
-    // TODO: enable backface culling
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
