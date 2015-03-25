@@ -48,6 +48,7 @@ struct Base_light
 {
     bool enabled;
     vec3 color;
+    bool casts_shadow;
 };
 
 struct Point_light
@@ -69,6 +70,7 @@ struct Spot_light
     float const_atten;
     float linear_atten;
     float quad_atten;
+    mat4 shadow_mat;
 };
 
 struct Dir_light

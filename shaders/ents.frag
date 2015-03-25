@@ -45,6 +45,7 @@ struct Base_light
 {
     bool enabled;
     vec3 color;
+    bool casts_shadow;
 };
 
 struct Point_light
@@ -66,6 +67,7 @@ struct Spot_light
     float const_atten;
     float linear_atten;
     float quad_atten;
+    mat4 shadow_mat;
 };
 
 struct Dir_light
@@ -106,8 +108,13 @@ uniform Point_light point_lights[max_point_lights];
 uniform Spot_light spot_lights[max_spot_lights];
 uniform Dir_light dir_light;
 
+// shadow vars
+in vec4 spot_shadow_coords[max_spot_lights];
+uniform sampler2DShadow shadow_map0;
+uniform sampler2DShadow shadow_map1;
+
 // camera facing direction (always (0, 0, 1) when viewed from camera)
-uniform vec3 cam_light_forward;
+uniform vec3 cam_light_forward; // TODO: set as const?
 
 out vec4 frag_color;
 
@@ -119,7 +126,7 @@ void main()
 
     vec3 mapped_normal = norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord);
 
-    for(int i = 0; i < num_point_lights; ++i)
+    for(int i = 0; i < num_point_lights && i < max_point_lights; ++i)
     {
         calc_point_lighting(pos, cam_light_forward, mapped_normal, material, tex_coord,
             point_lights[i], tmp_scattered, tmp_reflected);
@@ -127,12 +134,23 @@ void main()
         reflected += tmp_reflected;
     }
 
-    for(int i = 0; i < num_spot_lights; ++i)
+    for(int i = 0; i < num_spot_lights && i < max_spot_lights; ++i)
     {
         calc_spot_lighting(pos, cam_light_forward, mapped_normal, material, tex_coord,
             spot_lights[i], tmp_scattered, tmp_reflected);
-        scattered += tmp_scattered;
-        reflected += tmp_reflected;
+
+        float shadow = 1.0;
+        if(spot_lights[i].base.casts_shadow && i < 2)
+        {
+            // TODO: BAD FOR PERFORMANCE
+            if(i == 0)
+                shadow = textureProj(shadow_map0, spot_shadow_coords[i]);
+            else if(i == 1)
+                shadow = textureProj(shadow_map1, spot_shadow_coords[i]);
+        }
+
+        scattered += shadow * tmp_scattered;
+        reflected += shadow * tmp_reflected;
     }
 
     calc_dir_lighting(mapped_normal, material, tex_coord, dir_light, tmp_scattered,

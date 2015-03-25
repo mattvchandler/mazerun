@@ -122,6 +122,7 @@ World::World():
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
     _ent_shader.add_uniform("model_view");
+    _ent_shader.add_uniform("model");
     _ent_shader.add_uniform("normal_transform");
 
     _ent_shader.add_uniform("material.ambient_color");
@@ -147,6 +148,7 @@ World::World():
     {
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.color");
+        // _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.casts_shadow");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].pos_eye");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].const_atten");
         _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].linear_atten");
@@ -160,6 +162,7 @@ World::World():
     {
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.enabled");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.color");
+        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.casts_shadow");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].pos_eye");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].dir_eye");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].cos_cutoff");
@@ -167,13 +170,20 @@ World::World():
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].const_atten");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].linear_atten");
         _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].quad_atten");
+        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].shadow_mat");
 
         // we won't ever send the GPU disabled spot lights
         glUniform1i(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].base.enabled"), true);
     }
+    // TODO: work around GLSL texture limits
+    _ent_shader.add_uniform("shadow_map0");
+    _ent_shader.add_uniform("shadow_map1");
+    glUniform1i(_ent_shader.get_uniform("shadow_map0"), 7); // TODO: replace magic number
+    glUniform1i(_ent_shader.get_uniform("shadow_map1"), 8); // TODO: replace magic number
 
     _ent_shader.add_uniform("dir_light.base.enabled");
     _ent_shader.add_uniform("dir_light.base.color");
+    // _ent_shader.add_uniform("dir_light.base.casts_shadow");
     _ent_shader.add_uniform("dir_light.dir");
     _ent_shader.add_uniform("dir_light.half_vec");
 
@@ -240,7 +250,7 @@ void World::draw()
         {
             spot_lights[num_spot_lights++] = &ent;
 
-            if(!spot_light->casts_shadow)
+            if(!spot_light->casts_shadow || num_spot_lights > 2) // TODO: work around this limit
                 continue;
 
             spot_light->shadow_fbo->bind_fbo();
@@ -322,6 +332,7 @@ void World::draw()
         glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light.dir);
 
         glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].base.color"), 1, &spot_light.color[0]);
+        glUniform1i(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].base.casts_shadow"), spot_light.casts_shadow);
         glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].pos_eye"), 1, &spot_light_pos_eye[0]);
         glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].dir_eye"), 1, &spot_light_dir_eye[0]);
         glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].cos_cutoff"), spot_light.cos_cutoff);
@@ -329,6 +340,14 @@ void World::draw()
         glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].const_atten"), spot_light.const_atten);
         glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].linear_atten"), spot_light.linear_atten);
         glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].quad_atten"), spot_light.quad_atten);
+
+        if(spot_light.casts_shadow && i < 2) // TODO: work around
+        {
+            glUniformMatrix4fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[i][0][0]);
+
+            glActiveTexture(GL_TEXTURE0 + i + 7); // TODO: replace GL_TEXTURE7
+            spot_light.shadow_fbo->bind_tex();
+        }
     }
 
     glUniform1i(_ent_shader.get_uniform("num_spot_lights"), num_spot_lights);
@@ -365,12 +384,14 @@ void World::draw()
         auto model = ent.model();
         if(model)
         {
-            glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
+            glm::mat4 model_mat = ent.model_mat();
+            glm::mat4 model_view = _cam.view_mat() * model_mat;
             glm::mat4 model_view_proj = _proj * model_view;
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
             glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
             glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
+            glUniformMatrix4fv(_ent_shader.get_uniform("model"), 1, GL_FALSE, &model_mat[0][0]);
             glUniformMatrix3fv(_ent_shader.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
             model->draw(set_material);
