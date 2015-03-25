@@ -40,7 +40,7 @@
 class Entity final
 {
 public:
-    // TODO: order?
+    // TODO: order? names?
     Entity(std::shared_ptr<Model> model,
         std::shared_ptr<Input> input,
         std::shared_ptr<Physics> physics,
