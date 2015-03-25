@@ -36,6 +36,7 @@ class Light: public Component
 {
 public:
     virtual ~Light() = default;
+
     bool enabled;
     glm::vec3 color;
 
@@ -57,6 +58,9 @@ public:
         const bool casts_shadow, const glm::vec3 & pos, const float const_atten,
         const float linear_atten, const float quad_atten);
 
+    glm::mat4 shadow_view_mat(const glm::vec3 & axis);
+    glm::mat4 shadow_proj_mat(const glm::vec3 & axis);
+
     glm::vec3 pos;
     // attenuation properties
     float const_atten;
@@ -77,6 +81,9 @@ public:
         const float cos_cutoff, const float exponent, const float const_atten,
         const float linear_atten, const float quad_atten);
 
+    glm::mat4 shadow_view_mat();
+    glm::mat4 shadow_proj_mat();
+
     glm::vec3 pos;
     glm::vec3 dir;
     float cos_cutoff;
@@ -93,6 +100,9 @@ public:
     Dir_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
         const glm::vec3 & dir);
     virtual ~Dir_light() = default;
+
+    glm::mat4 shadow_view_mat();
+    glm::mat4 shadow_proj_mat();
 
     glm::vec3 dir;
 };
