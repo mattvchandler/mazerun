@@ -78,6 +78,7 @@ private:
     Skybox _skybox;
     Dir_light _sunlight;
     Shader_prog _ent_shader;
+    Shader_prog _shadow_map_shader;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better

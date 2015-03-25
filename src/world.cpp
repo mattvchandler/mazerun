@@ -88,6 +88,9 @@ World::World():
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
+    _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
     _ents({create_player(), create_testmdl(), create_testlight(), create_testmonkey(), create_walls(32, 32), create_floor(32, 32)}),
     _cam(_ents[0]),
     _player(_ents[0])
@@ -185,7 +188,10 @@ World::World():
     // glUniform1i(_ent_shader.get_uniform("material.reflectivity_map"), 5);
     glUniform1i(_ent_shader.get_uniform("material.normal_map"), 6);
 
-    glUseProgram(0); // TODO get prev val
+    _shadow_map_shader.use();
+    _shadow_map_shader.add_uniform("model_view_proj");
+
+    glUseProgram(0); // TODO get prev val?
     check_error("World::World");
 
     Message_locator::get().add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
@@ -195,11 +201,27 @@ World::World():
     // need: picking shader, target ent ptr
 void World::draw()
 {
+    // shadow map pass
+    _shadow_map_shader.use();
+    glClearDepth(1.0f);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(2.0f, 4.0f);
+    glViewport(0, 0, 512, 512); // TODO: make size an FBO property
+
     std::size_t num_point_lights = 0;
     std::size_t num_spot_lights = 0;
 
+    glm::mat4 spot_shadow_mat[max_spot_lights];
     Entity * point_lights[max_point_lights];
     Entity * spot_lights[max_spot_lights];
+
+    const glm::mat4 scale_bias_mat(
+        glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
+        glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
+        glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
+        glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+    auto set_no_material = [this](const Material & mat){};
 
     for(auto & ent: _ents)
     {
@@ -217,17 +239,43 @@ void World::draw()
         if(spot_light && num_spot_lights < max_spot_lights)
         {
             spot_lights[num_spot_lights++] = &ent;
+
+            if(!spot_light->casts_shadow)
+                continue;
+
+            spot_light->shadow_fbo->bind_fbo();
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            glm::mat4 view_proj = spot_light->shadow_proj_mat() * spot_light->shadow_view_mat() * ent.view_mat();
+            spot_shadow_mat[num_spot_lights - 1] = scale_bias_mat * view_proj;
+
+            for(auto & ent_2: _ents)
+            {
+                auto model = ent_2.model();
+                if(!model || !model->casts_shadow)
+                    continue;
+
+                glm::mat4 model_view_proj = view_proj * ent_2.model_mat();
+                glUniformMatrix4fv(_shadow_map_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+
+                model->draw(set_no_material);
+            }
         }
 
         if(num_point_lights >= max_point_lights && num_spot_lights >= max_spot_lights)
             break;
     }
 
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     _ent_shader.use();
 
+    check_error("World::draw - shadow pass");
+
+    glViewport(0, 0, _win.getSize().x, _win.getSize().y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // TODO: shadows
+    // TODO: point & dir shadows
     // TODO: forward+ rendering - see http://www.adriancourreges.com/blog/2015/03/10/deus-ex-human-revolution-graphics-study/
     // TODO: sunlight owned by skybox?
     glm::vec3 ambient_light_color(0.1f, 0.1f, 0.1f); // TODO: get from skybox?
