@@ -195,11 +195,40 @@ World::World():
     // need: picking shader, target ent ptr
 void World::draw()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    std::size_t num_point_lights = 0;
+    std::size_t num_spot_lights = 0;
+
+    Entity * point_lights[max_point_lights];
+    Entity * spot_lights[max_spot_lights];
+
+    for(auto & ent: _ents)
+    {
+        std::shared_ptr<Light> light = ent.light();
+        if(!light || !light->enabled)
+            continue;
+
+        std::shared_ptr<Point_light> point_light = std::dynamic_pointer_cast<Point_light>(light);
+        if(point_light && num_point_lights < max_point_lights)
+        {
+            point_lights[num_point_lights++] = &ent;
+        }
+
+        std::shared_ptr<Spot_light> spot_light = std::dynamic_pointer_cast<Spot_light>(light);
+        if(spot_light && num_spot_lights < max_spot_lights)
+        {
+            spot_lights[num_spot_lights++] = &ent;
+        }
+
+        if(num_point_lights >= max_point_lights && num_spot_lights >= max_spot_lights)
+            break;
+    }
+
     _ent_shader.use();
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // TODO: shadows
-    // TODO: deferred lighting
+    // TODO: forward+ rendering - see http://www.adriancourreges.com/blog/2015/03/10/deus-ex-human-revolution-graphics-study/
     // TODO: sunlight owned by skybox?
     glm::vec3 ambient_light_color(0.1f, 0.1f, 0.1f); // TODO: get from skybox?
     glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
@@ -216,56 +245,45 @@ void World::draw()
         glUniform3fv(_ent_shader.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
     }
 
-    std::size_t point_light_i = 0;
-    std::size_t spot_light_i = 0;
-    for(auto & ent: _ents)
+    for(std::size_t i = 0; i < num_point_lights; ++i)
     {
-        std::shared_ptr<Light> light = ent.light();
-        if(!light || !light->enabled)
-            continue;
+        Entity & ent = *point_lights[i];
+        Point_light & point_light = *std::dynamic_pointer_cast<Point_light>(ent.light());
 
         glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
+        glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light.pos, 1.0f));
 
-        std::shared_ptr<Point_light> point_light = std::dynamic_pointer_cast<Point_light>(light);
-        if(point_light && point_light_i < max_point_lights)
-        {
-            glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light->pos, 1.0f));
-
-            glUniform3fv(_ent_shader.get_uniform("point_lights[" + std::to_string(point_light_i) + "].base.color"), 1, &point_light->color[0]);
-            glUniform3fv(_ent_shader.get_uniform("point_lights[" + std::to_string(point_light_i) + "].pos_eye"), 1, &point_light_pos_eye[0]);
-            glUniform1f(_ent_shader.get_uniform("point_lights[" + std::to_string(point_light_i) + "].const_atten"), point_light->const_atten);
-            glUniform1f(_ent_shader.get_uniform("point_lights[" + std::to_string(point_light_i) + "].linear_atten"), point_light->linear_atten);
-            glUniform1f(_ent_shader.get_uniform("point_lights[" + std::to_string(point_light_i) + "].quad_atten"), point_light->quad_atten);
-
-            ++point_light_i;
-        }
-
-        std::shared_ptr<Spot_light> spot_light = std::dynamic_pointer_cast<Spot_light>(light);
-        if(spot_light && spot_light_i < max_spot_lights)
-        {
-            glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
-
-            glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-            glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
-
-            glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].base.color"), 1, &spot_light->color[0]);
-            glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].pos_eye"), 1, &spot_light_pos_eye[0]);
-            glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].dir_eye"), 1, &spot_light_dir_eye[0]);
-            glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].cos_cutoff"), spot_light->cos_cutoff);
-            glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].exponent"), spot_light->exponent);
-            glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].const_atten"), spot_light->const_atten);
-            glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].linear_atten"), spot_light->linear_atten);
-            glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(spot_light_i) + "].quad_atten"), spot_light->quad_atten);
-
-            ++spot_light_i;
-        }
-
-        if(point_light_i >= max_point_lights && spot_light_i >= max_spot_lights)
-            break;
+        glUniform3fv(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].base.color"), 1, &point_light.color[0]);
+        glUniform3fv(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].pos_eye"), 1, &point_light_pos_eye[0]);
+        glUniform1f(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].const_atten"), point_light.const_atten);
+        glUniform1f(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].linear_atten"), point_light.linear_atten);
+        glUniform1f(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].quad_atten"), point_light.quad_atten);
     }
 
-    glUniform1i(_ent_shader.get_uniform("num_point_lights"), point_light_i);
-    glUniform1i(_ent_shader.get_uniform("num_spot_lights"), spot_light_i);
+    glUniform1i(_ent_shader.get_uniform("num_point_lights"), num_point_lights);
+
+    for(std::size_t i = 0; i < num_spot_lights; ++i)
+    {
+        Entity & ent = *spot_lights[i];
+        Spot_light & spot_light = *std::dynamic_pointer_cast<Spot_light>(ent.light());
+
+        glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
+        glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light.pos, 1.0f));
+
+        glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+        glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light.dir);
+
+        glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].base.color"), 1, &spot_light.color[0]);
+        glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].pos_eye"), 1, &spot_light_pos_eye[0]);
+        glUniform3fv(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].dir_eye"), 1, &spot_light_dir_eye[0]);
+        glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].cos_cutoff"), spot_light.cos_cutoff);
+        glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].exponent"), spot_light.exponent);
+        glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].const_atten"), spot_light.const_atten);
+        glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].linear_atten"), spot_light.linear_atten);
+        glUniform1f(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].quad_atten"), spot_light.quad_atten);
+    }
+
+    glUniform1i(_ent_shader.get_uniform("num_spot_lights"), num_spot_lights);
 
     check_error("World::draw - light setup");
 
