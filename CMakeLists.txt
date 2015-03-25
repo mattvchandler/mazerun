@@ -82,6 +82,7 @@ add_executable(${PROJECT_NAME}
     src/audio.cpp
     src/config.cpp
     src/entity.cpp
+    src/framebuffer.cpp
     src/gl_helpers.cpp
     src/gl_wrappers.cpp
     src/light.cpp
