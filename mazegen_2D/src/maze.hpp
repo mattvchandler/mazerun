@@ -31,7 +31,7 @@
 #include <gtkmm/spinbutton.h>
 #include <gtkmm/window.h>
 
-#include "grid.hpp"
+#include "mazegen/grid.hpp"
 
 class Maze final: public Gtk::Window
 {

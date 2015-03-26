@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// gl_wrappers.hpp
+// RAII wrappers for open GL objects
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,56 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#include "opengl/gl_wrappers.hpp"
 
-#ifdef __MINGW32__
-    #include <ctime>
-#endif
-
-#include <gtkmm/application.h>
-
-#include "maze.hpp"
 #include "util/logger.hpp"
 
-#ifndef __MINGW32__
-    thread_local std::random_device rng;
-#endif
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+GL_buffer::GL_buffer(const GLenum type):
+    _type(type)
 {
-    // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+    glGenBuffers(1, &_buf);
+    Logger_locator::get()(Logger::TRACE, "Generated GL buffer " + std::to_string(_buf) + " type: " + std::to_string(_type));
+}
 
-    // random_device curently not working in windows GCC
-    #ifdef __MINGW32__
-        prng.seed(time(NULL));
-    #else
-        prng.seed(rng());
-    #endif
+GL_buffer::~GL_buffer()
+{
+    Logger_locator::get()(Logger::TRACE, "Deleted GL buffer " + std::to_string(_buf) + " type: " + std::to_string(_type));
+    glDeleteBuffers(1, &_buf);
+}
 
-    // create app and window objects
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
-        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
+void GL_buffer::bind() const
+{
+    glBindBuffer(_type, _buf);
+}
 
-    Logger_locator::get()(Logger::INFO, "Initializing...");
-    Maze maze(32, 32);
+GLenum GL_buffer::type() const
+{
+    return _type;
+}
 
-    Logger_locator::get()(Logger::INFO, "Running...");
-    return app->run(maze);
+GLuint GL_buffer::get_id() const
+{
+    return _buf;
+}
+
+GL_vertex_array::GL_vertex_array()
+{
+    glGenVertexArrays(1, &_arr);
+    Logger_locator::get()(Logger::TRACE, "Generated GL vertex array " + std::to_string(_arr));
+}
+
+GL_vertex_array::~GL_vertex_array()
+{
+    Logger_locator::get()(Logger::TRACE, "Deleted GL vertex array " + std::to_string(_arr));
+    glDeleteVertexArrays(1, &_arr);
+}
+
+void GL_vertex_array::bind() const
+{
+    glBindVertexArray(_arr);
+}
+
+GLuint GL_vertex_array::get_id() const
+{
+    return _arr;
 }

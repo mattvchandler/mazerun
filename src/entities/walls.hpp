@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// walls.hpp
+// maze walls
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#ifndef WALLS_HPP
+#define WALLS_HPP
 
-#ifdef __MINGW32__
-    #include <ctime>
-#endif
+#include "components/model.hpp"
+#include "mazegen/grid.hpp"
 
-#include <gtkmm/application.h>
-
-#include "maze.hpp"
-#include "util/logger.hpp"
-
-#ifndef __MINGW32__
-    thread_local std::random_device rng;
-#endif
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+class Walls final: public Model
 {
-    // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+public:
+    static std::shared_ptr<Walls> create(const unsigned int width, const unsigned int height);
+    void draw(const std::function<void(const Material &)> & set_material) const;
 
-    // random_device curently not working in windows GCC
-    #ifdef __MINGW32__
-        prng.seed(time(NULL));
-    #else
-        prng.seed(rng());
-    #endif
+private:
+    Walls(const unsigned int width, const unsigned int height);
 
-    // create app and window objects
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
-        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
+    Grid _grid;
+};
 
-    Logger_locator::get()(Logger::INFO, "Initializing...");
-    Maze maze(32, 32);
+Entity create_walls(const unsigned int width, const unsigned int height);
 
-    Logger_locator::get()(Logger::INFO, "Running...");
-    return app->run(maze);
-}
+class Floor final: public Model
+{
+public:
+static std::shared_ptr<Floor> create(const unsigned int width, const unsigned int height);
+    void draw(const std::function<void(const Material &)> & set_material) const;
+
+private:
+    Floor(const unsigned int width, const unsigned int height);
+};
+
+Entity create_floor(const unsigned int width, const unsigned int height);
+
+#endif // WALLS_HPP

@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// grid.cpp
+// maze grid representation and algs
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#include "mazegen/grid.hpp"
 
-#ifdef __MINGW32__
-    #include <ctime>
-#endif
+#include <stdexcept>
 
-#include <gtkmm/application.h>
-
-#include "maze.hpp"
 #include "util/logger.hpp"
 
-#ifndef __MINGW32__
-    thread_local std::random_device rng;
-#endif
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+Grid_cell::Grid_cell(): visited(false), region(-1), room(false)
 {
-    // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+    for(int i = 0; i < 4; ++i)
+        walls[i] = true;
+}
 
-    // random_device curently not working in windows GCC
-    #ifdef __MINGW32__
-        prng.seed(time(NULL));
-    #else
-        prng.seed(rng());
-    #endif
+Grid::Grid(const unsigned int width, const unsigned int height,
+    const Mazegen_alg mazegen, const unsigned int room_attempts, const unsigned int wall_rm_attempts)
+{
+    Logger_locator::get()(Logger::TRACE, "Generating maze grid...");
 
-    // create app and window objects
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
-        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
+    if(height == 0)
+    {
+        throw std::invalid_argument("grid_size.y == 0");
+    }
+    if(width == 0)
+    {
+        throw std::invalid_argument("grid_size.x == 0");
+    }
 
-    Logger_locator::get()(Logger::INFO, "Initializing...");
-    Maze maze(32, 32);
+    grid.assign(height, std::vector<Grid_cell>(width));
 
-    Logger_locator::get()(Logger::INFO, "Running...");
-    return app->run(maze);
+    gen_rooms(mazegen, room_attempts, wall_rm_attempts);
 }

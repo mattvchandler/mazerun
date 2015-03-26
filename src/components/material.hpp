@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// material.hpp
+// material structures
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#ifndef MATERIAL_HPP
+#define MATERIAL_HPP
 
-#ifdef __MINGW32__
-    #include <ctime>
-#endif
+#include <memory>
 
-#include <gtkmm/application.h>
+#include <glm/glm.hpp>
 
-#include "maze.hpp"
-#include "util/logger.hpp"
+#include "opengl/texture.hpp"
 
-#ifndef __MINGW32__
-    thread_local std::random_device rng;
-#endif
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+struct Material
 {
-    // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+    glm::vec3 ambient_color{1.0f, 1.0f, 1.0f};
+    glm::vec3 diffuse_color{1.0f, 1.0f, 1.0f};
+    glm::vec3 specular_color{1.0f, 1.0f, 1.0f};
+    float shininess = 0.0f;
+    glm::vec3 emissive_color{0.0f, 0.0f, 0.0f};
+    // float reflectivity;
 
-    // random_device curently not working in windows GCC
-    #ifdef __MINGW32__
-        prng.seed(time(NULL));
-    #else
-        prng.seed(rng());
-    #endif
+    std::shared_ptr<Texture_2D> ambient_map = Texture_2D::white_fallback();
+    std::shared_ptr<Texture_2D> diffuse_map = Texture_2D::white_fallback();
+    std::shared_ptr<Texture_2D> specular_map = Texture_2D::white_fallback();
+    std::shared_ptr<Texture_2D> shininess_map = Texture_2D::white_fallback(); // greyscale
+    std::shared_ptr<Texture_2D> emissive_map = Texture_2D::white_fallback();
+    // std::shared_ptr<Texture_2D> reflectivity_map = Texture_2D::white_fallback(); // greyscale
+    std::shared_ptr<Texture_2D> normal_map = Texture_2D::normal_map_fallback();
+};
 
-    // create app and window objects
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
-        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
-
-    Logger_locator::get()(Logger::INFO, "Initializing...");
-    Maze maze(32, 32);
-
-    Logger_locator::get()(Logger::INFO, "Running...");
-    return app->run(maze);
-}
+#endif // MATERIAL_HPP

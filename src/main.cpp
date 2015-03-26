@@ -24,17 +24,17 @@
 #include <atomic>
 #include <csignal>
 
-#include "world.hpp" // includes SFML, must be included before Xlib
+#include "world/world.hpp" // includes SFML, must be included before Xlib
 
 #ifdef __linux
 #include <X11/Xlib.h>
 #endif
 
-#include "audio.hpp"
-#include "logger.hpp"
-#include "message.hpp"
-#include "model.hpp"
-#include "texture.hpp"
+#include "components/audio.hpp"
+#include "components/model.hpp"
+#include "opengl/texture.hpp"
+#include "util/logger.hpp"
+#include "util/message.hpp"
 
 std::atomic_bool interrupted(false);
 

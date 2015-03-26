@@ -33,7 +33,7 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/separator.h>
 
-#include "logger.hpp"
+#include "util/logger.hpp"
 
 Maze::Maze(const unsigned int width, const unsigned int height):
     _grid_width(Gtk::Adjustment::create(32, 1.0, 100.0, 1.0)),

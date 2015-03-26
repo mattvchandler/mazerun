@@ -65,10 +65,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
 
 # main compilation
 add_library(mazegen OBJECT
-    src/gen_rooms.cpp
-    src/grid.cpp
-    src/logger.cpp
-    src/mazegen.cpp
+    src/mazegen/gen_rooms.cpp
+    src/mazegen/grid.cpp
+    src/mazegen/mazegen.cpp
+    src/util/logger.cpp
     )
 
 set(MAZERUN_BUILD_MAZEGEN_2D 1 CACHE STRING "Build 2D maze generator")
@@ -79,23 +79,23 @@ endif()
 
 add_executable(${PROJECT_NAME}
     # ${PROJECT_BINARY_DIR}/mazerun.rc
-    src/audio.cpp
-    src/config.cpp
-    src/entity.cpp
-    src/framebuffer.cpp
-    src/gl_helpers.cpp
-    src/gl_wrappers.cpp
-    src/light.cpp
     src/main.cpp
-    src/message.cpp
-    src/model.cpp
-    src/player.cpp
-    src/shader_prog.cpp
-    src/skybox.cpp
-    src/testmdl.cpp
-    src/texture.cpp
-    src/walls.cpp
-    src/world.cpp
+    src/components/audio.cpp
+    src/components/light.cpp
+    src/components/model.cpp
+    src/config.cpp
+    src/entities/player.cpp
+    src/entities/testmdl.cpp
+    src/entities/walls.cpp
+    src/opengl/framebuffer.cpp
+    src/opengl/gl_helpers.cpp
+    src/opengl/gl_wrappers.cpp
+    src/opengl/shader_prog.cpp
+    src/opengl/texture.cpp
+    src/util/message.cpp
+    src/world/entity.cpp
+    src/world/skybox.cpp
+    src/world/world.cpp
     $<TARGET_OBJECTS:mazegen>
     )
 target_link_libraries(${PROJECT_NAME}

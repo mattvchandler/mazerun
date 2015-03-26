@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// framebuffer.hpp
+// Framebuffer object
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#ifndef FRAMEBUFFER_HPP
+#define FRAMEBUFFER_HPP
 
-#ifdef __MINGW32__
-    #include <ctime>
-#endif
+#include <GL/glew.h>
 
-#include <gtkmm/application.h>
+#include <SFML/OpenGL.hpp>
+#include <SFML/System.hpp>
 
-#include "maze.hpp"
-#include "util/logger.hpp"
+#include "opengl/texture.hpp"
 
-#ifndef __MINGW32__
-    thread_local std::random_device rng;
-#endif
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+class Framebuffer: public sf::NonCopyable
 {
-    // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+public:
+    virtual ~Framebuffer();
+    virtual void bind_fbo() const = 0;
+    void bind_tex() const;
+    GLuint get_fbo_id() const;
+    GLuint get_tex_id() const;
 
-    // random_device curently not working in windows GCC
-    #ifdef __MINGW32__
-        prng.seed(time(NULL));
-    #else
-        prng.seed(rng());
-    #endif
+    static std::string error_string(GLenum error);
 
-    // create app and window objects
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
-        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
+protected:
+    Framebuffer();
 
-    Logger_locator::get()(Logger::INFO, "Initializing...");
-    Maze maze(32, 32);
+    GLuint _id;
+    std::unique_ptr<Texture> _tex;
+};
 
-    Logger_locator::get()(Logger::INFO, "Running...");
-    return app->run(maze);
-}
+class Shadow_FBO final: public Framebuffer
+{
+public:
+    Shadow_FBO(const std::size_t size);
+    void bind_fbo() const;
+};
+
+#endif // FRAMEBUFFER_HPP

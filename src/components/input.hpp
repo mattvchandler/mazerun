@@ -1,5 +1,5 @@
-// main.cpp
-// main entry point
+// input.hpp
+// input handling component
 
 // Copyright 2015 Matthew Chandler
 
@@ -21,42 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <random>
+#ifndef INPUT_HPP
+#define INPUT_HPP
 
-#ifdef __MINGW32__
-    #include <ctime>
-#endif
+#include <SFML/Window.hpp>
 
-#include <gtkmm/application.h>
+#include "components/component.hpp"
 
-#include "maze.hpp"
-#include "util/logger.hpp"
-
-#ifndef __MINGW32__
-    thread_local std::random_device rng;
-#endif
-thread_local std::mt19937 prng;
-
-int main(int argc, char * argv[])
+class Input: public Component
 {
-    // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+public:
+    Input() = default;
+    virtual ~Input() = default;
 
-    // random_device curently not working in windows GCC
-    #ifdef __MINGW32__
-        prng.seed(time(NULL));
-    #else
-        prng.seed(rng());
-    #endif
+    virtual void update(Entity & ent,
+        const sf::Window & win, const float dt) = 0;
+};
 
-    // create app and window objects
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.matt.mazegen",
-        Gio::APPLICATION_NON_UNIQUE | Gio::APPLICATION_HANDLES_OPEN);
-
-    Logger_locator::get()(Logger::INFO, "Initializing...");
-    Maze maze(32, 32);
-
-    Logger_locator::get()(Logger::INFO, "Running...");
-    return app->run(maze);
-}
+#endif // INPUT_HPP
