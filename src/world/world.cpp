@@ -68,7 +68,9 @@ Glew_init::Glew_init()
     }
 
     Glew_init::_initialized = true;
-    Logger_locator::get()(Logger::TRACE, "GLEW initialized");
+    Logger_locator::get()(Logger::TRACE, std::string("GLEW initialized. OpenGL version: ") + (const char *)glGetString(GL_VERSION));
+
+    // TODO: check minimum version
 
     if(glewInit() != GLEW_OK)
     {
@@ -80,7 +82,7 @@ Glew_init::Glew_init()
 bool Glew_init::_initialized = false;
 
 World::World():
-    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8, 3, 0)),
+    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8)),
     _running(true), _focused(true), _do_resize(false),
     _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), true, glm::normalize(glm::vec3(-1.0f))),
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
