@@ -70,12 +70,19 @@ Glew_init::Glew_init()
     Glew_init::_initialized = true;
     Logger_locator::get()(Logger::TRACE, std::string("GLEW initialized. OpenGL version: ") + (const char *)glGetString(GL_VERSION));
 
-    // TODO: check minimum version
 
-    if(glewInit() != GLEW_OK)
+    GLenum glew_status = glewInit();
+    if(glew_status != GLEW_OK)
     {
-        Logger_locator::get()(Logger::ERROR, "Error loading GLEW");
-        throw std::runtime_error("Error loading GLEW");
+        Logger_locator::get()(Logger::ERROR, std::string("Error loading GLEW:") + (const char *)glewGetErrorString(glew_status));
+        throw std::runtime_error(std::string("Error loading GLEW: ") + (const char *)glewGetErrorString(glew_status));
+    }
+
+    // Check for minimum supported OpenGL version
+    if(!GLEW_VERSION_3_0)
+    {
+        Logger_locator::get()(Logger::ERROR, std::string("Error OpenGL version (") + (const char *)glGetString(GL_VERSION) + ") is too low.\nVersion 3.0+ required");
+        throw std::runtime_error(std::string("Error OpenGL version (") + (const char *)glGetString(GL_VERSION) + ") is too low.\nVersion 3.0+ required");
     }
 }
 
