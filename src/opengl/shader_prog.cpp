@@ -34,7 +34,8 @@
 #include "util/logger.hpp"
 
 Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sources,
-    const std::vector<std::pair<std::string, GLuint>> & attribs)
+    const std::vector<std::pair<std::string, GLuint>> & attribs,
+    const std::vector<std::pair<std::string, GLuint>> & frag_data)
 {
     std::vector<GLuint> shaders;
     for(const auto & source: sources)
@@ -106,6 +107,9 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
     // bind given attributes (must be done before link)
     for(auto & attr: attribs)
         glBindAttribLocation(_prog, attr.second, attr.first.c_str());
+
+    for(auto & frag_out: frag_data)
+        glBindFragDataLocation(_prog, frag_out.second, frag_out.first.c_str());
 
     Logger_locator::get()(Logger::DBG, "Linking shaders");
     glLinkProgram(_prog);

@@ -38,7 +38,8 @@ class Shader_prog final: public sf::NonCopyable
 {
 public:
     Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sources,
-        const std::vector<std::pair<std::string, GLuint>> & attribs);
+        const std::vector<std::pair<std::string, GLuint>> & attribs,
+        const std::vector<std::pair<std::string, GLuint>> & frag_data = {});
     ~Shader_prog();
     void add_uniform(const std::string & uniform);
     GLuint get_uniform(const std::string & uniform) const;
