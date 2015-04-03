@@ -148,13 +148,13 @@ sf::Sound Jukebox::get_sound(const std::string & filename)
     return sound;
 }
 
-std::shared_ptr<Jukebox_base> Jukebox_locator::_jukebox;
-std::shared_ptr<Jukebox_base> Jukebox_locator::_default_jukebox = std::make_shared<Jukebox_base>();
+Jukebox_base * Jukebox_locator::_jukebox;
+Jukebox_base Jukebox_locator::_default_jukebox;
 
-void Jukebox_locator::init(std::shared_ptr<Jukebox_base> jukebox)
+void Jukebox_locator::init(Jukebox_base * jukebox)
 {
     if(!jukebox)
-        _jukebox = _default_jukebox;
+        _jukebox = &_default_jukebox;
     else
         _jukebox = jukebox;
 }

@@ -59,10 +59,12 @@ int main(int argc, char * argv[])
     Logger_locator::get()(Logger::INFO, "Initializing...");
 
     // create other services
+    std::unique_ptr<Jukebox> jukebox(new Jukebox);
+
     Message_locator::init();
     Model_cache_locator::init();
     Texture_cache_locator::init();
-    Jukebox_locator::init(std::make_shared<Jukebox>());
+    Jukebox_locator::init(jukebox.get());
 
     // initialize world - using a pointer so we can destroy it manually
     std::unique_ptr<World> world(new World);
@@ -78,6 +80,8 @@ int main(int argc, char * argv[])
     Texture_cache_locator::init();
     Model_cache_locator::init();
     Message_locator::init();
+
+    jukebox.reset();
 
     // destroy log service
     Logger_locator::get()(Logger::INFO, "Shutdown...");

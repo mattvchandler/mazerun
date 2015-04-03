@@ -82,12 +82,12 @@ class Jukebox_locator
 public:
     Jukebox_locator() = delete;
     ~Jukebox_locator() = delete;
-    static void init(std::shared_ptr<Jukebox_base> jukebox = _default_jukebox);
+    static void init(Jukebox_base * jukebox = &_default_jukebox);
     static Jukebox_base & get();
 
 private:
-    static std::shared_ptr<Jukebox_base> _jukebox;
-    static std::shared_ptr<Jukebox_base> _default_jukebox;
+    static Jukebox_base * _jukebox;
+    static Jukebox_base _default_jukebox;
 };
 
 #endif // AUDIO_HPP
