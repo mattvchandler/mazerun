@@ -45,14 +45,14 @@ public:
         std::shared_ptr<Input> input,
         std::shared_ptr<Physics> physics,
         std::shared_ptr<Light> light,
-        std::shared_ptr<Audio> audio);
+        Audio * audio);
 
     // component getters
     std::shared_ptr<Model> model();
     std::shared_ptr<Input> input();
     std::shared_ptr<Physics> physics();
     std::shared_ptr<Light> light();
-    std::shared_ptr<Audio> audio();
+    Audio * audio();
 
     // set / reset pos / orientation
     void set(const glm::vec3 & pos = glm::vec3(0.0f),
@@ -88,7 +88,7 @@ protected:
     std::shared_ptr<Input> _input;
     std::shared_ptr<Physics> _physics;
     std::shared_ptr<Light> _light;
-    std::shared_ptr<Audio> _audio;
+    std::unique_ptr<Audio> _audio;
 };
 
 #endif // ENTITY_HPP

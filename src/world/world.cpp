@@ -99,13 +99,18 @@ World::World():
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
     _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
-    _ents({create_player(), create_testmdl(), create_testlight(), create_testmonkey(), create_walls(32, 32), create_floor(32, 32)}),
-    _cam(_ents[0]),
-    _player(_ents[0])
+        {std::make_pair("vert_pos", 0)})
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
+    _ents.emplace_back(create_player());
+    _ents.emplace_back(create_testmdl());
+    _ents.emplace_back(create_testlight());
+    _ents.emplace_back(create_testmonkey());
+    _ents.emplace_back(create_walls(32, 32));
+    _ents.emplace_back(create_floor(32, 32));
+
+    _cam = _player = &_ents[0];
 
     _win.setKeyRepeatEnabled(false);
     // _win.setFramerateLimit(60);
@@ -303,7 +308,7 @@ void World::draw()
     glUniform1i(_ent_shader.get_uniform("dir_light.base.enabled"), _sunlight.enabled); // TODO: Also from skybox?
     if(_sunlight.enabled)
     {
-        glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam.view_mat()))) *
+        glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam->view_mat()))) *
             glm::normalize(-_sunlight.dir));
         glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
 
@@ -317,7 +322,7 @@ void World::draw()
         Entity & ent = *point_lights[i];
         Point_light & point_light = *std::dynamic_pointer_cast<Point_light>(ent.light());
 
-        glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
+        glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
         glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light.pos, 1.0f));
 
         glUniform3fv(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].base.color"), 1, &point_light.color[0]);
@@ -334,7 +339,7 @@ void World::draw()
         Entity & ent = *spot_lights[i];
         Spot_light & spot_light = *std::dynamic_pointer_cast<Spot_light>(ent.light());
 
-        glm::mat4 model_view = _cam.view_mat() * ent.model_mat();
+        glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
         glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light.pos, 1.0f));
 
         glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
@@ -394,7 +399,7 @@ void World::draw()
         if(model)
         {
             glm::mat4 model_mat = ent.model_mat();
-            glm::mat4 model_view = _cam.view_mat() * model_mat;
+            glm::mat4 model_view = _cam->view_mat() * model_mat;
             glm::mat4 model_view_proj = _proj * model_view;
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
@@ -407,7 +412,7 @@ void World::draw()
         }
     }
 
-    _skybox.draw(_cam, _proj);
+    _skybox.draw(*_cam, _proj);
 
     _win.display();
     check_error("World::draw - end");
@@ -531,9 +536,9 @@ void World::main_loop()
         }
 
         // set audio listener
-        glm::vec3 cam_pos = _cam.pos();
-        glm::vec3 cam_forward = _cam.forward();
-        // glm::vec3 cam_up = _cam.up();
+        glm::vec3 cam_pos = _cam->pos();
+        glm::vec3 cam_forward = _cam->forward();
+        // glm::vec3 cam_up = _cam->up();
         sf::Listener::setPosition(cam_pos.x, cam_pos.y, cam_pos.z);
         sf::Listener::setDirection(cam_forward.x, cam_forward.y, cam_forward.z);
         // sf::Listener::setUpVector(cam_up.x, cam_up.y, cam_up.z); // TODO: available in SFML 2.2

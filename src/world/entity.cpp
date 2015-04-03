@@ -23,6 +23,8 @@
 
 #include "world/entity.hpp"
 
+#include <utility>
+
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -33,7 +35,7 @@ Entity::Entity(std::shared_ptr<Model> model,
     std::shared_ptr<Input> input,
     std::shared_ptr<Physics> physics,
     std::shared_ptr<Light> light,
-    std::shared_ptr<Audio> audio):
+    Audio * audio):
     _model(model),
     _input(input),
     _physics(physics),
@@ -63,9 +65,9 @@ std::shared_ptr <Light> Entity::light()
     return _light;
 }
 
-std::shared_ptr <Audio> Entity::audio()
+Audio * Entity::audio()
 {
-    return _audio;
+    return _audio.get();
 }
 
 // set / reset pos / orientation

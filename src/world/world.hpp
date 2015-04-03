@@ -86,8 +86,8 @@ private:
     // std::vector<Input> _input_components;
     // std::vector<Physics> _physics_components;
 
-    Entity & _cam;
-    Entity & _player;
+    Entity * _cam;
+    Entity * _player;
 };
 
 #endif // WORLD_HPP

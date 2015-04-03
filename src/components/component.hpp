@@ -24,7 +24,7 @@
 #ifndef COMPONENT_HPP
 #define COMPONENT_HPP
 
-#include <memory>
+#include <memory> // TODO: remove?
 
 #include <sigc++/sigc++.h>
 

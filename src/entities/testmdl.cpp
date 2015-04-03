@@ -53,7 +53,7 @@ Entity create_testmdl()
         std::shared_ptr<Input>(),
         Testmdl_physics::create(),
         std::shared_ptr<Light>(),
-        std::shared_ptr<Audio>());
+        nullptr);
 
     testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
     testmdl.rotate_world(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -122,9 +122,14 @@ Entity create_testlight()
     auto physics = Testlight_physics::create();
     auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
-    auto audio = Audio::create(glm::vec3(0.0f));
+    Audio * audio = new Audio(glm::vec3(0.0f));
 
-    Entity ent(model, input, physics, light, audio);
+    Entity ent(
+        model,
+        input,
+        physics,
+        light,
+        audio);
 
     input->signal_light_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
     {
@@ -171,9 +176,14 @@ Entity create_testmonkey()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f), std::cos(10.0f * M_PI / 180.0f), 90.0f,
         0.0f, 0.1f, 0.0f);
-    auto audio = Audio::create(glm::vec3(0.0f));
+    Audio * audio = new Audio(glm::vec3(0.0f));
 
-    Entity ent(model, input, physics, light, audio);
+    Entity ent(
+        model,
+        input,
+        physics,
+        light,
+        audio);
 
     ent.set_pos(glm::vec3(-10.0f, 10.0f, -10.0f));
     ent.rotate_world(0.25f * M_PI, ent.up());

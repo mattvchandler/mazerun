@@ -41,7 +41,6 @@ class Audio: public Component
 public:
     Audio(const glm::vec3 & pos);
     virtual ~Audio() = default;
-    static std::shared_ptr<Audio> create(const glm::vec3 & pos);
     virtual void set_pos(const glm::vec3 & pos);
     virtual std::shared_ptr<sf::Sound> play_sound(const std::string & filename, const float volume = 100.0f,
         const bool loop = false);

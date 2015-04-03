@@ -30,11 +30,6 @@ Audio::Audio(const glm::vec3 & pos): _pos(pos.x, pos.y, pos.z)
 {
 }
 
-std::shared_ptr<Audio> Audio::create(const glm::vec3 & pos)
-{
-    return std::make_shared<Audio>(pos);
-}
-
 void Audio::set_pos(const glm::vec3 & pos)
 {
     _pos.x = pos.x;

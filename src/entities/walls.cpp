@@ -223,7 +223,7 @@ Entity create_walls(const unsigned int width, const unsigned int height)
         std::shared_ptr<Input>(),
         std::shared_ptr<Physics>(),
         std::shared_ptr<Light>(),
-        std::shared_ptr<Audio>());
+        nullptr);
 
     return walls;
 }
@@ -342,7 +342,7 @@ Entity create_floor(const unsigned int width, const unsigned int height)
         std::shared_ptr<Input>(),
         std::shared_ptr<Physics>(),
         std::shared_ptr<Light>(),
-        std::shared_ptr<Audio>());
+        nullptr);
 
     return floor;
 }
