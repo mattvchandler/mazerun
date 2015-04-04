@@ -131,7 +131,6 @@ Entity create_testlight()
         light,
         audio);
 
-    // TODO: don't keep pointers (call new in ent ctor)
     input->signal_light_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
     {
         light->enabled = !light->enabled;

@@ -42,7 +42,7 @@ public:
     Audio(const glm::vec3 & pos);
     virtual ~Audio() = default;
     virtual void set_pos(const glm::vec3 & pos);
-    virtual std::shared_ptr<sf::Sound> play_sound(const std::string & filename, const float volume = 100.0f,
+    virtual sf::Sound * play_sound(const std::string & filename, const float volume = 100.0f,
         const bool loop = false);
     virtual sf::Music & play_music(const std::string & filename, const float volume = 100.0f,
         const bool loop = false);
@@ -51,7 +51,7 @@ public:
 
 private:
     sf::Vector3f _pos;
-    std::list<std::shared_ptr<sf::Sound>> _sound_players;
+    std::list<sf::Sound> _sound_players;
     sf::Music _music_player;
 };
 

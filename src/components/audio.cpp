@@ -38,18 +38,18 @@ void Audio::set_pos(const glm::vec3 & pos)
 
     for(auto & sound: _sound_players)
     {
-        sound->setPosition(_pos);
+        sound.setPosition(_pos);
     }
 
     _music_player.setPosition(_pos);
 }
 
-std::shared_ptr<sf::Sound> Audio::play_sound(const std::string & filename, const float volume,
+sf::Sound * Audio::play_sound(const std::string & filename, const float volume,
     const bool loop)
 {
-    std::shared_ptr<sf::Sound> sound = std::make_shared<sf::Sound>(Jukebox_locator::get().get_sound(filename));
-    _sound_players.push_back(sound);
+    _sound_players.emplace_back(Jukebox_locator::get().get_sound(filename));
 
+    sf::Sound * sound = &_sound_players.back();
     sound->setPosition(_pos);
     sound->setVolume(volume);
     sound->setLoop(loop);
@@ -74,7 +74,7 @@ sf::Music & Audio::play_music(const std::string & filename, const float volume,
 void Audio::silence_all()
 {
     for(auto & sound: _sound_players)
-        sound->stop();
+        sound.stop();
     _sound_players.clear();
 
     _music_player.stop();
@@ -84,7 +84,7 @@ void Audio::update(const Entity & ent)
 {
     for(auto it = _sound_players.begin(); it != _sound_players.end(); ++it)
     {
-        if((*it)->getStatus() == sf::Sound::Stopped)
+        if(it->getStatus() == sf::Sound::Stopped)
         {
             it = _sound_players.erase(it);
         }

@@ -141,7 +141,6 @@ Entity create_player()
     player.set(glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     audio->set_pos(player.pos());
 
-    // TODO: don't hold on to pointers
     input->signal_spotlight_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
     {
         light->enabled = !light->enabled;
