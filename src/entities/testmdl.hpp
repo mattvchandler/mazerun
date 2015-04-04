@@ -34,7 +34,6 @@
 class Testmdl_physics final: public Physics
 {
 public:
-    static std::shared_ptr<Testmdl_physics> create();
     void update(Entity & ent, const float dt) override;
 };
 
@@ -43,7 +42,6 @@ Entity create_testmdl();
 class Testlight_input final: public Input
 {
 public:
-    static std::shared_ptr<Testlight_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
     void key_down(const Message::Packet & pkt);
@@ -58,7 +56,6 @@ private:
 class Testlight_physics final: public Physics
 {
 public:
-    static std::shared_ptr<Testlight_physics> create();
     void update(Entity & ent, const float dt) override;
     void toggle_movement();
 private:
@@ -72,7 +69,6 @@ Entity create_testlight();
 class Testmonkey_input final: public Input
 {
 public:
-    static std::shared_ptr<Testmonkey_input> create();
     void update(Entity & ent, const sf::Window & win,
         const float dt) override;
     void key_down(const Message::Packet & pkt);

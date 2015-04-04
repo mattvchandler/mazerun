@@ -220,8 +220,8 @@ Walls::Walls(const unsigned int width, const unsigned int height):
 Entity create_walls(const unsigned int width, const unsigned int height)
 {
     Entity walls(Walls::create(width, height),
-        std::shared_ptr<Input>(),
-        std::shared_ptr<Physics>(),
+        nullptr, // input
+        nullptr, // physics
         nullptr, // light
         nullptr); // audio
 
@@ -339,8 +339,8 @@ Floor::Floor(const unsigned int width, const unsigned int height):
 Entity create_floor(const unsigned int width, const unsigned int height)
 {
     Entity floor(Floor::create(width, height),
-        std::shared_ptr<Input>(),
-        std::shared_ptr<Physics>(),
+        nullptr, // input
+        nullptr, // physics
         nullptr, // light
         nullptr); // audio
 

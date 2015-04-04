@@ -32,8 +32,8 @@
 #include "util/logger.hpp"
 
 Entity::Entity(std::shared_ptr<Model> model,
-    std::shared_ptr<Input> input,
-    std::shared_ptr<Physics> physics,
+    Input * input,
+    Physics * physics,
     Light * light,
     Audio * audio):
     _model(model),
@@ -45,19 +45,19 @@ Entity::Entity(std::shared_ptr<Model> model,
     set();
 }
 
-std::shared_ptr <Model> Entity::model()
+std::shared_ptr<Model> Entity::model()
 {
     return _model;
 }
 
-std::shared_ptr <Input> Entity::input()
+Input * Entity::input()
 {
-    return _input;
+    return _input.get();
 }
 
-std::shared_ptr <Physics> Entity::physics()
+Physics * Entity::physics()
 {
-    return _physics;
+    return _physics.get();
 }
 
 Light * Entity::light()

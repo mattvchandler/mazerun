@@ -42,11 +42,6 @@
 #include "config.hpp"
 #include "world/entity.hpp"
 
-std::shared_ptr<Player_input> Player_input::create()
-{
-    return std::make_shared<Player_input>();
-}
-
 void Player_input::update(Entity & ent,
     const sf::Window & win, const float dt)
 {
@@ -124,8 +119,7 @@ sigc::signal<void> Player_input::signal_spotlight_toggled()
 Entity create_player()
 {
     auto model = std::shared_ptr<Model>();
-    auto input = Player_input::create();
-    auto physics = std::shared_ptr<Physics>();
+    Player_input * input = new Player_input();
     Spot_light * light = new Spot_light(true, glm::vec3(1.0f, 1.0f, 0.75f), true,
         glm::vec3(0.05f, -0.2f, 0.0f), glm::normalize(glm::vec3(-0.1f, 0.0f, -1.0f)),
         std::cos(20.0f * M_PI / 180.0), 90.0f, 0.3f, 0.2f, 0.0f);
@@ -134,7 +128,7 @@ Entity create_player()
     Entity player(
         model,
         input,
-        physics,
+        nullptr, // physics
         light,
         audio);
 

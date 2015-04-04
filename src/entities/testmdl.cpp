@@ -37,11 +37,6 @@
 #include "util/logger.hpp"
 #include "world/entity.hpp"
 
-std::shared_ptr<Testmdl_physics> Testmdl_physics::create()
-{
-    return std::make_shared<Testmdl_physics>();
-}
-
 void Testmdl_physics::update(Entity & ent, const float dt)
 {
     ent.rotate_world(dt * 0.5f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -50,8 +45,8 @@ void Testmdl_physics::update(Entity & ent, const float dt)
 Entity create_testmdl()
 {
     Entity testmdl(Model::create(check_in_pwd("mdl/weird_cube.dae"), true),
-        std::shared_ptr<Input>(),
-        Testmdl_physics::create(),
+        nullptr, // input
+        new Testmdl_physics,
         nullptr, // light
         nullptr); // audio
 
@@ -60,11 +55,6 @@ Entity create_testmdl()
     testmdl.rotate_world(M_PI / 8.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     return testmdl;
-}
-
-std::shared_ptr<Testlight_input> Testlight_input::create()
-{
-    return std::make_shared<Testlight_input>();
 }
 
 void Testlight_input::update(Entity & ent, const sf::Window & win,
@@ -91,11 +81,6 @@ sigc::signal<void> Testlight_input::signal_move_toggled()
     return _signal_move_toggled;
 }
 
-std::shared_ptr<Testlight_physics> Testlight_physics::create()
-{
-    return std::make_shared<Testlight_physics>();
-}
-
 void Testlight_physics::update(Entity & ent, const float dt)
 {
     if(!_moving)
@@ -118,8 +103,8 @@ void Testlight_physics::toggle_movement()
 Entity create_testlight()
 {
     auto model = Model::create(check_in_pwd("mdl/boring_sphere.dae"), true);
-    auto input = Testlight_input::create();
-    auto physics = Testlight_physics::create();
+    Testlight_input * input = new Testlight_input;
+    Testlight_physics * physics = new Testlight_physics;
     Point_light * light = new Point_light(true, glm::vec3(1.0f, 0.0f, 0.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
     Audio * audio = new Audio(glm::vec3(0.0f));
@@ -145,11 +130,6 @@ Entity create_testlight()
     return ent;
 }
 
-std::shared_ptr<Testmonkey_input> Testmonkey_input::create()
-{
-    return std::make_shared<Testmonkey_input>();
-}
-
 void Testmonkey_input::update(Entity & ent, const sf::Window & win,
     const float dt)
 {
@@ -170,8 +150,7 @@ sigc::signal<void> Testmonkey_input::signal_light_toggled()
 Entity create_testmonkey()
 {
     auto model = Model::create(check_in_pwd("mdl/monkey.dae"), true);
-    auto input = Testmonkey_input::create();
-    auto physics = std::shared_ptr<Physics>();
+    Testmonkey_input * input = new Testmonkey_input;
     Spot_light * light = new Spot_light(true, glm::vec3(0.0f, 1.0f, 1.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f), std::cos(10.0f * M_PI / 180.0f), 90.0f,
@@ -181,7 +160,7 @@ Entity create_testmonkey()
     Entity ent(
         model,
         input,
-        physics,
+        nullptr, // physics
         light,
         audio);
 

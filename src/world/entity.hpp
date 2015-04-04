@@ -24,7 +24,7 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
 
-#include <memory> // TODO: remove?
+#include <memory>
 
 #include <glm/glm.hpp>
 
@@ -40,17 +40,17 @@
 class Entity final
 {
 public:
-    // TODO: order? names?
+    // TODO: order? entity name/class?
     Entity(std::shared_ptr<Model> model,
-        std::shared_ptr<Input> input,
-        std::shared_ptr<Physics> physics,
+        Input * input,
+        Physics * physics,
         Light * light,
         Audio * audio);
 
     // component getters
     std::shared_ptr<Model> model();
-    std::shared_ptr<Input> input();
-    std::shared_ptr<Physics> physics();
+    Input * input();
+    Physics * physics();
     Light * light();
     Audio * audio();
 
@@ -64,7 +64,7 @@ public:
     void set_facing(const glm::vec3 & forward = glm::vec3(0.0f, 0.0f, -1.0f),
         const glm::vec3 & up = glm::vec3(0.0f, 1.0f, 0.0f));
 
-    // move the position acoording to a vector
+    // move the position according to a vector
     void translate(const glm::vec3 & translation);
 
     // rotate around an axis
@@ -85,8 +85,8 @@ protected:
 
     // components
     std::shared_ptr<Model> _model;
-    std::shared_ptr<Input> _input;
-    std::shared_ptr<Physics> _physics;
+    std::unique_ptr<Input> _input;
+    std::unique_ptr<Physics> _physics;
     std::unique_ptr<Light> _light;
     std::unique_ptr<Audio> _audio;
 };
