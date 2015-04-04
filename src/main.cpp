@@ -60,11 +60,12 @@ int main(int argc, char * argv[])
 
     // create other services
     std::unique_ptr<Model_cache> model_cache(new Model_cache);
+    std::unique_ptr<Texture_cache> texture_cache(new Texture_cache);
     std::unique_ptr<Jukebox> jukebox(new Jukebox);
 
     Message_locator::init();
     Model_cache_locator::init(model_cache.get());
-    Texture_cache_locator::init();
+    Texture_cache_locator::init(texture_cache.get());
     Jukebox_locator::init(jukebox.get());
 
     // initialize world - using a pointer so we can destroy it manually
@@ -83,6 +84,7 @@ int main(int argc, char * argv[])
     Message_locator::init();
 
     model_cache.reset();
+    texture_cache.reset();
     jukebox.reset();
 
     // destroy log service

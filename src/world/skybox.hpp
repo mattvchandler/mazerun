@@ -46,7 +46,7 @@ protected:
     GL_buffer _ebo;
     GLuint _num_indexes;
 
-    std::shared_ptr<Texture_cubemap> _tex; // TODO: may want to expose this for environment mapping
+    Texture_cubemap * _tex; // TODO: may want to expose this for environment mapping
     Shader_prog _prog;
 };
 

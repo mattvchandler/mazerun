@@ -50,46 +50,46 @@ Texture::Texture()
     Logger_locator::get()(Logger::TRACE, "Generated GL texture: " + std::to_string(_texid));
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::create(const std::string & filename)
+Texture_2D * Texture_2D::create(const std::string & filename)
 {
     std::string key = std::string("2D:") + filename;
 
-    if(Texture_cache_locator::get().allocated_tex.count(key) > 0)
+    if(Texture_cache_locator::get().tex_index.count(key) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
-        return std::dynamic_pointer_cast<Texture_2D>(Texture_cache_locator::get().allocated_tex[key]);
+        return dynamic_cast<Texture_2D *>(Texture_cache_locator::get().tex_index[key].get());
     }
     else
     {
-        std::shared_ptr<Texture_2D> ret(new Texture_2D(filename));
+        Texture_2D * ret = new Texture_2D(filename);
         ret->_key = key;
-        Texture_cache_locator::get().allocated_tex[key] = ret;
+        Texture_cache_locator::get().tex_index.emplace(key, std::unique_ptr<Texture>(ret));
         return ret;
     }
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::white_fallback()
+Texture_2D * Texture_2D::white_fallback()
 {
     if(!Texture_cache_locator::get().white_fallback)
     {
         Texture_cache_locator::get().white_fallback.reset(new Texture_2D(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
         Logger_locator::get()(Logger::DBG, "Generated white fallback texture");
     }
-    return Texture_cache_locator::get().white_fallback;
+    return dynamic_cast<Texture_2D *>(Texture_cache_locator::get().white_fallback.get());
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::black_fallback()
+Texture_2D * Texture_2D::black_fallback()
 {
     if(!Texture_cache_locator::get().black_fallback)
     {
         Texture_cache_locator::get().black_fallback.reset(new Texture_2D(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1, 1));
         Logger_locator::get()(Logger::DBG, "Generated black fallback texture");
     }
-    return Texture_cache_locator::get().black_fallback;
+    return dynamic_cast<Texture_2D *>(Texture_cache_locator::get().black_fallback.get());
 }
 
 // black & magenta checkerboard (like source!)
-std::shared_ptr<Texture_2D> Texture_2D::missing_fallback()
+Texture_2D * Texture_2D::missing_fallback()
 {
     if(!Texture_cache_locator::get().missing_fallback)
     {
@@ -111,17 +111,17 @@ std::shared_ptr<Texture_2D> Texture_2D::missing_fallback()
         Texture_cache_locator::get().missing_fallback.reset(new Texture_2D(data, size, size));
         Logger_locator::get()(Logger::DBG, "Generated missing fallback texture");
     }
-    return Texture_cache_locator::get().missing_fallback;
+    return dynamic_cast<Texture_2D *>(Texture_cache_locator::get().missing_fallback.get());
 }
 
-std::shared_ptr<Texture_2D> Texture_2D::normal_map_fallback()
+Texture_2D * Texture_2D::normal_map_fallback()
 {
     if(!Texture_cache_locator::get().normal_map_fallback)
     {
         Texture_cache_locator::get().normal_map_fallback.reset(new Texture_2D(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), 1, 1));
         Logger_locator::get()(Logger::DBG, "Generated normal map fallback texture");
     }
-    return Texture_cache_locator::get().normal_map_fallback;
+    return dynamic_cast<Texture_2D *>(Texture_cache_locator::get().normal_map_fallback.get());
 }
 
 void Texture_2D::bind() const
@@ -178,7 +178,7 @@ void Texture_2D::set_properties() const
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
-std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & left_fname, const std::string & right_fname,
+Texture_cubemap * Texture_cubemap::create(const std::string & left_fname, const std::string & right_fname,
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname)
 {
@@ -187,30 +187,30 @@ std::shared_ptr<Texture_cubemap> Texture_cubemap::create(const std::string & lef
         back_fname + ";" + front_fname + ";" +
         down_fname + ";" + up_fname;
 
-    if(Texture_cache_locator::get().allocated_tex.count(key) > 0)
+    if(Texture_cache_locator::get().tex_index.count(key) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
-        return std::dynamic_pointer_cast<Texture_cubemap>(Texture_cache_locator::get().allocated_tex[key]);
+        return dynamic_cast<Texture_cubemap *>(Texture_cache_locator::get().tex_index[key].get());
     }
     else
     {
-        std::shared_ptr<Texture_cubemap> ret(new Texture_cubemap(left_fname, right_fname,
+        Texture_cubemap * ret(new Texture_cubemap(left_fname, right_fname,
                 back_fname, front_fname,
                 down_fname, up_fname));
         ret->_key = key;
-        Texture_cache_locator::get().allocated_tex[key] = ret;
+        Texture_cache_locator::get().tex_index.emplace(key, std::unique_ptr<Texture>(ret));
         return ret;
     }
 }
 
-std::shared_ptr<Texture_cubemap> Texture_cubemap::env_fallback()
+Texture_cubemap * Texture_cubemap::env_fallback()
 {
     if(!Texture_cache_locator::get().env_fallback)
     {
         Texture_cache_locator::get().env_fallback.reset(new Texture_cubemap(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1));
         Logger_locator::get()(Logger::DBG, "Generated cubemap fallback texture");
     }
-    return Texture_cache_locator::get().env_fallback;
+    return dynamic_cast<Texture_cubemap *>(Texture_cache_locator::get().env_fallback.get());
 }
 
 void Texture_cubemap::bind() const
@@ -290,12 +290,23 @@ void Texture_cubemap::set_properties() const
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
-std::shared_ptr<Texture_cache> Texture_cache_locator::_cache = std::make_shared<Texture_cache>();
+Texture_cache Texture_cache_locator::_default_texture_cache;
+Texture_cache * Texture_cache_locator::_cache = &Texture_cache_locator::_default_texture_cache;
 
-void Texture_cache_locator::init(std::shared_ptr<Texture_cache> cache)
+void Texture_cache_locator::init(Texture_cache * cache)
 {
     if(!cache)
-        _cache = std::make_shared<Texture_cache>();
+    {
+        _default_texture_cache.tex_index.clear();
+
+        _default_texture_cache.white_fallback.reset();
+        _default_texture_cache.black_fallback.reset();
+        _default_texture_cache.missing_fallback.reset();
+        _default_texture_cache.normal_map_fallback.reset();
+        _default_texture_cache.env_fallback.reset();
+
+        _cache = &_default_texture_cache;
+    }
     else
         _cache = cache;
 }
