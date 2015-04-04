@@ -67,12 +67,12 @@ class Logger_locator
 public:
     Logger_locator() = delete;
     ~Logger_locator() = delete;
-    static void init(std::shared_ptr<Logger> log = _default_logger);
+    static void init(Logger * log);
     static Logger & get();
 
 private:
-    static std::shared_ptr<Logger> _log;
-    static std::shared_ptr<Logger> _default_logger;
+    static Logger _default_logger;
+    static Logger * _log;
 };
 
 #endif // LOGGER_HPP

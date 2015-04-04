@@ -54,7 +54,8 @@ int main(int argc, char * argv[])
 
     // set up logging service
     // TODO: get app name  & log level from config
-    Logger_locator::init(std::make_shared<Tee_log>("mazerun.log", std::cerr, Logger::TRACE));
+    std::unique_ptr<Tee_log> log(new Tee_log("mazerun.log", std::cerr, Logger::TRACE));
+    Logger_locator::init(log.get());
 
     Logger_locator::get()(Logger::INFO, "Initializing...");
 
@@ -89,7 +90,8 @@ int main(int argc, char * argv[])
 
     // destroy log service
     Logger_locator::get()(Logger::INFO, "Shutdown...");
-    Logger_locator::init();
+    Logger_locator::init(nullptr);
+    log.reset();
 
     return EXIT_SUCCESS;
 }

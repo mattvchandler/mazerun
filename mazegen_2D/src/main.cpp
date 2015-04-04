@@ -40,8 +40,8 @@ thread_local std::mt19937 prng;
 int main(int argc, char * argv[])
 {
     // TODO: get app name from config
-    std::shared_ptr<Tee_log> log = std::make_shared<Tee_log>("mazegen_2D.log", std::cerr, Logger::TRACE);
-    Logger_locator::init(log);
+    std::unique_ptr<Tee_log> log(new Tee_log("mazegen_2D.log", std::cerr, Logger::TRACE));
+    Logger_locator::init(log.get());
 
     // random_device curently not working in windows GCC
     #ifdef __MINGW32__
