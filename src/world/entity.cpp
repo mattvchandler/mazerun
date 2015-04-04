@@ -31,7 +31,7 @@
 
 #include "util/logger.hpp"
 
-Entity::Entity(std::shared_ptr<Model> model,
+Entity::Entity(Model * model,
     Input * input,
     Physics * physics,
     Light * light,
@@ -45,7 +45,7 @@ Entity::Entity(std::shared_ptr<Model> model,
     set();
 }
 
-std::shared_ptr<Model> Entity::model()
+Model * Entity::model()
 {
     return _model;
 }

@@ -102,7 +102,7 @@ void Testlight_physics::toggle_movement()
 
 Entity create_testlight()
 {
-    auto model = Model::create(check_in_pwd("mdl/boring_sphere.dae"), true);
+    Model * model = Model::create(check_in_pwd("mdl/boring_sphere.dae"), true);
     Testlight_input * input = new Testlight_input;
     Testlight_physics * physics = new Testlight_physics;
     Point_light * light = new Point_light(true, glm::vec3(1.0f, 0.0f, 0.0f), true,
@@ -149,7 +149,7 @@ sigc::signal<void> Testmonkey_input::signal_light_toggled()
 
 Entity create_testmonkey()
 {
-    auto model = Model::create(check_in_pwd("mdl/monkey.dae"), true);
+    Model * model = Model::create(check_in_pwd("mdl/monkey.dae"), true);
     Testmonkey_input * input = new Testmonkey_input;
     Spot_light * light = new Spot_light(true, glm::vec3(0.0f, 1.0f, 1.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f),

@@ -51,19 +51,20 @@ Model::~Model()
     Logger_locator::get()(Logger::DBG, "Deleting model: " + _key);
 }
 
-std::shared_ptr<Model> Model::create(const std::string & filename, const bool casts_shadow)
+Model * Model::create(const std::string & filename, const bool casts_shadow)
 {
-    if(Model_cache_locator::get().allocated_mdl.count(filename) > 0)
+    std::string key = "MDL:" + filename;
+    if(Model_cache_locator::get().mdl_index.count(key) > 0)
     {
         Logger_locator::get()(Logger::DBG, "Reusing model: " + filename);
-        return Model_cache_locator::get().allocated_mdl[filename];
+        return Model_cache_locator::get().mdl_index[key].get();
     }
     else
     {
-        std::shared_ptr<Model> ret(new Model(filename, casts_shadow));
-        ret->_key = filename;
-        Model_cache_locator::get().allocated_mdl[filename] = ret;
-        return ret;
+        Model * model = new Model(filename, casts_shadow);
+        model->_key = key;
+        Model_cache_locator::get().mdl_index.emplace(key, std::unique_ptr<Model>(model));
+        return model;
     }
 }
 
@@ -306,12 +307,16 @@ Model::Model(const std::string & filename, const bool casts_shadow):
     check_error("Model::Model");
 }
 
-std::shared_ptr<Model_cache> Model_cache_locator::_cache = std::make_shared<Model_cache>();
+Model_cache Model_cache_locator::_default_model_cache;
+Model_cache * Model_cache_locator::_cache = &Model_cache_locator::_default_model_cache;
 
-void Model_cache_locator::init(std::shared_ptr<Model_cache> cache)
+void Model_cache_locator::init(Model_cache * cache)
 {
     if(!cache)
-        _cache = std::make_shared<Model_cache>();
+    {
+        _default_model_cache.mdl_index.clear();
+        _cache = &_default_model_cache;
+    }
     else
         _cache = cache;
 }

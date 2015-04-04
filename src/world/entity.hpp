@@ -41,14 +41,14 @@ class Entity final
 {
 public:
     // TODO: order? entity name/class?
-    Entity(std::shared_ptr<Model> model,
+    Entity(Model * model,
         Input * input,
         Physics * physics,
         Light * light,
         Audio * audio);
 
     // component getters
-    std::shared_ptr<Model> model();
+    Model * model();
     Input * input();
     Physics * physics();
     Light * light();
@@ -84,7 +84,7 @@ protected:
     glm::vec3 _pos;
 
     // components
-    std::shared_ptr<Model> _model;
+    Model * _model;
     std::unique_ptr<Input> _input;
     std::unique_ptr<Physics> _physics;
     std::unique_ptr<Light> _light;

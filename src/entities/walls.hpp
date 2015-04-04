@@ -30,7 +30,7 @@
 class Walls final: public Model
 {
 public:
-    static std::shared_ptr<Walls> create(const unsigned int width, const unsigned int height);
+    static Walls * create(const unsigned int width, const unsigned int height);
     void draw(const std::function<void(const Material &)> & set_material) const;
 
 private:
@@ -44,7 +44,7 @@ Entity create_walls(const unsigned int width, const unsigned int height);
 class Floor final: public Model
 {
 public:
-static std::shared_ptr<Floor> create(const unsigned int width, const unsigned int height);
+static Floor * create(const unsigned int width, const unsigned int height);
     void draw(const std::function<void(const Material &)> & set_material) const;
 
 private:

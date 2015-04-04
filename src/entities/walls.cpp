@@ -30,10 +30,11 @@
 #include "util/logger.hpp"
 #include "world/entity.hpp"
 
-std::shared_ptr<Walls> Walls::create(const unsigned int width, const unsigned int height)
+Walls * Walls::create(const unsigned int width, const unsigned int height)
 {
-    std::shared_ptr<Walls> ret(new Walls(width, height));
-    return ret;
+    Walls * walls = new Walls(width, height);
+    Model_cache_locator::get().mdl_index.emplace("WALLS", std::unique_ptr<Model>(walls));
+    return walls;
 }
 
 void Walls::draw(const std::function<void(const Material &)> & set_material) const
@@ -54,6 +55,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     Model(true),
     _grid(width, height, Grid::MAZEGEN_DFS, 25, 100)
 {
+    _key = "WALLS";
     Logger_locator::get()(Logger::DBG, "Creating walls");
 
     std::vector<glm::vec3> vert_pos;
@@ -228,10 +230,11 @@ Entity create_walls(const unsigned int width, const unsigned int height)
     return walls;
 }
 
-std::shared_ptr<Floor> Floor::create(const unsigned int width, const unsigned int height)
+Floor * Floor::create(const unsigned int width, const unsigned int height)
 {
-    std::shared_ptr<Floor> ret(new Floor(width, height));
-    return ret;
+    Floor * floor = new Floor(width, height);
+    Model_cache_locator::get().mdl_index.emplace("FLOOR", std::unique_ptr<Model>(floor));
+    return floor;
 }
 
 void Floor::draw(const std::function<void(const Material &)> & set_material) const
@@ -249,6 +252,7 @@ void Floor::draw(const std::function<void(const Material &)> & set_material) con
 Floor::Floor(const unsigned int width, const unsigned int height):
     Model(false)
 {
+    _key = "FLOOR";
     Logger_locator::get()(Logger::DBG, "Creating floor");
     glm::vec2 ll(-0.5f * (float)width, 0.5f * (float)height);
     glm::vec2 ur(0.5f * (float)width, -0.5f * (float)height);

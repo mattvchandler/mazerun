@@ -118,7 +118,6 @@ sigc::signal<void> Player_input::signal_spotlight_toggled()
 
 Entity create_player()
 {
-    auto model = std::shared_ptr<Model>();
     Player_input * input = new Player_input();
     Spot_light * light = new Spot_light(true, glm::vec3(1.0f, 1.0f, 0.75f), true,
         glm::vec3(0.05f, -0.2f, 0.0f), glm::normalize(glm::vec3(-0.1f, 0.0f, -1.0f)),
@@ -126,7 +125,7 @@ Entity create_player()
     Audio * audio = new Audio(glm::vec3(0.0f));
 
     Entity player(
-        model,
+        nullptr, // model
         input,
         nullptr, // physics
         light,
