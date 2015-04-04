@@ -148,8 +148,8 @@ sf::Sound Jukebox::get_sound(const std::string & filename)
     return sound;
 }
 
-Jukebox_base * Jukebox_locator::_jukebox;
 Jukebox_base Jukebox_locator::_default_jukebox;
+Jukebox_base * Jukebox_locator::_jukebox = & Jukebox_locator::_default_jukebox;
 
 void Jukebox_locator::init(Jukebox_base * jukebox)
 {
