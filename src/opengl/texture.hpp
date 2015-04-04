@@ -108,12 +108,12 @@ public:
     Texture_cache_locator() = delete;
     ~Texture_cache_locator() = delete;
 
-    static void init(Texture_cache * cache = &_default_texture_cache);
+    static void init(Texture_cache * cache);
     static Texture_cache & get();
 
 private:
-    static Texture_cache * _cache;
     static Texture_cache  _default_texture_cache;
+    static Texture_cache * _cache;
 };
 
 #endif // TEXTURE_HPP

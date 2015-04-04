@@ -82,12 +82,12 @@ class Jukebox_locator
 public:
     Jukebox_locator() = delete;
     ~Jukebox_locator() = delete;
-    static void init(Jukebox_base * jukebox = &_default_jukebox);
+    static void init(Jukebox_base * jukebox);
     static Jukebox_base & get();
 
 private:
-    static Jukebox_base * _jukebox;
     static Jukebox_base _default_jukebox;
+    static Jukebox_base * _jukebox;
 };
 
 #endif // AUDIO_HPP

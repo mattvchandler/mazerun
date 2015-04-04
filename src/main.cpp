@@ -78,9 +78,9 @@ int main(int argc, char * argv[])
     world.reset();
 
     // destroy services
-    Jukebox_locator::init();
-    Texture_cache_locator::init();
-    Model_cache_locator::init();
+    Jukebox_locator::init(nullptr);
+    Texture_cache_locator::init(nullptr);
+    Model_cache_locator::init(nullptr);
     Message_locator::init();
 
     model_cache.reset();

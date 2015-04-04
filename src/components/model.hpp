@@ -76,12 +76,12 @@ public:
     Model_cache_locator() = delete;
     ~Model_cache_locator() = delete;
 
-    static void init(Model_cache * cache = &_default_model_cache);
+    static void init(Model_cache * cache);
     static Model_cache & get();
 
 private:
-    static Model_cache * _cache;
     static Model_cache _default_model_cache;
+    static Model_cache * _cache;
 };
 
 #endif // MODEL_HPP
