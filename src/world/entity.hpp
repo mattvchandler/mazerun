@@ -24,7 +24,7 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
 
-#include <memory>
+#include <memory> // TODO: remove?
 
 #include <glm/glm.hpp>
 
@@ -44,14 +44,14 @@ public:
     Entity(std::shared_ptr<Model> model,
         std::shared_ptr<Input> input,
         std::shared_ptr<Physics> physics,
-        std::shared_ptr<Light> light,
+        Light * light,
         Audio * audio);
 
     // component getters
     std::shared_ptr<Model> model();
     std::shared_ptr<Input> input();
     std::shared_ptr<Physics> physics();
-    std::shared_ptr<Light> light();
+    Light * light();
     Audio * audio();
 
     // set / reset pos / orientation
@@ -87,7 +87,7 @@ protected:
     std::shared_ptr<Model> _model;
     std::shared_ptr<Input> _input;
     std::shared_ptr<Physics> _physics;
-    std::shared_ptr<Light> _light;
+    std::unique_ptr<Light> _light;
     std::unique_ptr<Audio> _audio;
 };
 

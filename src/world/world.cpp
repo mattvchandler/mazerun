@@ -249,17 +249,17 @@ void World::draw()
 
     for(auto & ent: _ents)
     {
-        std::shared_ptr<Light> light = ent.light();
+        Light * light = ent.light();
         if(!light || !light->enabled)
             continue;
 
-        std::shared_ptr<Point_light> point_light = std::dynamic_pointer_cast<Point_light>(light);
+        Point_light * point_light = dynamic_cast<Point_light *>(light);
         if(point_light && num_point_lights < max_point_lights)
         {
             point_lights[num_point_lights++] = &ent;
         }
 
-        std::shared_ptr<Spot_light> spot_light = std::dynamic_pointer_cast<Spot_light>(light);
+        Spot_light * spot_light = dynamic_cast<Spot_light *>(light);
         if(spot_light && num_spot_lights < max_spot_lights)
         {
             spot_lights[num_spot_lights++] = &ent;
@@ -320,7 +320,7 @@ void World::draw()
     for(std::size_t i = 0; i < num_point_lights; ++i)
     {
         Entity & ent = *point_lights[i];
-        Point_light & point_light = *std::dynamic_pointer_cast<Point_light>(ent.light());
+        Point_light & point_light = *dynamic_cast<Point_light *>(ent.light());
 
         glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
         glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light.pos, 1.0f));
@@ -337,7 +337,7 @@ void World::draw()
     for(std::size_t i = 0; i < num_spot_lights; ++i)
     {
         Entity & ent = *spot_lights[i];
-        Spot_light & spot_light = *std::dynamic_pointer_cast<Spot_light>(ent.light());
+        Spot_light & spot_light = *dynamic_cast<Spot_light *>(ent.light());
 
         glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
         glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light.pos, 1.0f));

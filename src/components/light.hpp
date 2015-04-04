@@ -55,10 +55,6 @@ public:
         const float quad_atten);
     virtual ~Point_light() = default;
 
-    static std::shared_ptr<Point_light> create(const bool enabled, const glm::vec3 & color,
-        const bool casts_shadow, const glm::vec3 & pos, const float const_atten,
-        const float linear_atten, const float quad_atten);
-
     glm::mat4 shadow_view_mat(const glm::vec3 & axis);
     glm::mat4 shadow_proj_mat(const glm::vec3 & axis);
 
@@ -76,11 +72,6 @@ public:
         const glm::vec3 & pos, const glm::vec3 & dir, const float cos_cutoff,
         const float exponent, const float const_atten, const float linear_atten,
         const float quad_atten);
-
-    static std::shared_ptr<Spot_light> create(const bool enabled, const glm::vec3 & color,
-        const bool casts_shadow, const glm::vec3 & pos, const glm::vec3 & dir,
-        const float cos_cutoff, const float exponent, const float const_atten,
-        const float linear_atten, const float quad_atten);
 
     glm::mat4 shadow_view_mat();
     glm::mat4 shadow_proj_mat();

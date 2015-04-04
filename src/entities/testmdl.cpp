@@ -52,8 +52,8 @@ Entity create_testmdl()
     Entity testmdl(Model::create(check_in_pwd("mdl/weird_cube.dae"), true),
         std::shared_ptr<Input>(),
         Testmdl_physics::create(),
-        std::shared_ptr<Light>(),
-        nullptr);
+        nullptr, // light
+        nullptr); // audio
 
     testmdl.set_pos(glm::vec3(0.0f, 5.0f, 0.0f));
     testmdl.rotate_world(M_PI / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -120,7 +120,7 @@ Entity create_testlight()
     auto model = Model::create(check_in_pwd("mdl/boring_sphere.dae"), true);
     auto input = Testlight_input::create();
     auto physics = Testlight_physics::create();
-    auto light = Point_light::create(true, glm::vec3(1.0f, 0.0f, 0.0f), true,
+    Point_light * light = new Point_light(true, glm::vec3(1.0f, 0.0f, 0.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.5f, 0.0f);
     Audio * audio = new Audio(glm::vec3(0.0f));
 
@@ -131,6 +131,7 @@ Entity create_testlight()
         light,
         audio);
 
+    // TODO: don't keep pointers (call new in ent ctor)
     input->signal_light_toggled().connect(sigc::track_obj(sigc::track_obj([light, audio]()
     {
         light->enabled = !light->enabled;
@@ -172,7 +173,7 @@ Entity create_testmonkey()
     auto model = Model::create(check_in_pwd("mdl/monkey.dae"), true);
     auto input = Testmonkey_input::create();
     auto physics = std::shared_ptr<Physics>();
-    auto light = Spot_light::create(true, glm::vec3(0.0f, 1.0f, 1.0f), true,
+    Spot_light * light = new Spot_light(true, glm::vec3(0.0f, 1.0f, 1.0f), true,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f), std::cos(10.0f * M_PI / 180.0f), 90.0f,
         0.0f, 0.1f, 0.0f);
