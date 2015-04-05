@@ -41,6 +41,8 @@ private:
     class Typed_packet;
 
 public:
+    friend class Message_locator;
+
     class Packet
     {
     public:
@@ -128,11 +130,12 @@ class Message_locator
         Message_locator() = delete;
         ~Message_locator() = delete;
 
-        static void init(std::shared_ptr<Message> msg = std::make_shared<Message>());
+        static void init(Message * msg);
         static Message & get();
 
     private:
-        static std::shared_ptr<Message> _msg;
+        static Message _default_msg;
+        static Message * _msg;
 };
 
 #endif // MESSAGE_HPP

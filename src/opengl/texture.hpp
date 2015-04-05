@@ -36,7 +36,6 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/System.hpp>
 
-// TODO: revisit all shared_ptr's - try for unique owner wherever possible
 // TODO: have materials and FBO's contain tex ID and provide a lookup function?
 
 class Texture: public sf::NonCopyable

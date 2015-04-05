@@ -60,11 +60,12 @@ int main(int argc, char * argv[])
     Logger_locator::get()(Logger::INFO, "Initializing...");
 
     // create other services
+    std::unique_ptr<Message> message(new Message);
     std::unique_ptr<Model_cache> model_cache(new Model_cache);
     std::unique_ptr<Texture_cache> texture_cache(new Texture_cache);
     std::unique_ptr<Jukebox> jukebox(new Jukebox);
 
-    Message_locator::init();
+    Message_locator::init(message.get());
     Model_cache_locator::init(model_cache.get());
     Texture_cache_locator::init(texture_cache.get());
     Jukebox_locator::init(jukebox.get());
@@ -82,8 +83,9 @@ int main(int argc, char * argv[])
     Jukebox_locator::init(nullptr);
     Texture_cache_locator::init(nullptr);
     Model_cache_locator::init(nullptr);
-    Message_locator::init();
+    Message_locator::init(nullptr);
 
+    message.reset();
     model_cache.reset();
     texture_cache.reset();
     jukebox.reset();

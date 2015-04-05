@@ -104,12 +104,17 @@ bool Message::queue_empty()
     return empty;
 }
 
-std::shared_ptr<Message> Message_locator::_msg = std::make_shared<Message>();
+Message Message_locator::_default_msg;
+Message * Message_locator::_msg = &Message_locator::_default_msg;
 
-void Message_locator::init(std::shared_ptr<Message> msg)
+void Message_locator::init(Message * msg)
 {
     if(!msg)
-        _msg = std::make_shared<Message>();
+    {
+        _default_msg._signals.clear();
+        _default_msg._queue.clear();
+        _msg = &_default_msg;
+    }
     else
         _msg = msg;
 }
