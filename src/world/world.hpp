@@ -80,6 +80,8 @@ private:
     Shader_prog _ent_shader;
     Shader_prog _shadow_map_shader;
 
+    G_FBO _g_fbo;
+
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better
     // std::vector<Model> _model_components;

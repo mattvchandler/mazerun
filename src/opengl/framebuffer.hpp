@@ -62,4 +62,28 @@ private:
     std::unique_ptr<Texture> _tex;
 };
 
+class G_FBO final: public Framebuffer
+{
+public:
+    G_FBO(const GLuint width, const GLuint height);
+
+    void bind_diffuse_tex() const;
+    void bind_normal_tex() const;
+    void bind_pos_tex() const;
+    void bind_tex_coord_tex() const;
+    void bind_depth_tex() const;
+    GLuint get_diffuse_tex_id() const;
+    GLuint get_normal_tex_id() const;
+    GLuint get_pos_tex_id() const;
+    GLuint get_tex_coord_tex_id() const;
+    GLuint get_depth_tex_id() const;
+
+private:
+    std::unique_ptr<Texture> _diffuse_tex;
+    std::unique_ptr<Texture> _normal_tex;
+    std::unique_ptr<Texture> _pos_tex;
+    std::unique_ptr<Texture> _tex_coord_tex;
+    std::unique_ptr<Texture> _depth_tex;
+};
+
 #endif // FRAMEBUFFER_HPP

@@ -99,7 +99,8 @@ World::World():
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
     _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)})
+        {std::make_pair("vert_pos", 0)}),
+    _g_fbo(1024, 1024)
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
