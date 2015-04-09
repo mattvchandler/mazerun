@@ -35,10 +35,8 @@ class Framebuffer: public sf::NonCopyable
 {
 public:
     virtual ~Framebuffer();
-    virtual void bind_fbo() const = 0;
-    void bind_tex() const;
+    virtual void bind_fbo() const;
     GLuint get_fbo_id() const;
-    GLuint get_tex_id() const;
 
     GLuint get_width() const;
     GLuint get_height() const;
@@ -49,7 +47,6 @@ protected:
     Framebuffer(const GLuint width, const GLuint height);
 
     GLuint _id;
-    std::unique_ptr<Texture> _tex;
     GLuint _width, _height;
 };
 
@@ -57,7 +54,12 @@ class Shadow_FBO final: public Framebuffer
 {
 public:
     Shadow_FBO(const GLuint width, const GLuint height);
-    void bind_fbo() const;
+
+    void bind_tex() const;
+    GLuint get_tex_id() const;
+
+private:
+    std::unique_ptr<Texture> _tex;
 };
 
 #endif // FRAMEBUFFER_HPP

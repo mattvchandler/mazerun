@@ -32,19 +32,14 @@ Framebuffer::~Framebuffer()
     glDeleteFramebuffers(1, &_id);
 }
 
-void Framebuffer::bind_tex() const
+void Framebuffer::bind_fbo() const
 {
-    _tex->bind();
+    glBindFramebuffer(GL_FRAMEBUFFER, _id);
 }
 
 GLuint Framebuffer::get_fbo_id() const
 {
     return _id;
-}
-
-GLuint Framebuffer::get_tex_id() const
-{
-    return _tex->get_id();
 }
 
 GLuint Framebuffer::get_width() const
@@ -126,7 +121,12 @@ Shadow_FBO::Shadow_FBO(const GLuint width, const GLuint height):
     check_error("Shadow_FBO::Shadow_FBO");
 }
 
-void Shadow_FBO::bind_fbo() const
+void Shadow_FBO::bind_tex() const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, _id);
+    _tex->bind();
+}
+
+GLuint Shadow_FBO::get_tex_id() const
+{
+    return _tex->get_id();
 }
