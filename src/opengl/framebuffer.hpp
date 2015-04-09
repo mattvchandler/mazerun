@@ -40,19 +40,23 @@ public:
     GLuint get_fbo_id() const;
     GLuint get_tex_id() const;
 
+    GLuint get_width() const;
+    GLuint get_height() const;
+
     static std::string error_string(GLenum error);
 
 protected:
-    Framebuffer();
+    Framebuffer(const GLuint width, const GLuint height);
 
     GLuint _id;
     std::unique_ptr<Texture> _tex;
+    GLuint _width, _height;
 };
 
 class Shadow_FBO final: public Framebuffer
 {
 public:
-    Shadow_FBO(const std::size_t size);
+    Shadow_FBO(const GLuint width, const GLuint height);
     void bind_fbo() const;
 };
 

@@ -230,7 +230,6 @@ void World::draw()
     glClearDepth(1.0f);
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2.0f, 4.0f);
-    glViewport(0, 0, 512, 512); // TODO: make size an FBO property
 
     std::size_t num_point_lights = 0;
     std::size_t num_spot_lights = 0;
@@ -268,6 +267,7 @@ void World::draw()
                 continue;
 
             spot_light->shadow_fbo->bind_fbo();
+            glViewport(0, 0, spot_light->shadow_fbo->get_width(), spot_light->shadow_fbo->get_height());
             glClear(GL_DEPTH_BUFFER_BIT);
 
             glm::mat4 view_proj = spot_light->shadow_proj_mat() * spot_light->shadow_view_mat() * ent.view_mat();

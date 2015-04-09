@@ -47,6 +47,16 @@ GLuint Framebuffer::get_tex_id() const
     return _tex->get_id();
 }
 
+GLuint Framebuffer::get_width() const
+{
+    return _width;
+}
+
+GLuint Framebuffer::get_height() const
+{
+    return _height;
+}
+
 std::string Framebuffer::error_string(GLenum error)
 {
     switch(error)
@@ -72,18 +82,20 @@ std::string Framebuffer::error_string(GLenum error)
     }
 }
 
-Framebuffer::Framebuffer()
+Framebuffer::Framebuffer(const GLuint width, const GLuint height):
+    _width(width), _height(height)
 {
     glGenFramebuffers(1, &_id);
     Logger_locator::get()(Logger::TRACE, "Generated GL FBO: " + std::to_string(_id));
 }
 
-Shadow_FBO::Shadow_FBO(const std::size_t size)
+Shadow_FBO::Shadow_FBO(const GLuint width, const GLuint height):
+    Framebuffer(width, height)
 {
     _tex = std::unique_ptr<Texture>(new Texture_2D);
     bind_tex();
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, size, size, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, _width, _height, 0,
         GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
