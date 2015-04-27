@@ -134,16 +134,15 @@ GLuint Shadow_FBO::get_tex_id() const
 G_FBO::G_FBO(const GLuint width, const GLuint height):
     Framebuffer(width, height)
 {
-    _diffuse_tex = std::unique_ptr<Texture>(new Texture_2D);
-    _normal_tex = std::unique_ptr<Texture>(new Texture_2D);
     _pos_tex = std::unique_ptr<Texture>(new Texture_2D);
     _tex_coord_tex = std::unique_ptr<Texture>(new Texture_2D);
+    _normal_tex = std::unique_ptr<Texture>(new Texture_2D);
     _depth_tex = std::unique_ptr<Texture>(new Texture_2D);
 
     bind_fbo();
 
     int i = 0;
-    for(auto tex: {get_diffuse_tex_id(), get_normal_tex_id(), get_pos_tex_id(), get_tex_coord_tex_id()})
+    for(auto tex: {get_pos_tex_id(), get_tex_coord_tex_id(), get_normal_tex_id()})
     {
         glBindTexture(GL_TEXTURE_2D, tex);
 
@@ -191,16 +190,6 @@ G_FBO::G_FBO(const GLuint width, const GLuint height):
     check_error("Shadow_FBO::Shadow_FBO");
 }
 
-void G_FBO::bind_diffuse_tex() const
-{
-    _diffuse_tex->bind();
-}
-
-void G_FBO::bind_normal_tex() const
-{
-    _normal_tex->bind();
-}
-
 void G_FBO::bind_pos_tex() const
 {
     _pos_tex->bind();
@@ -211,19 +200,14 @@ void G_FBO::bind_tex_coord_tex() const
     _tex_coord_tex->bind();
 }
 
+void G_FBO::bind_normal_tex() const
+{
+    _normal_tex->bind();
+}
+
 void G_FBO::bind_depth_tex() const
 {
     _depth_tex->bind();
-}
-
-GLuint G_FBO::get_diffuse_tex_id() const
-{
-    return _diffuse_tex->get_id();
-}
-
-GLuint G_FBO::get_normal_tex_id() const
-{
-    return _normal_tex->get_id();
 }
 
 GLuint G_FBO::get_pos_tex_id() const
@@ -234,6 +218,11 @@ GLuint G_FBO::get_pos_tex_id() const
 GLuint G_FBO::get_tex_coord_tex_id() const
 {
     return _tex_coord_tex->get_id();
+}
+
+GLuint G_FBO::get_normal_tex_id() const
+{
+    return _normal_tex->get_id();
 }
 
 GLuint G_FBO::get_depth_tex_id() const
