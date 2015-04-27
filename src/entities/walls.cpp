@@ -32,9 +32,17 @@
 
 Walls * Walls::create(const unsigned int width, const unsigned int height)
 {
-    Walls * walls = new Walls(width, height);
-    Model_cache_locator::get().mdl_index.emplace("WALLS", std::unique_ptr<Model>(walls));
-    return walls;
+    auto walls_it = Model_cache_locator::get().mdl_index.find("WALLS");
+    if(walls_it != Model_cache_locator::get().mdl_index.end())
+    {
+        return dynamic_cast<Walls *>(walls_it->second.get());
+    }
+    else
+    {
+        Walls * walls = new Walls(width, height);
+        Model_cache_locator::get().mdl_index.emplace("WALLS", std::unique_ptr<Model>(walls));
+        return walls;
+    }
 }
 
 void Walls::draw(const std::function<void(const Material &)> & set_material) const
@@ -232,9 +240,17 @@ Entity create_walls(const unsigned int width, const unsigned int height)
 
 Floor * Floor::create(const unsigned int width, const unsigned int height)
 {
-    Floor * floor = new Floor(width, height);
-    Model_cache_locator::get().mdl_index.emplace("FLOOR", std::unique_ptr<Model>(floor));
-    return floor;
+    auto floor_it = Model_cache_locator::get().mdl_index.find("FLOOR");
+    if(floor_it != Model_cache_locator::get().mdl_index.end())
+    {
+        return dynamic_cast<Floor *>(floor_it->second.get());
+    }
+    else
+    {
+        Floor * floor = new Floor(width, height);
+        Model_cache_locator::get().mdl_index.emplace("FLOOR", std::unique_ptr<Model>(floor));
+        return floor;
+    }
 }
 
 void Floor::draw(const std::function<void(const Material &)> & set_material) const
