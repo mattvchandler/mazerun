@@ -77,8 +77,9 @@ private:
 
     Skybox _skybox;
     Dir_light _sunlight;
-    Shader_prog _ent_shader;
-    Shader_prog _shadow_map_shader;
+    Shader_prog _ent_prepass;
+    // Shader_prog _ent_shader;
+    // Shader_prog _shadow_map_shader;
 
     G_FBO _g_fbo;
 

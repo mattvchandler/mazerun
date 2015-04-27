@@ -92,14 +92,19 @@ World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8)),
     _running(true), _focused(true), _do_resize(false),
     _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), true, glm::normalize(glm::vec3(-1.0f))),
-    _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
-        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+    _ent_prepass({std::make_pair("shaders/prepass.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/prepass.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
-        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
-    _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)},
+        {std::make_pair("pos", 0), std::make_pair("g_tex", 1), std::make_pair("g_norm", 2)}),
+    // _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
+    //     std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
+    //     std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+    //     {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
+    //     std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
+    // _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
+    //     std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
+    //     {std::make_pair("vert_pos", 0)}),
     _g_fbo(1024, 1024)
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
@@ -134,6 +139,14 @@ World::World():
 
     resize();
 
+    _ent_prepass.use();
+    _ent_prepass.add_uniform("model_view_proj");
+    _ent_prepass.add_uniform("model_view");
+    _ent_prepass.add_uniform("normal_transform");
+    _ent_prepass.add_uniform("normal_map");
+    glUniform1i(_ent_prepass.get_uniform("normal_map"), 6);
+
+    /*
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
     _ent_shader.add_uniform("model_view");
@@ -215,6 +228,7 @@ World::World():
 
     _shadow_map_shader.use();
     _shadow_map_shader.add_uniform("model_view_proj");
+    */
 
     glUseProgram(0); // TODO get prev val?
     check_error("World::World");
@@ -226,9 +240,10 @@ World::World():
     // need: picking shader, target ent ptr
 void World::draw()
 {
+    glClearDepth(1.0f);
+    /*
     // shadow map pass
     _shadow_map_shader.use();
-    glClearDepth(1.0f);
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2.0f, 4.0f);
 
@@ -369,49 +384,57 @@ void World::draw()
 
     check_error("World::draw - light setup");
 
+    */
     auto set_material = [this](const Material & mat)
     {
-        glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
-        glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
-        glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
-        glUniform1f(_ent_shader.get_uniform("material.shininess"), mat.shininess);
-        glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
+        // glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
+        // glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
+        // glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
+        // glUniform1f(_ent_shader.get_uniform("material.shininess"), mat.shininess);
+        // glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
         // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
 
-        glActiveTexture(GL_TEXTURE0);
-        mat.ambient_map->bind();
-        glActiveTexture(GL_TEXTURE1);
-        mat.diffuse_map->bind();
-        glActiveTexture(GL_TEXTURE2);
-        mat.specular_map->bind();
-        glActiveTexture(GL_TEXTURE3);
-        mat.shininess_map->bind();
-        glActiveTexture(GL_TEXTURE4);
-        mat.emissive_map->bind();
+        // glActiveTexture(GL_TEXTURE0);
+        // mat.ambient_map->bind();
+        // glActiveTexture(GL_TEXTURE1);
+        // mat.diffuse_map->bind();
+        // glActiveTexture(GL_TEXTURE2);
+        // mat.specular_map->bind();
+        // glActiveTexture(GL_TEXTURE3);
+        // mat.shininess_map->bind();
+        // glActiveTexture(GL_TEXTURE4);
+        // mat.emissive_map->bind();
         // glActiveTexture(GL_TEXTURE5);
         // mat.reflectivity_map->bind();
         glActiveTexture(GL_TEXTURE6);
         mat.normal_map->bind();
     };
 
+    _g_fbo.bind_fbo();
+    _ent_prepass.use();
+    glViewport(0, 0, _g_fbo.get_width(), _g_fbo.get_height());
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     for(auto & ent: _ents)
     {
         auto model = ent.model();
         if(model)
         {
-            glm::mat4 model_mat = ent.model_mat();
-            glm::mat4 model_view = _cam->view_mat() * model_mat;
+            glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
             glm::mat4 model_view_proj = _proj * model_view;
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
-            glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
-            glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
-            glUniformMatrix4fv(_ent_shader.get_uniform("model"), 1, GL_FALSE, &model_mat[0][0]);
-            glUniformMatrix3fv(_ent_shader.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
+            glUniformMatrix4fv(_ent_prepass.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+            glUniformMatrix4fv(_ent_prepass.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
+            glUniformMatrix3fv(_ent_prepass.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
             model->draw(set_material);
         }
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, _win.getSize().x, _win.getSize().y);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     _skybox.draw(*_cam, _proj);
 
