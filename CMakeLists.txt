@@ -34,6 +34,9 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
 find_package(Threads REQUIRED)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_package(X11 REQUIRED)
+endif()
 
 # directories
 include_directories(
@@ -44,12 +47,14 @@ include_directories(
     ${GLM_INCLUDE_DIRS}
     ${SFML_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
+    ${X11_INCLUDE_DIRS}
     )
 link_directories(
     ${ASSIMP_LIBRARIES_DIRS}
     ${SIGC_LIBRARIES_DIRS}
     ${SFML_LIBRARIES_DIRS}
     ${GLEW_LIBRARIES_DIRS}
+    ${X11_LIBRARIES_DIRS}
     )
 
 # configure variables
@@ -105,6 +110,7 @@ target_link_libraries(${PROJECT_NAME}
     ${SFML_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}
+    ${X11_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     )
 
