@@ -96,7 +96,7 @@ World::World():
         std::make_pair("shaders/prepass.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)},
-        {std::make_pair("pos", 0), std::make_pair("g_tex", 1), std::make_pair("g_norm", 2)}),
+        {std::make_pair("pos", 0), std::make_pair("g_shininess", 1), std::make_pair("g_norm", 2)}),
     // _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
     //     std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
     //     std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
@@ -135,7 +135,7 @@ World::World():
     glBlendColor(1.0f, 1.0f, 1.0f, 0.1f);
     glEnable(GL_BLEND);
 
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     resize();
 
@@ -143,8 +143,11 @@ World::World():
     _ent_prepass.add_uniform("model_view_proj");
     _ent_prepass.add_uniform("model_view");
     _ent_prepass.add_uniform("normal_transform");
-    _ent_prepass.add_uniform("normal_map");
-    glUniform1i(_ent_prepass.get_uniform("normal_map"), 6);
+    _ent_prepass.add_uniform("material.shininess");
+    _ent_prepass.add_uniform("material.shininess_map");
+    _ent_prepass.add_uniform("material.normal_map");
+    glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 3);
+    glUniform1i(_ent_prepass.get_uniform("material.normal_map"), 6);
 
     /*
     _ent_shader.use();
@@ -387,12 +390,12 @@ void World::draw()
     */
     auto set_material = [this](const Material & mat)
     {
-        // glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
-        // glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
-        // glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
-        // glUniform1f(_ent_shader.get_uniform("material.shininess"), mat.shininess);
-        // glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
-        // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
+        // glUniform3fv(_ent_prepass.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
+        // glUniform3fv(_ent_prepass.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
+        // glUniform3fv(_ent_prepass.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
+        glUniform1f(_ent_prepass.get_uniform("material.shininess"), mat.shininess);
+        // glUniform3fv(_ent_prepass.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
+        // glUniform1f(_ent_prepass.get_uniform("material.reflectivity"), mat.reflectivity);
 
         // glActiveTexture(GL_TEXTURE0);
         // mat.ambient_map->bind();
@@ -400,8 +403,8 @@ void World::draw()
         // mat.diffuse_map->bind();
         // glActiveTexture(GL_TEXTURE2);
         // mat.specular_map->bind();
-        // glActiveTexture(GL_TEXTURE3);
-        // mat.shininess_map->bind();
+        glActiveTexture(GL_TEXTURE3);
+        mat.shininess_map->bind();
         // glActiveTexture(GL_TEXTURE4);
         // mat.emissive_map->bind();
         // glActiveTexture(GL_TEXTURE5);

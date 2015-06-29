@@ -28,10 +28,18 @@ in vec2 tex_coord;
 in vec3 normal_vec;
 in vec3 tangent;
 
-uniform sampler2D normal_map;
+// material vars
+struct Material
+{
+    float shininess;
+    sampler2D shininess_map; // greyscale
+    sampler2D normal_map;
+};
+
+uniform Material material;
 
 out vec4 g_pos;
-out vec4 g_tex;
+out vec4 g_shininess;
 out vec4 g_norm;
 
 vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, in vec2 tex_coord)
@@ -54,6 +62,6 @@ vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, i
 void main()
 {
     g_pos = vec4(pos, 1.0);
-    g_tex = vec4(tex_coord, 0.0, 1.0);
-    g_norm = vec4(norm_map_normal(normal_vec, tangent, normal_map, tex_coord), 1.0);
+    g_shininess = vec4(material.shininess * texture(material.shininess_map, tex_coord).r, 0.0, 0.0, 1.0);
+    g_norm = vec4(norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord), 1.0);
 }
