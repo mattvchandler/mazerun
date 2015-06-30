@@ -56,9 +56,13 @@ Spot_light::Spot_light(const bool enabled, const glm::vec3 & color, const bool c
     const float exponent, const float const_atten, const float linear_atten,
     const float quad_atten):
     Light(enabled, color, casts_shadow), pos(pos), dir(dir), cos_cutoff(cos_cutoff),
-    exponent(exponent), const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten)
+    exponent(exponent), const_atten(const_atten), linear_atten(linear_atten), quad_atten(quad_atten),
+    shadow_map(FBO::create_shadow_tex(512, 512)) // TODO: get the size from some constant, possibly config
 {
-    shadow_fbo = std::unique_ptr<Shadow_FBO>(new Shadow_FBO(512, 512)); // get the size from some constant, possibly config
+    shadow_fbo.bind();
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map->get_id(), 0);
+    glDrawBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 glm::mat4 Spot_light::shadow_view_mat()

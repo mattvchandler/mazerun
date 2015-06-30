@@ -105,9 +105,13 @@ World::World():
     // _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
     //     std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
     //     {std::make_pair("vert_pos", 0)}),
-    _g_fbo(1024, 1024),
-    _diffuse_fbo(1024, 1024),
-    _specular_fbo(1024, 1024)
+    // TODO: what should FBO sizes be?
+    _g_fbo_pos_tex(FBO::create_tex(1024, 1024)),
+    _g_fbo_shininess_tex(FBO::create_tex(1024, 1024)),
+    _g_fbo_normal_tex(FBO::create_tex(1024, 1024)),
+    _g_fbo_depth_tex(FBO::create_depth_tex(1024, 1024)),
+    _diffuse_fbo_tex(FBO::create_tex(1024, 1024)),
+    _specular_fbo_tex(FBO::create_tex(1024, 1024))
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
@@ -234,8 +238,39 @@ World::World():
     _shadow_map_shader.use();
     _shadow_map_shader.add_uniform("model_view_proj");
     */
-
     glUseProgram(0); // TODO get prev val?
+
+    // setup FBOs
+    _g_fbo.bind();
+
+    int i = 0;
+    for(auto tex_id: {_g_fbo_pos_tex->get_id(), _g_fbo_shininess_tex->get_id(), _g_fbo_normal_tex->get_id()})
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (i++), GL_TEXTURE_2D, tex_id, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
+
+    const GLenum buffs[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+    glDrawBuffers(4, buffs);
+
+    _g_fbo.verify();
+
+    _diffuse_fbo.bind();
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _diffuse_fbo_tex->get_id(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    _diffuse_fbo.verify();
+
+    _specular_fbo.bind();
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    _specular_fbo.verify();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     check_error("World::World");
 
     Message_locator::get().add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
@@ -418,9 +453,9 @@ void World::draw()
         mat.normal_map->bind();
     };
 
-    _g_fbo.bind_fbo();
+    _g_fbo.bind();
     _ent_prepass.use();
-    glViewport(0, 0, _g_fbo.get_width(), _g_fbo.get_height());
+    glViewport(0, 0, 1024, 1024); // TODO: how to get fbo size?
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for(auto & ent: _ents)
@@ -461,10 +496,10 @@ void World::draw()
     // TODO: shadow pass
 
     // Lighting pass
-    for(auto & ent: point_lights)
-    {
-        Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
-    }
+    // for(auto & ent: point_lights)
+    // {
+    //     Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
+    // }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, _win.getSize().x, _win.getSize().y);

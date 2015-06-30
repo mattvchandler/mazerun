@@ -85,7 +85,8 @@ public:
     float linear_atten;
     float quad_atten;
 
-    std::unique_ptr<Shadow_FBO> shadow_fbo; // TODO: may need different types for different lights (current Shadow_FBO will not work with point lights)
+    FBO shadow_fbo;
+    std::unique_ptr<Texture_2D> shadow_map; // TODO: may need different types for different lights (current Shadow_FBO will not work with point lights)
 };
 
 class Dir_light: public Light

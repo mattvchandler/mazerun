@@ -81,9 +81,16 @@ private:
     // Shader_prog _ent_shader;
     // Shader_prog _shadow_map_shader;
 
-    G_FBO _g_fbo;
+    FBO _g_fbo;
     FBO _diffuse_fbo;
     FBO _specular_fbo;
+
+    std::unique_ptr<Texture_2D> _g_fbo_pos_tex;
+    std::unique_ptr<Texture_2D> _g_fbo_shininess_tex;
+    std::unique_ptr<Texture_2D> _g_fbo_normal_tex;
+    std::unique_ptr<Texture_2D> _g_fbo_depth_tex; // TODO: should be renderbuffer
+    std::unique_ptr<Texture_2D> _diffuse_fbo_tex;
+    std::unique_ptr<Texture_2D> _specular_fbo_tex;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better

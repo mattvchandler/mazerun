@@ -31,66 +31,26 @@
 
 #include "opengl/texture.hpp"
 
-class Framebuffer: public sf::NonCopyable
+class FBO final: public sf::NonCopyable
 {
 public:
-    virtual ~Framebuffer();
-    virtual void bind_fbo() const;
-    GLuint get_fbo_id() const;
-
-    GLuint get_width() const;
-    GLuint get_height() const;
+    FBO();
+    virtual ~FBO();
+    virtual void bind() const;
+    GLuint get_id() const;
+    bool verify() const;
 
     static std::string error_string(GLenum error);
 
-protected:
-    Framebuffer(const GLuint width, const GLuint height);
+    static Texture_2D * create_tex(const GLuint width, const GLuint height);
+    static Texture_2D * create_depth_tex(const GLuint width, const GLuint height);
+    static Texture_2D * create_shadow_tex(const GLuint width, const GLuint height);
+
+private:
 
     GLuint _id;
-    GLuint _width, _height;
 };
 
-class FBO final: public Framebuffer
-{
-public:
-    FBO(const GLuint width, const GLuint height);
-    void bind_tex() const;
-    GLuint get_tex_id() const;
-private:
-    std::unique_ptr<Texture> _tex;
-};
-
-class Shadow_FBO final: public Framebuffer
-{
-public:
-    Shadow_FBO(const GLuint width, const GLuint height);
-
-    void bind_tex() const;
-    GLuint get_tex_id() const;
-
-private:
-    std::unique_ptr<Texture> _tex;
-};
-
-class G_FBO final: public Framebuffer
-{
-public:
-    G_FBO(const GLuint width, const GLuint height);
-
-    void bind_pos_tex() const;
-    void bind_shininess_tex() const;
-    void bind_normal_tex() const;
-    void bind_depth_tex() const;
-    GLuint get_pos_tex_id() const;
-    GLuint get_shininess_tex_id() const;
-    GLuint get_normal_tex_id() const;
-    GLuint get_depth_tex_id() const;
-
-private:
-    std::unique_ptr<Texture> _pos_tex;
-    std::unique_ptr<Texture> _shininess_tex;
-    std::unique_ptr<Texture> _normal_tex;
-    std::unique_ptr<Texture> _depth_tex;
-};
+// TODO: renderbuffer class
 
 #endif // FRAMEBUFFER_HPP
