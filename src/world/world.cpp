@@ -56,8 +56,8 @@ thread_local std::random_device rng;
 
 extern std::atomic_bool interrupted; // defined in main.cpp
 
-const unsigned int max_point_lights = 10; // TODO: get from config?
-const unsigned int max_spot_lights = 10;
+// const unsigned int max_point_lights = 10; // TODO: get from config?
+// const unsigned int max_spot_lights = 10;
 
 Glew_init::Glew_init()
 {
@@ -105,7 +105,9 @@ World::World():
     // _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
     //     std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
     //     {std::make_pair("vert_pos", 0)}),
-    _g_fbo(1024, 1024)
+    _g_fbo(1024, 1024),
+    _diffuse_fbo(1024, 1024),
+    _specular_fbo(1024, 1024)
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
@@ -249,14 +251,17 @@ void World::draw()
     _shadow_map_shader.use();
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2.0f, 4.0f);
+    */
 
-    std::size_t num_point_lights = 0;
-    std::size_t num_spot_lights = 0;
+    // glm::mat4 spot_shadow_mat[max_spot_lights];
+    std::vector<Entity *> point_lights;
+    std::vector<Entity *> spot_lights;
+    std::vector<Entity *> models;
+    point_lights.reserve(_ents.size());
+    spot_lights.reserve(_ents.size());
+    models.reserve(_ents.size());
 
-    glm::mat4 spot_shadow_mat[max_spot_lights];
-    Entity * point_lights[max_point_lights];
-    Entity * spot_lights[max_spot_lights];
-
+    /*
     const glm::mat4 scale_bias_mat(
         glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
         glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
@@ -423,6 +428,7 @@ void World::draw()
         auto model = ent.model();
         if(model)
         {
+            models.push_back(&ent);
             glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
             glm::mat4 model_view_proj = _proj * model_view;
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
@@ -433,6 +439,31 @@ void World::draw()
 
             model->draw(set_material);
         }
+
+        // collect lighting info
+        auto light = ent.light();
+        if(light && light->enabled)
+        {
+            Point_light * point_light = dynamic_cast<Point_light *>(light);
+            if(point_light)
+            {
+                point_lights.push_back(&ent);
+            }
+
+            Spot_light * spot_light = dynamic_cast<Spot_light *>(light);
+            if(spot_light)
+            {
+                spot_lights.push_back(&ent);
+            }
+        }
+    }
+
+    // TODO: shadow pass
+
+    // Lighting pass
+    for(auto & ent: point_lights)
+    {
+        Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

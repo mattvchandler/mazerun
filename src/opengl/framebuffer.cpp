@@ -84,6 +84,52 @@ Framebuffer::Framebuffer(const GLuint width, const GLuint height):
     Logger_locator::get()(Logger::TRACE, "Generated GL FBO: " + std::to_string(_id));
 }
 
+FBO::FBO(const GLuint width, const GLuint height):
+    Framebuffer(width, height)
+{
+    _tex = std::unique_ptr<Texture>(new Texture_2D);
+
+    bind_tex();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _width, _height, 0,
+        GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    bind_fbo();
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, get_tex_id(), 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::string error = error_string(status);
+        Logger_locator::get()(Logger::WARN, "Incomplete framebuffer: " + error);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    check_error("FBO::FBO");
+}
+
+void FBO::bind_tex() const
+{
+    _tex->bind();
+}
+
+GLuint FBO::get_tex_id() const
+{
+    return _tex->get_id();
+}
+
 Shadow_FBO::Shadow_FBO(const GLuint width, const GLuint height):
     Framebuffer(width, height)
 {

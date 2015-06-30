@@ -82,6 +82,8 @@ private:
     // Shader_prog _shadow_map_shader;
 
     G_FBO _g_fbo;
+    FBO _diffuse_fbo;
+    FBO _specular_fbo;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better

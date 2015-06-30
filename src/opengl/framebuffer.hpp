@@ -50,6 +50,16 @@ protected:
     GLuint _width, _height;
 };
 
+class FBO final: public Framebuffer
+{
+public:
+    FBO(const GLuint width, const GLuint height);
+    void bind_tex() const;
+    GLuint get_tex_id() const;
+private:
+    std::unique_ptr<Texture> _tex;
+};
+
 class Shadow_FBO final: public Framebuffer
 {
 public:
