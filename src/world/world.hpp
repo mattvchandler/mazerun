@@ -41,6 +41,7 @@
 #include "opengl/shader_prog.hpp"
 #include "util/message.hpp"
 #include "world/entity.hpp"
+#include "world/quad.hpp"
 #include "world/skybox.hpp"
 
 class Glew_init final: public sf::NonCopyable
@@ -78,12 +79,13 @@ private:
     Skybox _skybox;
     Dir_light _sunlight;
     Shader_prog _ent_prepass;
+    Shader_prog _point_light_prog;
+    Shader_prog _fullscreen_tex;
     // Shader_prog _ent_shader;
     // Shader_prog _shadow_map_shader;
 
     FBO _g_fbo;
-    FBO _diffuse_fbo;
-    FBO _specular_fbo;
+    FBO _lighting_fbo;
 
     std::unique_ptr<Texture_2D> _g_fbo_pos_tex;
     std::unique_ptr<Texture_2D> _g_fbo_shininess_tex;
@@ -91,6 +93,8 @@ private:
     std::unique_ptr<Texture_2D> _g_fbo_depth_tex; // TODO: should be renderbuffer
     std::unique_ptr<Texture_2D> _diffuse_fbo_tex;
     std::unique_ptr<Texture_2D> _specular_fbo_tex;
+
+    Quad * _quad;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better

@@ -97,6 +97,13 @@ World::World():
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)},
         {std::make_pair("pos", 0), std::make_pair("g_shininess", 1), std::make_pair("g_norm", 2)}),
+    _point_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: vert shader may need shadow matrix input
+        std::make_pair("shaders/point_light.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
     // _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
     //     std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
     //     std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
@@ -111,7 +118,8 @@ World::World():
     _g_fbo_normal_tex(FBO::create_tex(1024, 1024)),
     _g_fbo_depth_tex(FBO::create_depth_tex(1024, 1024)),
     _diffuse_fbo_tex(FBO::create_tex(1024, 1024)),
-    _specular_fbo_tex(FBO::create_tex(1024, 1024))
+    _specular_fbo_tex(FBO::create_tex(1024, 1024)),
+    _quad(Quad::create())
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
@@ -145,6 +153,7 @@ World::World():
 
     resize();
 
+    // Uniform setup
     _ent_prepass.use();
     _ent_prepass.add_uniform("model_view_proj");
     _ent_prepass.add_uniform("model_view");
@@ -152,8 +161,29 @@ World::World():
     _ent_prepass.add_uniform("material.shininess");
     _ent_prepass.add_uniform("material.shininess_map");
     _ent_prepass.add_uniform("material.normal_map");
-    glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 3);
+    glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 3); // TODO: 0 and 1
     glUniform1i(_ent_prepass.get_uniform("material.normal_map"), 6);
+
+    _point_light_prog.use();
+    _point_light_prog.add_uniform("point_light.base.color");
+    // _point_light_prog.add_uniform("point_light.base.casts_shadow");
+    _point_light_prog.add_uniform("point_light.pos_eye");
+    _point_light_prog.add_uniform("point_light.const_atten");
+    _point_light_prog.add_uniform("point_light.linear_atten");
+    _point_light_prog.add_uniform("point_light.quad_atten");
+    _point_light_prog.add_uniform("pos_map");
+    _point_light_prog.add_uniform("shininess_map");
+    _point_light_prog.add_uniform("normal_map");
+    _point_light_prog.add_uniform("viewport_size");
+    _point_light_prog.add_uniform("cam_light_forward");
+    glUniform1i(_point_light_prog.get_uniform("pos_map"), 0);
+    glUniform1i(_point_light_prog.get_uniform("shininess_map"), 1);
+    glUniform1i(_point_light_prog.get_uniform("normal_map"), 2);
+
+    _fullscreen_tex.use();
+    _fullscreen_tex.add_uniform("viewport_size");
+    _fullscreen_tex.add_uniform("tex");
+    glUniform1i(_fullscreen_tex.get_uniform("tex"), 0);
 
     /*
     _ent_shader.use();
@@ -253,21 +283,14 @@ World::World():
 
     _g_fbo.verify();
 
-    _diffuse_fbo.bind();
+    _lighting_fbo.bind();
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _diffuse_fbo_tex->get_id(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawBuffers(2, buffs);
 
-    _diffuse_fbo.verify();
-
-    _specular_fbo.bind();
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-    _specular_fbo.verify();
+    _lighting_fbo.verify();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -453,6 +476,8 @@ void World::draw()
         mat.normal_map->bind();
     };
 
+    glm::vec2 viewport_size = {(float)1024, (float)1024}; // TODO: how to get fbo size?
+
     _g_fbo.bind();
     _ent_prepass.use();
     glViewport(0, 0, 1024, 1024); // TODO: how to get fbo size?
@@ -493,17 +518,60 @@ void World::draw()
         }
     }
 
+    glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
+
     // TODO: shadow pass
 
     // Lighting pass
-    // for(auto & ent: point_lights)
-    // {
-    //     Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
-    // }
+    _lighting_fbo.bind();
+    _point_light_prog.use();
+
+    glActiveTexture(GL_TEXTURE0);
+    _g_fbo_pos_tex->bind();
+    glActiveTexture(GL_TEXTURE1);
+    _g_fbo_shininess_tex->bind();
+    glActiveTexture(GL_TEXTURE2);
+    _g_fbo_normal_tex->bind();
+
+    glViewport(0, 0, 1024, 1024);
+
+    glUniform2fv(_point_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    // TODO: disable depth writes, change depth test
+    // TODO: enable additive blending (can we do this in the init stage?)
+    for(auto & ent: point_lights)
+    {
+        Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
+
+        glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
+        glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light->pos, 1.0f));
+
+        glUniform3fv(_point_light_prog.get_uniform("point_light.base.color"), 1, &point_light->color[0]);
+        glUniform3fv(_point_light_prog.get_uniform("point_light.pos_eye"), 1, &point_light_pos_eye[0]);
+        glUniform1f(_point_light_prog.get_uniform("point_light.const_atten"), point_light->const_atten);
+        glUniform1f(_point_light_prog.get_uniform("point_light.linear_atten"), point_light->linear_atten);
+        glUniform1f(_point_light_prog.get_uniform("point_light.quad_atten"), point_light->quad_atten);
+
+        _quad->draw([](const Material & mat){}); // TODO: sphere or smaller quad instead?
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    viewport_size = {(float)_win.getSize().x, (float)_win.getSize().y};
     glViewport(0, 0, _win.getSize().x, _win.getSize().y);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    _fullscreen_tex.use();
+    glUniform2fv(_fullscreen_tex.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glActiveTexture(GL_TEXTURE0);
+    // _g_fbo_normal_tex->bind();
+    _diffuse_fbo_tex->bind();
+
+    _quad->draw([](const Material & mat){});
+
+    // TODO: final pass (material)
 
     _skybox.draw(*_cam, _proj);
 

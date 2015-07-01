@@ -64,10 +64,10 @@ Quad::Quad(): Model(false)
 
     std::vector<glm::vec3> vert_pos =
     {
-        glm::vec3(-1.0f, 1.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 0.0f),
         glm::vec3(-1.0f, -1.0f, 0.0f),
         glm::vec3(1.0f, -1.0f, 0.0f),
+        glm::vec3(-1.0f, 1.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 0.0f)
     };
 
     std::vector<glm::vec2> vert_tex_coords
