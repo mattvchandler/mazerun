@@ -1,4 +1,4 @@
-// point_light.frag
+// spot_light.frag
 // fragment shader for most entities
 
 // Copyright 2015 Matthew Chandler
@@ -30,20 +30,24 @@ struct Base_light
     bool casts_shadow; // TODO: needed?
 };
 
-struct Point_light
+struct Spot_light
 {
     Base_light base;
     vec3 pos_eye;
+    vec3 dir_eye;
+    float cos_cutoff;
+    float exponent;
     float const_atten;
     float linear_atten;
     float quad_atten;
+    mat4 shadow_mat;
 };
 
-void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in float shininess, in Point_light point_light,
+void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
+    in float shininess, in Spot_light spot_light,
     out vec3 diffuse, out vec3 specular);
 
-uniform Point_light point_light;
+uniform Spot_light spot_light;
 
 uniform sampler2D pos_map;
 uniform sampler2D shininess_map;
@@ -66,7 +70,7 @@ void main()
 
     vec3 diffuse_tmp, specular_tmp;
 
-    calc_point_lighting(pos, cam_light_forward, normal_vec, shininess, point_light,
+    calc_spot_lighting(pos, cam_light_forward, normal_vec, shininess, spot_light,
         diffuse_tmp, specular_tmp);
 
     diffuse = vec4(diffuse_tmp, 1.0);

@@ -1,4 +1,4 @@
-// point_light.frag
+// dir_light.frag
 // fragment shader for most entities
 
 // Copyright 2015 Matthew Chandler
@@ -30,28 +30,21 @@ struct Base_light
     bool casts_shadow; // TODO: needed?
 };
 
-struct Point_light
+struct Dir_light
 {
     Base_light base;
-    vec3 pos_eye;
-    float const_atten;
-    float linear_atten;
-    float quad_atten;
+    vec3 dir;
+    vec3 half_vec;
 };
 
-void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in float shininess, in Point_light point_light,
-    out vec3 diffuse, out vec3 specular);
+void calc_dir_lighting(in vec3 normal_vec, in float shininess,
+    in Dir_light dir_light, out vec3 diffuse, out vec3 specular);
 
-uniform Point_light point_light;
+uniform Dir_light dir_light;
 
-uniform sampler2D pos_map;
 uniform sampler2D shininess_map;
 uniform sampler2D normal_map;
 uniform vec2 viewport_size;
-
-// camera facing direction (always (0, 0, 1) when viewed from camera)
-uniform vec3 cam_light_forward; // TODO: set as const?
 
 out vec4 diffuse;
 out vec4 specular;
@@ -60,13 +53,12 @@ void main()
 {
     // TODO: shadow map lookup
     vec2 map_coords = gl_FragCoord.xy / viewport_size;
-    vec3 pos = texture(pos_map, map_coords).xyz;
     float shininess = texture(shininess_map, map_coords).x;
     vec3 normal_vec = texture(normal_map, map_coords).xyz;
 
     vec3 diffuse_tmp, specular_tmp;
 
-    calc_point_lighting(pos, cam_light_forward, normal_vec, shininess, point_light,
+    calc_dir_lighting(normal_vec, shininess, dir_light,
         diffuse_tmp, specular_tmp);
 
     diffuse = vec4(diffuse_tmp, 1.0);

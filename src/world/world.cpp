@@ -101,6 +101,14 @@ World::World():
         std::make_pair("shaders/point_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
+    _spot_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: vert shader may need shadow matrix input
+        std::make_pair("shaders/spot_light.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: vert shader may need shadow matrix input
+        std::make_pair("shaders/dir_light.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
     _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
@@ -136,22 +144,17 @@ World::World():
     // _win.setFramerateLimit(60);
     // TODO _win.setIcon
 
-    glEnable(GL_DEPTH_TEST);
     glDepthRangef(0.0f, 1.0f);
     glLineWidth(5.0f);
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glEnable(GL_POLYGON_SMOOTH);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendColor(1.0f, 1.0f, 1.0f, 0.1f);
-    glEnable(GL_BLEND);
-
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     resize();
+
+    const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
 
     // Uniform setup
     _ent_prepass.use();
@@ -179,6 +182,38 @@ World::World():
     glUniform1i(_point_light_prog.get_uniform("pos_map"), 0);
     glUniform1i(_point_light_prog.get_uniform("shininess_map"), 1);
     glUniform1i(_point_light_prog.get_uniform("normal_map"), 2);
+    glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
+
+    _spot_light_prog.use();
+    _spot_light_prog.add_uniform("spot_light.base.color");
+    // _spot_light_prog.add_uniform("spot_light.base.casts_shadow");
+    _spot_light_prog.add_uniform("spot_light.pos_eye");
+    _spot_light_prog.add_uniform("spot_light.dir_eye");
+    _spot_light_prog.add_uniform("spot_light.cos_cutoff");
+    _spot_light_prog.add_uniform("spot_light.exponent");
+    _spot_light_prog.add_uniform("spot_light.const_atten");
+    _spot_light_prog.add_uniform("spot_light.linear_atten");
+    _spot_light_prog.add_uniform("spot_light.quad_atten");
+    _spot_light_prog.add_uniform("pos_map");
+    _spot_light_prog.add_uniform("shininess_map");
+    _spot_light_prog.add_uniform("normal_map");
+    _spot_light_prog.add_uniform("viewport_size");
+    _spot_light_prog.add_uniform("cam_light_forward");
+    glUniform1i(_spot_light_prog.get_uniform("pos_map"), 0);
+    glUniform1i(_spot_light_prog.get_uniform("shininess_map"), 1);
+    glUniform1i(_spot_light_prog.get_uniform("normal_map"), 2);
+    glUniform3fv(_spot_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
+
+    _dir_light_prog.use();
+    _dir_light_prog.add_uniform("dir_light.base.color");
+    // _dir_light_prog.add_uniform("dir_light.base.casts_shadow");
+    _dir_light_prog.add_uniform("dir_light.dir");
+    _dir_light_prog.add_uniform("dir_light.half_vec");
+    _dir_light_prog.add_uniform("shininess_map");
+    _dir_light_prog.add_uniform("normal_map");
+    _dir_light_prog.add_uniform("viewport_size");
+    glUniform1i(_dir_light_prog.get_uniform("shininess_map"), 1);
+    glUniform1i(_dir_light_prog.get_uniform("normal_map"), 2);
 
     _fullscreen_tex.use();
     _fullscreen_tex.add_uniform("viewport_size");
@@ -287,7 +322,7 @@ World::World():
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _diffuse_fbo_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
     glDrawBuffers(2, buffs);
 
     _lighting_fbo.verify();
@@ -303,7 +338,8 @@ World::World():
     // need: picking shader, target ent ptr
 void World::draw()
 {
-    glClearDepth(1.0f);
+    const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
+
     /*
     // shadow map pass
     _shadow_map_shader.use();
@@ -479,8 +515,15 @@ void World::draw()
     glm::vec2 viewport_size = {(float)1024, (float)1024}; // TODO: how to get fbo size?
 
     _g_fbo.bind();
-    _ent_prepass.use();
     glViewport(0, 0, 1024, 1024); // TODO: how to get fbo size?
+
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_BLEND);
+
+    _ent_prepass.use();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for(auto & ent: _ents)
@@ -518,13 +561,16 @@ void World::draw()
         }
     }
 
-    glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
-
     // TODO: shadow pass
 
     // Lighting pass
     _lighting_fbo.bind();
-    _point_light_prog.use();
+    glViewport(0, 0, 1024, 1024);
+
+    glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
 
     glActiveTexture(GL_TEXTURE0);
     _g_fbo_pos_tex->bind();
@@ -533,14 +579,12 @@ void World::draw()
     glActiveTexture(GL_TEXTURE2);
     _g_fbo_normal_tex->bind();
 
-    glViewport(0, 0, 1024, 1024);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    _point_light_prog.use();
 
     glUniform2fv(_point_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
-    glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
-    glClear(GL_COLOR_BUFFER_BIT);
-    // TODO: disable depth writes, change depth test
-    // TODO: enable additive blending (can we do this in the init stage?)
     for(auto & ent: point_lights)
     {
         Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
@@ -557,23 +601,74 @@ void World::draw()
         _quad->draw([](const Material & mat){}); // TODO: sphere or smaller quad instead?
     }
 
+    _spot_light_prog.use();
+
+    glUniform2fv(_spot_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
+    for(auto & ent: spot_lights)
+    {
+        Spot_light * spot_light = dynamic_cast<Spot_light *>(ent->light());
+
+        glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
+        glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
+
+        glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+        glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
+
+        glUniform3fv(_spot_light_prog.get_uniform("spot_light.base.color"), 1, &spot_light->color[0]);
+        glUniform3fv(_spot_light_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
+        glUniform3fv(_spot_light_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
+        glUniform1f(_spot_light_prog.get_uniform("spot_light.cos_cutoff"), spot_light->cos_cutoff);
+        glUniform1f(_spot_light_prog.get_uniform("spot_light.exponent"), spot_light->exponent);
+        glUniform1f(_spot_light_prog.get_uniform("spot_light.const_atten"), spot_light->const_atten);
+        glUniform1f(_spot_light_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
+        glUniform1f(_spot_light_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
+
+        _quad->draw([](const Material & mat){}); // TODO: sphere or smaller quad instead?
+    }
+
+    if(_sunlight.enabled)
+    {
+        _dir_light_prog.use();
+
+        glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam->view_mat()))) *
+            glm::normalize(-_sunlight.dir));
+        glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
+
+        glUniform3fv(_dir_light_prog.get_uniform("dir_light.base.color"), 1, &_sunlight.color[0]); // TODO: Also from skybox?
+        glUniform3fv(_dir_light_prog.get_uniform("dir_light.dir"), 1, &sunlight_dir[0]);
+        glUniform3fv(_dir_light_prog.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
+
+        _quad->draw([](const Material & mat){}); // TODO: sphere or smaller quad instead?
+    }
+
+    glUniform2fv(_dir_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    viewport_size = {(float)_win.getSize().x, (float)_win.getSize().y};
     glViewport(0, 0, _win.getSize().x, _win.getSize().y);
+    viewport_size = {(float)_win.getSize().x, (float)_win.getSize().y};
+
+    glDisable(GL_BLEND);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     _fullscreen_tex.use();
     glUniform2fv(_fullscreen_tex.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
     glActiveTexture(GL_TEXTURE0);
-    // _g_fbo_normal_tex->bind();
     _diffuse_fbo_tex->bind();
 
     _quad->draw([](const Material & mat){});
 
     // TODO: final pass (material)
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    // glDepthFunc(GL_LEQUAL);
 
+    glDepthFunc(GL_LESS);
     _skybox.draw(*_cam, _proj);
+
+    // TODO: antialiasing?
 
     _win.display();
     check_error("World::draw - end");

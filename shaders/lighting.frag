@@ -47,7 +47,7 @@ struct Material
 struct Base_light
 {
     vec3 color;
-    bool casts_shadow;
+    bool casts_shadow; // TODO: needed?
 };
 
 struct Point_light
@@ -80,7 +80,7 @@ struct Dir_light
 };
 
 void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
-    in float shininess, in Base_light base, in float atten,
+    in float shininess, in vec3 color, in float atten,
     out vec3 diffuse, out vec3 specular)
 {
     // calculate ammt of diffuse and specular shading
@@ -95,9 +95,9 @@ void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
         specular_mul = pow(specular_mul, shininess);
 
     // diffuse light color
-    diffuse = base.color * diffuse_mul * atten;
+    diffuse = color * diffuse_mul * atten;
     // specular light color
-    specular = base.color * specular_mul * atten;
+    specular = color * specular_mul * atten;
 }
 
 float calc_attenuation(in float const_atten, in float linear_atten, in float quad_atten, in float dist)
@@ -116,13 +116,13 @@ void calc_dist_dir(in vec3 light_pos_eye, in vec3 pos, out vec3 dir, out float d
 }
 
 void calc_point_spot_light(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in vec3 dir, in float atten, in float shininess, in Base_light base,
+    in vec3 dir, in float atten, in float shininess, in vec3 color,
     out vec3 diffuse, out vec3 specular)
 {
     // midway between light and camera - for reflection calc
     vec3 half_vec = normalize(dir + forward);
 
-    calc_common_lighting(normal_vec, dir, half_vec, shininess, base, atten,
+    calc_common_lighting(normal_vec, dir, half_vec, shininess, color, atten,
         diffuse, specular);
 }
 
@@ -139,7 +139,7 @@ void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
         point_light.quad_atten, dist);
 
     calc_point_spot_light(pos, forward, normal_vec, dir, atten, shininess,
-        point_light.base, diffuse, specular);
+        point_light.base.color, diffuse, specular);
 }
 
 void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
@@ -162,12 +162,12 @@ void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
         atten *= pow(spot_cos, spot_light.exponent);
 
     calc_point_spot_light(pos, forward, normal_vec, dir, atten, shininess,
-        spot_light.base, diffuse, specular);
+        spot_light.base.color, diffuse, specular);
 }
 
 void calc_dir_lighting(in vec3 normal_vec, in float shininess,
     in Dir_light dir_light, out vec3 diffuse, out vec3 specular)
 {
     calc_common_lighting(normal_vec, dir_light.dir, dir_light.half_vec, shininess,
-        dir_light.base, 1.0, diffuse, specular);
+        dir_light.base.color, 1.0, diffuse, specular);
 }
