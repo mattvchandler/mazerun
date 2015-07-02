@@ -604,6 +604,8 @@ void World::draw()
     // main drawing pass
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-2.0f, 1.0f);
 
     _ent_shader.use();
 
@@ -645,6 +647,7 @@ void World::draw()
 
         model->draw(set_material);
     }
+    glDisable(GL_POLYGON_OFFSET_FILL);
 
     _skybox.draw(*_cam, _proj);
 
