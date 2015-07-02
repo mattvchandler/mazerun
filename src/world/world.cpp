@@ -576,10 +576,10 @@ void World::draw()
         glUniform3fv(_dir_light_prog.get_uniform("dir_light.dir"), 1, &sunlight_dir[0]);
         glUniform3fv(_dir_light_prog.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
 
+        glUniform2fv(_dir_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
         _quad->draw([](const Material & mat){});
     }
-
-    glUniform2fv(_dir_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, _win.getSize().x, _win.getSize().y);
