@@ -1,5 +1,5 @@
 // point_light.frag
-// fragment shader for most entities
+// point light pass
 
 // Copyright 2015 Matthew Chandler
 

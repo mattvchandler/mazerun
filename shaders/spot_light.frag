@@ -1,5 +1,5 @@
 // spot_light.frag
-// fragment shader for most entities
+// spot light pass
 
 // Copyright 2015 Matthew Chandler
 

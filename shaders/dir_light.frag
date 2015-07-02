@@ -1,5 +1,5 @@
 // dir_light.frag
-// fragment shader for most entities
+// directional light pass
 
 // Copyright 2015 Matthew Chandler
 
