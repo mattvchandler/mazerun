@@ -28,117 +28,34 @@ struct Material
     vec3 ambient_color;
     vec3 diffuse_color;
     vec3 specular_color;
-    float shininess;
     vec3 emissive_color;
     // float reflectivity;
 
     sampler2D ambient_map;
     sampler2D diffuse_map;
     sampler2D specular_map;
-    sampler2D shininess_map; // greyscale
     sampler2D emissive_map;
     // sampler2D reflectivity_map; // greyscale
-    sampler2D normal_map;
 };
 
-struct Base_light
-{
-    bool enabled;
-    vec3 color;
-    bool casts_shadow;
-};
-
-struct Point_light
-{
-    Base_light base;
-    vec3 pos_eye;
-    float const_atten;
-    float linear_atten;
-    float quad_atten;
-};
-
-struct Spot_light
-{
-    Base_light base;
-    vec3 pos_eye;
-    vec3 dir_eye;
-    float cos_cutoff;
-    float exponent;
-    float const_atten;
-    float linear_atten;
-    float quad_atten;
-    mat4 shadow_mat;
-};
-
-struct Dir_light
-{
-    Base_light base;
-    vec3 dir;
-    vec3 half_vec;
-};
-
-vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, in vec2 tex_coord);
-
-void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in Material material, in vec2 tex_coord, in Point_light point_light,
-    out vec3 scattered, out vec3 reflected);
-
-void calc_spot_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
-    in Material material, in vec2 tex_coord, in Spot_light spot_light,
-    out vec3 scattered, out vec3 reflected);
-
-void calc_dir_lighting(in vec3 normal_vec, in Material material, in vec2 tex_coord,
-    in Dir_light dir_light, out vec3 scattered, out vec3 reflected);
-
-in vec3 pos;
 in vec2 tex_coord;
-in vec3 normal_vec;
-in vec3 tangent;
 
 // material vars
 uniform Material material;
 
-// lighting vars
 uniform vec3 ambient_light_color;
-const int max_point_lights = 10; // TODO: set by config?
-const int max_spot_lights = 10; // TODO: set by config?
-uniform int num_point_lights;
-uniform int num_spot_lights;
-uniform Point_light point_lights[max_point_lights];
-uniform Spot_light spot_lights[max_spot_lights];
-uniform Dir_light dir_light;
 
-// shadow vars
-in vec4 spot_shadow_coords[max_spot_lights];
-uniform sampler2DShadow shadow_map0;
-uniform sampler2DShadow shadow_map1;
-
-// camera facing direction (always (0, 0, 1) when viewed from camera)
-uniform vec3 cam_light_forward; // TODO: set as const?
+uniform sampler2D diffuse_fbo_tex;
+uniform sampler2D specular_fbo_tex;
+uniform vec2 viewport_size;
 
 out vec4 frag_color;
 
 void main()
 {
-    vec3 scattered = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color;
-    vec3 reflected = vec3(0.0);
-    vec3 tmp_scattered, tmp_reflected;
-
-    vec3 mapped_normal = norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord);
-
-    for(int i = 0; i < num_point_lights && i < max_point_lights; ++i)
-    {
-        calc_point_lighting(pos, cam_light_forward, mapped_normal, material, tex_coord,
-            point_lights[i], tmp_scattered, tmp_reflected);
-        scattered += tmp_scattered;
-        reflected += tmp_reflected;
-    }
-
+    /*
     for(int i = 0; i < num_spot_lights && i < max_spot_lights; ++i)
     {
-        calc_spot_lighting(pos, cam_light_forward, mapped_normal, material, tex_coord,
-            spot_lights[i], tmp_scattered, tmp_reflected);
-
         float shadow = 1.0;
         if(spot_lights[i].base.casts_shadow && i < 2)
         {
@@ -152,15 +69,17 @@ void main()
         scattered += shadow * tmp_scattered;
         reflected += shadow * tmp_reflected;
     }
+    */
 
-    calc_dir_lighting(mapped_normal, material, tex_coord, dir_light, tmp_scattered,
-        tmp_reflected);
-    scattered += tmp_scattered;
-    reflected += tmp_reflected;
+    vec2 map_coords = gl_FragCoord.xy / viewport_size;
 
-    // add to material color (from texture) to lighting for final color
+    vec3 diffuse = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color +
+        texture(diffuse_fbo_tex, map_coords).rgb;
+    vec3 specular = texture(specular_fbo_tex, map_coords).rgb;
+
+    // add to material color (from textures) to lighting for final color
     vec3 rgb = min(material.emissive_color * texture(material.emissive_map, tex_coord).rgb +
-        material.diffuse_color * texture(material.diffuse_map, tex_coord).rgb * scattered +
-        material.specular_color * texture(material.specular_map, tex_coord).rgb * reflected, vec3(1.0));
+        material.diffuse_color * texture(material.diffuse_map, tex_coord).rgb * diffuse +
+        material.specular_color * texture(material.specular_map, tex_coord).rgb * specular, vec3(1.0));
     frag_color = vec4(rgb, 1.0);
 }

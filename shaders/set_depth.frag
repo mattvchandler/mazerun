@@ -1,5 +1,5 @@
-// ents.vert
-// vertex shader for most entites
+// set_depth.frag
+// set the depth buffer from a texture
 
 // Copyright 2015 Matthew Chandler
 
@@ -23,14 +23,13 @@
 
 #version 130
 
-in vec3 vert_pos;
-in vec2 vert_tex_coords;
+uniform vec2 viewport_size;
+uniform sampler2D tex;
 
-uniform mat4 model_view_proj;
-out vec2 tex_coord;
+out vec4 frag_color;
 
 void main()
 {
-    tex_coord = vert_tex_coords;
-    gl_Position = model_view_proj * vec4(vert_pos, 1.0);
+    gl_FragDepth = texture(tex, gl_FragCoord.xy / viewport_size).r;
+    frag_color = vec4(0.0); // ignored when no color buffer bound
 }

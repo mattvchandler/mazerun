@@ -102,9 +102,6 @@ Skybox::Skybox():
 
 void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 {
-    GLint depth_func_old;
-    glGetIntegerv(GL_DEPTH_FUNC, &depth_func_old);
-
     glDepthFunc(GL_LEQUAL);
 
     _prog.use();
@@ -120,8 +117,6 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 
     glBindVertexArray(0); // get prev val?
     glUseProgram(0); // get prev val?
-
-    glDepthFunc(depth_func_old);
 
     check_error("Skybox::draw");
 }

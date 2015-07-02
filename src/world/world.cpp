@@ -109,24 +109,25 @@ World::World():
         std::make_pair("shaders/dir_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
+    _set_depth_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/set_depth.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    // _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
-    //     std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER),
-    //     std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-    //     {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
-    //     std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
+    _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
     // _shadow_map_shader({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
     //     std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
     //     {std::make_pair("vert_pos", 0)}),
     // TODO: what should FBO sizes be?
-    _g_fbo_pos_tex(FBO::create_tex(1024, 1024)),
-    _g_fbo_shininess_tex(FBO::create_tex(1024, 1024)),
-    _g_fbo_normal_tex(FBO::create_tex(1024, 1024)),
-    _g_fbo_depth_tex(FBO::create_depth_tex(1024, 1024)),
-    _diffuse_fbo_tex(FBO::create_tex(1024, 1024)),
-    _specular_fbo_tex(FBO::create_tex(1024, 1024)),
+    _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed?
+        std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _g_fbo_pos_tex(FBO::create_tex(800, 600)),
+    _g_fbo_shininess_tex(FBO::create_tex(800, 600)),
+    _g_fbo_normal_tex(FBO::create_tex(800, 600)),
+    _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
+    _diffuse_fbo_tex(FBO::create_tex(800, 600)),
+    _specular_fbo_tex(FBO::create_tex(800, 600)),
     _quad(Quad::create())
 {
     Logger_locator::get()(Logger::TRACE, "World init starting...");
@@ -164,8 +165,8 @@ World::World():
     _ent_prepass.add_uniform("material.shininess");
     _ent_prepass.add_uniform("material.shininess_map");
     _ent_prepass.add_uniform("material.normal_map");
-    glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 3); // TODO: 0 and 1
-    glUniform1i(_ent_prepass.get_uniform("material.normal_map"), 6);
+    glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 0);
+    glUniform1i(_ent_prepass.get_uniform("material.normal_map"), 1);
 
     _point_light_prog.use();
     _point_light_prog.add_uniform("point_light.base.color");
@@ -215,94 +216,47 @@ World::World():
     glUniform1i(_dir_light_prog.get_uniform("shininess_map"), 1);
     glUniform1i(_dir_light_prog.get_uniform("normal_map"), 2);
 
-    _fullscreen_tex.use();
-    _fullscreen_tex.add_uniform("viewport_size");
-    _fullscreen_tex.add_uniform("tex");
-    glUniform1i(_fullscreen_tex.get_uniform("tex"), 0);
+    _set_depth_prog.use();
+    _set_depth_prog.add_uniform("viewport_size");
+    _set_depth_prog.add_uniform("tex");
+    glUniform1i(_set_depth_prog.get_uniform("tex"), 0);
 
-    /*
     _ent_shader.use();
     _ent_shader.add_uniform("model_view_proj");
-    _ent_shader.add_uniform("model_view");
-    _ent_shader.add_uniform("model");
-    _ent_shader.add_uniform("normal_transform");
-
     _ent_shader.add_uniform("material.ambient_color");
     _ent_shader.add_uniform("material.diffuse_color");
     _ent_shader.add_uniform("material.specular_color");
-    _ent_shader.add_uniform("material.shininess");
     _ent_shader.add_uniform("material.emissive_color");
     // _ent_shader.add_uniform("material.reflectivity");
-
     _ent_shader.add_uniform("material.ambient_map");
     _ent_shader.add_uniform("material.diffuse_map");
     _ent_shader.add_uniform("material.specular_map");
-    _ent_shader.add_uniform("material.shininess_map");
     _ent_shader.add_uniform("material.emissive_map");
     // _ent_shader.add_uniform("material.reflectivity_map");
-    _ent_shader.add_uniform("material.normal_map");
-
     _ent_shader.add_uniform("ambient_light_color");
-    _ent_shader.add_uniform("num_point_lights");
-    _ent_shader.add_uniform("num_spot_lights");
-
-    for(std::size_t i = 0; i < max_point_lights; ++i)
-    {
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.enabled");
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.color");
-        // _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].base.casts_shadow");
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].pos_eye");
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].const_atten");
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].linear_atten");
-        _ent_shader.add_uniform("point_lights[" + std::to_string(i) + "].quad_atten");
-
-        // we won't ever send the GPU disabled point lights
-        glUniform1i(_ent_shader.get_uniform("point_lights[" + std::to_string(i) + "].base.enabled"), true);
-    }
-
-    for(std::size_t i = 0; i < max_spot_lights; ++i)
-    {
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.enabled");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.color");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].base.casts_shadow");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].pos_eye");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].dir_eye");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].cos_cutoff");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].exponent");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].const_atten");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].linear_atten");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].quad_atten");
-        _ent_shader.add_uniform("spot_lights[" + std::to_string(i) + "].shadow_mat");
-
-        // we won't ever send the GPU disabled spot lights
-        glUniform1i(_ent_shader.get_uniform("spot_lights[" + std::to_string(i) + "].base.enabled"), true);
-    }
-    // TODO: work around GLSL texture limits
-    _ent_shader.add_uniform("shadow_map0");
-    _ent_shader.add_uniform("shadow_map1");
-    glUniform1i(_ent_shader.get_uniform("shadow_map0"), 7); // TODO: replace magic number
-    glUniform1i(_ent_shader.get_uniform("shadow_map1"), 8); // TODO: replace magic number
-
-    _ent_shader.add_uniform("dir_light.base.enabled");
-    _ent_shader.add_uniform("dir_light.base.color");
-    // _ent_shader.add_uniform("dir_light.base.casts_shadow");
-    _ent_shader.add_uniform("dir_light.dir");
-    _ent_shader.add_uniform("dir_light.half_vec");
-
-    _ent_shader.add_uniform("cam_light_forward");
+    _ent_shader.add_uniform("diffuse_fbo_tex");
+    _ent_shader.add_uniform("specular_fbo_tex");
+    _ent_shader.add_uniform("viewport_size");
 
     // set up static uniform vals
     glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 0);
     glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 1);
     glUniform1i(_ent_shader.get_uniform("material.specular_map"), 2);
-    glUniform1i(_ent_shader.get_uniform("material.shininess_map"), 3);
-    glUniform1i(_ent_shader.get_uniform("material.emissive_map"), 4);
-    // glUniform1i(_ent_shader.get_uniform("material.reflectivity_map"), 5);
-    glUniform1i(_ent_shader.get_uniform("material.normal_map"), 6);
+    glUniform1i(_ent_shader.get_uniform("material.emissive_map"), 3);
+    // glUniform1i(_ent_shader.get_uniform("material.reflectivity_map"), 4);
+    glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 5);
+    glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 6);
 
+    /*
     _shadow_map_shader.use();
     _shadow_map_shader.add_uniform("model_view_proj");
     */
+
+    _fullscreen_tex.use();
+    _fullscreen_tex.add_uniform("viewport_size");
+    _fullscreen_tex.add_uniform("tex");
+    glUniform1i(_fullscreen_tex.get_uniform("tex"), 0);
+
     glUseProgram(0); // TODO get prev val?
 
     // setup FBOs
@@ -322,7 +276,6 @@ World::World():
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _diffuse_fbo_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
-    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
     glDrawBuffers(2, buffs);
 
     _lighting_fbo.verify();
@@ -487,35 +440,19 @@ void World::draw()
     check_error("World::draw - light setup");
 
     */
-    auto set_material = [this](const Material & mat)
+    auto set_prepass_material = [this](const Material & mat)
     {
-        // glUniform3fv(_ent_prepass.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
-        // glUniform3fv(_ent_prepass.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
-        // glUniform3fv(_ent_prepass.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
         glUniform1f(_ent_prepass.get_uniform("material.shininess"), mat.shininess);
-        // glUniform3fv(_ent_prepass.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
-        // glUniform1f(_ent_prepass.get_uniform("material.reflectivity"), mat.reflectivity);
-
-        // glActiveTexture(GL_TEXTURE0);
-        // mat.ambient_map->bind();
-        // glActiveTexture(GL_TEXTURE1);
-        // mat.diffuse_map->bind();
-        // glActiveTexture(GL_TEXTURE2);
-        // mat.specular_map->bind();
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE0);
         mat.shininess_map->bind();
-        // glActiveTexture(GL_TEXTURE4);
-        // mat.emissive_map->bind();
-        // glActiveTexture(GL_TEXTURE5);
-        // mat.reflectivity_map->bind();
-        glActiveTexture(GL_TEXTURE6);
+        glActiveTexture(GL_TEXTURE1);
         mat.normal_map->bind();
     };
 
-    glm::vec2 viewport_size = {(float)1024, (float)1024}; // TODO: how to get fbo size?
+    glm::vec2 viewport_size = {(float)800, (float)600}; // TODO: how to get fbo size?
 
     _g_fbo.bind();
-    glViewport(0, 0, 1024, 1024); // TODO: how to get fbo size?
+    glViewport(0, 0, 800, 600); // TODO: how to get fbo size?
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -540,7 +477,7 @@ void World::draw()
             glUniformMatrix4fv(_ent_prepass.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
             glUniformMatrix3fv(_ent_prepass.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
-            model->draw(set_material);
+            model->draw(set_prepass_material);
         }
 
         // collect lighting info
@@ -565,7 +502,7 @@ void World::draw()
 
     // Lighting pass
     _lighting_fbo.bind();
-    glViewport(0, 0, 1024, 1024);
+    glViewport(0, 0, 800, 600);
 
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
@@ -639,7 +576,7 @@ void World::draw()
         glUniform3fv(_dir_light_prog.get_uniform("dir_light.dir"), 1, &sunlight_dir[0]);
         glUniform3fv(_dir_light_prog.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
 
-        _quad->draw([](const Material & mat){}); // TODO: sphere or smaller quad instead?
+        _quad->draw([](const Material & mat){});
     }
 
     glUniform2fv(_dir_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
@@ -648,27 +585,70 @@ void World::draw()
     glViewport(0, 0, _win.getSize().x, _win.getSize().y);
     viewport_size = {(float)_win.getSize().x, (float)_win.getSize().y};
 
+    // set default framebuffer depth buffer from G buffer
     glDisable(GL_BLEND);
+
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_ALWAYS);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    _fullscreen_tex.use();
-    glUniform2fv(_fullscreen_tex.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    _set_depth_prog.use();
+    glUniform2fv(_set_depth_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
     glActiveTexture(GL_TEXTURE0);
-    _diffuse_fbo_tex->bind();
-
+    _g_fbo_depth_tex->bind();
     _quad->draw([](const Material & mat){});
 
-    // TODO: final pass (material)
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LEQUAL);
+    // main drawing pass
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
 
-    glDepthFunc(GL_LESS);
+    _ent_shader.use();
+
+    auto set_material = [this](const Material & mat)
+    {
+        glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
+        glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
+        glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
+        glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
+        // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
+
+        glActiveTexture(GL_TEXTURE0);
+        mat.ambient_map->bind();
+        glActiveTexture(GL_TEXTURE1);
+        mat.diffuse_map->bind();
+        glActiveTexture(GL_TEXTURE2);
+        mat.specular_map->bind();
+        glActiveTexture(GL_TEXTURE3);
+        mat.emissive_map->bind();
+        // glActiveTexture(GL_TEXTURE4);
+        // mat.reflectivity_map->bind();
+    };
+
+    glActiveTexture(GL_TEXTURE5);
+    _diffuse_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE6);
+    _specular_fbo_tex->bind();
+
+    glUniform2fv(_ent_shader.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
+    for(auto & ent: models)
+    {
+        Model * model = ent->model();
+
+        glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
+        glm::mat4 model_view_proj = _proj * model_view;
+
+        glUniformMatrix4fv(_ent_prepass.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+
+        model->draw(set_material);
+    }
+
     _skybox.draw(*_cam, _proj);
 
-    // TODO: antialiasing?
+    // TODO: antialiasing
 
     _win.display();
     check_error("World::draw - end");

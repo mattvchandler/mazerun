@@ -82,8 +82,9 @@ private:
     Shader_prog _point_light_prog;
     Shader_prog _spot_light_prog;
     Shader_prog _dir_light_prog;
+    Shader_prog _set_depth_prog;
+    Shader_prog _ent_shader;
     Shader_prog _fullscreen_tex;
-    // Shader_prog _ent_shader;
     // Shader_prog _shadow_map_shader;
 
     FBO _g_fbo;
