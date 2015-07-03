@@ -71,6 +71,8 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
             throw std::ios_base::failure(std::string("Error opening shader file: ") + source.first);
         }
 
+        // TODO: cache shader objects?
+
         // compile shaders
         shaders.push_back(glCreateShader(source.second));
         const char * source_str = buff.data();

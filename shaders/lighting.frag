@@ -47,7 +47,6 @@ struct Material
 struct Base_light
 {
     vec3 color;
-    bool casts_shadow; // TODO: needed?
 };
 
 struct Point_light

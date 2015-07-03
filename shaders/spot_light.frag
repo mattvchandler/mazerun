@@ -27,7 +27,6 @@
 struct Base_light
 {
     vec3 color;
-    bool casts_shadow;
 };
 
 struct Spot_light
@@ -57,9 +56,6 @@ uniform vec2 viewport_size;
 // camera facing direction (always (0, 0, 1) when viewed from camera)
 uniform vec3 cam_light_forward; // TODO: set as const?
 
-uniform mat4 shadow_mat;
-uniform sampler2DShadow shadow_map;
-
 out vec4 diffuse;
 out vec4 specular;
 
@@ -70,18 +66,11 @@ void main()
     float shininess = texture(shininess_map, map_coords).x;
     vec3 normal_vec = texture(normal_map, map_coords).xyz;
 
-    // TODO: should there be separate shadow light shaders?
-    float shadow = 1.0;
-    if(spot_light.base.casts_shadow)
-    {
-        shadow = textureProj(shadow_map, shadow_mat * vec4(pos, 1.0)); // not too happy about per-pixel mat mult
-    }
-
     vec3 diffuse_tmp, specular_tmp;
 
     calc_spot_lighting(pos, cam_light_forward, normal_vec, shininess, spot_light,
         diffuse_tmp, specular_tmp);
 
-    diffuse = shadow * vec4(diffuse_tmp, 1.0);
-    specular = shadow * vec4(specular_tmp, 1.0);
+    diffuse = vec4(diffuse_tmp, 1.0);
+    specular =vec4(specular_tmp, 1.0);
 }

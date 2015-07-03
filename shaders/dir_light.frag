@@ -27,7 +27,6 @@
 struct Base_light
 {
     vec3 color;
-    bool casts_shadow; // TODO: needed?
 };
 
 struct Dir_light
@@ -51,7 +50,6 @@ out vec4 specular;
 
 void main()
 {
-    // TODO: shadow map lookup
     vec2 map_coords = gl_FragCoord.xy / viewport_size;
     float shininess = texture(shininess_map, map_coords).x;
     vec3 normal_vec = texture(normal_map, map_coords).xyz;

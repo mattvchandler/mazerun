@@ -97,18 +97,22 @@ World::World():
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)},
         {std::make_pair("pos", 0), std::make_pair("g_shininess", 1), std::make_pair("g_norm", 2)}),
-    _point_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: vert shader may need shadow matrix input
+    _point_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/point_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _spot_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: vert shader may need shadow matrix input
+    _spot_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/spot_light.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _spot_light_shadow_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/spot_light_shadow.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
     _spot_shadow_prog({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: vert shader may need shadow matrix input
+    _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/dir_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
@@ -171,7 +175,6 @@ World::World():
 
     _point_light_prog.use();
     _point_light_prog.add_uniform("point_light.base.color");
-    // _point_light_prog.add_uniform("point_light.base.casts_shadow");
     _point_light_prog.add_uniform("point_light.pos_eye");
     _point_light_prog.add_uniform("point_light.const_atten");
     _point_light_prog.add_uniform("point_light.linear_atten");
@@ -188,7 +191,6 @@ World::World():
 
     _spot_light_prog.use();
     _spot_light_prog.add_uniform("spot_light.base.color");
-    _spot_light_prog.add_uniform("spot_light.base.casts_shadow");
     _spot_light_prog.add_uniform("spot_light.pos_eye");
     _spot_light_prog.add_uniform("spot_light.dir_eye");
     _spot_light_prog.add_uniform("spot_light.cos_cutoff");
@@ -201,20 +203,38 @@ World::World():
     _spot_light_prog.add_uniform("normal_map");
     _spot_light_prog.add_uniform("viewport_size");
     _spot_light_prog.add_uniform("cam_light_forward");
-    _spot_light_prog.add_uniform("shadow_mat");
-    _spot_light_prog.add_uniform("shadow_map");
     glUniform1i(_spot_light_prog.get_uniform("pos_map"), 0);
     glUniform1i(_spot_light_prog.get_uniform("shininess_map"), 1);
     glUniform1i(_spot_light_prog.get_uniform("normal_map"), 2);
-    glUniform1i(_spot_light_prog.get_uniform("shadow_map"), 3);
     glUniform3fv(_spot_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
+
+    _spot_light_shadow_prog.use();
+    _spot_light_shadow_prog.add_uniform("spot_light.base.color");
+    _spot_light_shadow_prog.add_uniform("spot_light.pos_eye");
+    _spot_light_shadow_prog.add_uniform("spot_light.dir_eye");
+    _spot_light_shadow_prog.add_uniform("spot_light.cos_cutoff");
+    _spot_light_shadow_prog.add_uniform("spot_light.exponent");
+    _spot_light_shadow_prog.add_uniform("spot_light.const_atten");
+    _spot_light_shadow_prog.add_uniform("spot_light.linear_atten");
+    _spot_light_shadow_prog.add_uniform("spot_light.quad_atten");
+    _spot_light_shadow_prog.add_uniform("pos_map");
+    _spot_light_shadow_prog.add_uniform("shininess_map");
+    _spot_light_shadow_prog.add_uniform("normal_map");
+    _spot_light_shadow_prog.add_uniform("viewport_size");
+    _spot_light_shadow_prog.add_uniform("cam_light_forward");
+    _spot_light_shadow_prog.add_uniform("shadow_mat");
+    _spot_light_shadow_prog.add_uniform("shadow_map");
+    glUniform1i(_spot_light_shadow_prog.get_uniform("pos_map"), 0);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("shininess_map"), 1);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("normal_map"), 2);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 3);
+    glUniform3fv(_spot_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_shadow_prog.use();
     _spot_shadow_prog.add_uniform("model_view_proj");
 
     _dir_light_prog.use();
     _dir_light_prog.add_uniform("dir_light.base.color");
-    // _dir_light_prog.add_uniform("dir_light.base.casts_shadow");
     _dir_light_prog.add_uniform("dir_light.dir");
     _dir_light_prog.add_uniform("dir_light.half_vec");
     _dir_light_prog.add_uniform("shininess_map");
@@ -295,6 +315,8 @@ World::World():
 
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
     // need: picking shader, target ent ptr
+// TODO: weird lighting artifacts
+// TODO: FPS display
 void World::draw()
 {
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
@@ -373,7 +395,6 @@ void World::draw()
 
     // Lighting pass
     _lighting_fbo.bind();
-    glViewport(0, 0, 800, 600);
 
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
@@ -412,7 +433,6 @@ void World::draw()
     glActiveTexture(GL_TEXTURE3);
     _spot_dir_shadow_fbo_tex->bind();
 
-    glm::mat4 spot_shadow_mat;
     glPolygonOffset(2.0f, 4.0f);
 
     _spot_light_prog.use();
@@ -422,6 +442,7 @@ void World::draw()
     for(auto & ent: spot_lights)
     {
         Spot_light * spot_light = dynamic_cast<Spot_light *>(ent->light());
+
         if(spot_light->casts_shadow)
         {
             _spot_dir_shadow_fbo.bind();
@@ -435,7 +456,7 @@ void World::draw()
             glClear(GL_DEPTH_BUFFER_BIT);
 
             glm::mat4 view_proj = spot_light->shadow_proj_mat() * spot_light->shadow_view_mat() * ent->view_mat();
-            spot_shadow_mat = scale_bias_mat * view_proj * glm::inverse(_cam->view_mat());
+            glm::mat4 spot_shadow_mat = scale_bias_mat * view_proj * glm::inverse(_cam->view_mat());
 
             for(auto & ent_2: models)
             {
@@ -451,32 +472,52 @@ void World::draw()
 
             _lighting_fbo.bind();
             glViewport(0, 0, 800, 600);
-            _spot_light_prog.use();
+            _spot_light_shadow_prog.use();
             glDepthMask(GL_FALSE);
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
             glDisable(GL_POLYGON_OFFSET_FILL);
-            glUniformMatrix4fv(_spot_light_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[0][0]);
 
+            glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
+            glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
+
+            glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+            glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
+
+            glUniform3fv(_spot_light_shadow_prog.get_uniform("spot_light.base.color"), 1, &spot_light->color[0]);
+            glUniform3fv(_spot_light_shadow_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
+            glUniform3fv(_spot_light_shadow_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
+            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.cos_cutoff"), spot_light->cos_cutoff);
+            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.exponent"), spot_light->exponent);
+            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.const_atten"), spot_light->const_atten);
+            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
+            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
+            glUniformMatrix4fv(_spot_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[0][0]);
+            glUniform2fv(_spot_light_shadow_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
+            _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+
+            _spot_light_prog.use();
         }
+        else
+        {
+            glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
+            glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
 
-        glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
-        glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
+            glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+            glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
 
-        glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-        glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
+            glUniform3fv(_spot_light_prog.get_uniform("spot_light.base.color"), 1, &spot_light->color[0]);
+            glUniform3fv(_spot_light_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
+            glUniform3fv(_spot_light_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
+            glUniform1f(_spot_light_prog.get_uniform("spot_light.cos_cutoff"), spot_light->cos_cutoff);
+            glUniform1f(_spot_light_prog.get_uniform("spot_light.exponent"), spot_light->exponent);
+            glUniform1f(_spot_light_prog.get_uniform("spot_light.const_atten"), spot_light->const_atten);
+            glUniform1f(_spot_light_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
+            glUniform1f(_spot_light_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
 
-        glUniform3fv(_spot_light_prog.get_uniform("spot_light.base.color"), 1, &spot_light->color[0]);
-        glUniform1i(_spot_light_prog.get_uniform("spot_light.base.casts_shadow"), spot_light->casts_shadow);
-        glUniform3fv(_spot_light_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
-        glUniform3fv(_spot_light_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
-        glUniform1f(_spot_light_prog.get_uniform("spot_light.cos_cutoff"), spot_light->cos_cutoff);
-        glUniform1f(_spot_light_prog.get_uniform("spot_light.exponent"), spot_light->exponent);
-        glUniform1f(_spot_light_prog.get_uniform("spot_light.const_atten"), spot_light->const_atten);
-        glUniform1f(_spot_light_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
-        glUniform1f(_spot_light_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
-
-        _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+            _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+        }
     }
 
     if(_sunlight.enabled)
