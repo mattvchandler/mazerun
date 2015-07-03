@@ -435,9 +435,12 @@ void World::draw()
 
     glPolygonOffset(2.0f, 4.0f);
 
-    _spot_light_prog.use();
+    _spot_light_shadow_prog.use();
+    glUniform2fv(_spot_light_shadow_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
+    _spot_light_prog.use();
     glUniform2fv(_spot_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    bool use_shadow = false;
 
     for(auto & ent: spot_lights)
     {
@@ -493,14 +496,19 @@ void World::draw()
             glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
             glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
             glUniformMatrix4fv(_spot_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[0][0]);
-            glUniform2fv(_spot_light_shadow_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
             _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
 
-            _spot_light_prog.use();
+            use_shadow = true;
         }
         else
         {
+            if(use_shadow)
+            {
+                use_shadow = false;
+                _spot_light_prog.use();
+            }
+
             glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
             glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
 
