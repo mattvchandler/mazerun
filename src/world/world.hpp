@@ -81,14 +81,15 @@ private:
     Shader_prog _ent_prepass;
     Shader_prog _point_light_prog;
     Shader_prog _spot_light_prog;
+    Shader_prog _spot_shadow_prog;
     Shader_prog _dir_light_prog;
     Shader_prog _set_depth_prog;
     Shader_prog _ent_shader;
     Shader_prog _fullscreen_tex;
-    // Shader_prog _shadow_map_shader;
 
     FBO _g_fbo;
     FBO _lighting_fbo;
+    FBO _spot_dir_shadow_fbo;
 
     std::unique_ptr<Texture_2D> _g_fbo_pos_tex;
     std::unique_ptr<Texture_2D> _g_fbo_shininess_tex;
@@ -96,6 +97,7 @@ private:
     std::unique_ptr<Texture_2D> _g_fbo_depth_tex; // TODO: should be renderbuffer
     std::unique_ptr<Texture_2D> _diffuse_fbo_tex;
     std::unique_ptr<Texture_2D> _specular_fbo_tex;
+    std::unique_ptr<Texture_2D> _spot_dir_shadow_fbo_tex;
 
     Quad * _quad;
 

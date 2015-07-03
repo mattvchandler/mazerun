@@ -53,24 +53,6 @@ out vec4 frag_color;
 
 void main()
 {
-    /*
-    for(int i = 0; i < num_spot_lights && i < max_spot_lights; ++i)
-    {
-        float shadow = 1.0;
-        if(spot_lights[i].base.casts_shadow && i < 2)
-        {
-            // TODO: BAD FOR PERFORMANCE
-            if(i == 0)
-                shadow = textureProj(shadow_map0, spot_shadow_coords[i]);
-            else if(i == 1)
-                shadow = textureProj(shadow_map1, spot_shadow_coords[i]);
-        }
-
-        scattered += shadow * tmp_scattered;
-        reflected += shadow * tmp_reflected;
-    }
-    */
-
     vec2 map_coords = gl_FragCoord.xy / viewport_size;
 
     vec3 diffuse = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color +
