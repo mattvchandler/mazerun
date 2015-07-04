@@ -442,12 +442,34 @@ void World::draw()
     glUniform2fv(_spot_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
     bool use_shadow = false;
 
+    // common spot lighting
+    auto spot_common = [this](const Shader_prog & spot_prog, const Entity & ent, const Spot_light & spot_light)
+    {
+        glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
+        glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light.pos, 1.0f));
+
+        glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
+        glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light.dir);
+
+        glUniform3fv(spot_prog.get_uniform("spot_light.base.color"), 1, &spot_light.color[0]);
+        glUniform3fv(spot_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
+        glUniform3fv(spot_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
+        glUniform1f(spot_prog.get_uniform("spot_light.cos_cutoff"), spot_light.cos_cutoff);
+        glUniform1f(spot_prog.get_uniform("spot_light.exponent"), spot_light.exponent);
+        glUniform1f(spot_prog.get_uniform("spot_light.const_atten"), spot_light.const_atten);
+        glUniform1f(spot_prog.get_uniform("spot_light.linear_atten"), spot_light.linear_atten);
+        glUniform1f(spot_prog.get_uniform("spot_light.quad_atten"), spot_light.quad_atten);
+
+        _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+    };
+
     for(auto & ent: spot_lights)
     {
         Spot_light * spot_light = dynamic_cast<Spot_light *>(ent->light());
 
         if(spot_light->casts_shadow)
         {
+            // create shadow map
             _spot_dir_shadow_fbo.bind();
             glViewport(0, 0, 512, 512);
             _spot_shadow_prog.use();
@@ -481,23 +503,8 @@ void World::draw()
             glEnable(GL_BLEND);
             glDisable(GL_POLYGON_OFFSET_FILL);
 
-            glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
-            glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
-
-            glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-            glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
-
-            glUniform3fv(_spot_light_shadow_prog.get_uniform("spot_light.base.color"), 1, &spot_light->color[0]);
-            glUniform3fv(_spot_light_shadow_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
-            glUniform3fv(_spot_light_shadow_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
-            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.cos_cutoff"), spot_light->cos_cutoff);
-            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.exponent"), spot_light->exponent);
-            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.const_atten"), spot_light->const_atten);
-            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
-            glUniform1f(_spot_light_shadow_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
             glUniformMatrix4fv(_spot_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[0][0]);
-
-            _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+            spot_common(_spot_light_shadow_prog, *ent, *spot_light);
 
             use_shadow = true;
         }
@@ -509,22 +516,7 @@ void World::draw()
                 _spot_light_prog.use();
             }
 
-            glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
-            glm::vec3 spot_light_pos_eye = glm::vec3(model_view * glm::vec4(spot_light->pos, 1.0f));
-
-            glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
-            glm::vec3 spot_light_dir_eye = glm::normalize(normal_transform * spot_light->dir);
-
-            glUniform3fv(_spot_light_prog.get_uniform("spot_light.base.color"), 1, &spot_light->color[0]);
-            glUniform3fv(_spot_light_prog.get_uniform("spot_light.pos_eye"), 1, &spot_light_pos_eye[0]);
-            glUniform3fv(_spot_light_prog.get_uniform("spot_light.dir_eye"), 1, &spot_light_dir_eye[0]);
-            glUniform1f(_spot_light_prog.get_uniform("spot_light.cos_cutoff"), spot_light->cos_cutoff);
-            glUniform1f(_spot_light_prog.get_uniform("spot_light.exponent"), spot_light->exponent);
-            glUniform1f(_spot_light_prog.get_uniform("spot_light.const_atten"), spot_light->const_atten);
-            glUniform1f(_spot_light_prog.get_uniform("spot_light.linear_atten"), spot_light->linear_atten);
-            glUniform1f(_spot_light_prog.get_uniform("spot_light.quad_atten"), spot_light->quad_atten);
-
-            _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+            spot_common(_spot_light_prog, *ent, *spot_light);
         }
     }
 
