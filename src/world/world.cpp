@@ -109,12 +109,16 @@ World::World():
         std::make_pair("shaders/spot_light_shadow.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _spot_shadow_prog({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
     _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/dir_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _dir_light_shadow_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/dir_light_shadow.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _spot_dir_shadow_prog({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
     _set_depth_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/set_depth.frag", GL_FRAGMENT_SHADER)},
@@ -230,9 +234,6 @@ World::World():
     glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 3);
     glUniform3fv(_spot_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
-    _spot_shadow_prog.use();
-    _spot_shadow_prog.add_uniform("model_view_proj");
-
     _dir_light_prog.use();
     _dir_light_prog.add_uniform("dir_light.base.color");
     _dir_light_prog.add_uniform("dir_light.dir");
@@ -242,6 +243,24 @@ World::World():
     _dir_light_prog.add_uniform("viewport_size");
     glUniform1i(_dir_light_prog.get_uniform("shininess_map"), 1);
     glUniform1i(_dir_light_prog.get_uniform("normal_map"), 2);
+
+    _dir_light_shadow_prog.use();
+    _dir_light_shadow_prog.add_uniform("dir_light.base.color");
+    _dir_light_shadow_prog.add_uniform("dir_light.dir");
+    _dir_light_shadow_prog.add_uniform("dir_light.half_vec");
+    _dir_light_shadow_prog.add_uniform("pos_map");
+    _dir_light_shadow_prog.add_uniform("shininess_map");
+    _dir_light_shadow_prog.add_uniform("normal_map");
+    _dir_light_shadow_prog.add_uniform("viewport_size");
+    _dir_light_shadow_prog.add_uniform("shadow_map");
+    _dir_light_shadow_prog.add_uniform("shadow_mat");
+    glUniform1i(_dir_light_shadow_prog.get_uniform("pos_map"), 0);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("shininess_map"), 1);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("normal_map"), 2);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 3);
+
+    _spot_dir_shadow_prog.use();
+    _spot_dir_shadow_prog.add_uniform("model_view_proj");
 
     _set_depth_prog.use();
     _set_depth_prog.add_uniform("viewport_size");
@@ -469,10 +488,12 @@ void World::draw()
 
         if(spot_light->casts_shadow)
         {
+            // TODO: blocky shadows? cascaded shadow maps?
+            //      http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
             // create shadow map
             _spot_dir_shadow_fbo.bind();
             glViewport(0, 0, 512, 512);
-            _spot_shadow_prog.use();
+            _spot_dir_shadow_prog.use();
             glDepthMask(GL_TRUE);
             glEnable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
@@ -490,7 +511,7 @@ void World::draw()
                     continue;
 
                 glm::mat4 model_view_proj = view_proj * ent_2->model_mat();
-                glUniformMatrix4fv(_spot_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+                glUniformMatrix4fv(_spot_dir_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
                 model->draw([](const Material &){});
             }
@@ -520,21 +541,71 @@ void World::draw()
         }
     }
 
-    if(_sunlight.enabled)
+    auto dir_common = [this](const Shader_prog & dir_prog, const glm::vec3 & cam_light_forward, const glm::vec2 & viewport_size)
     {
-        _dir_light_prog.use();
-
         glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam->view_mat()))) *
             glm::normalize(-_sunlight.dir));
         glm::vec3 sunlight_half_vec = glm::normalize(cam_light_forward + sunlight_dir);
 
-        glUniform3fv(_dir_light_prog.get_uniform("dir_light.base.color"), 1, &_sunlight.color[0]); // TODO: Also from skybox?
-        glUniform3fv(_dir_light_prog.get_uniform("dir_light.dir"), 1, &sunlight_dir[0]);
-        glUniform3fv(_dir_light_prog.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
+        glUniform3fv(dir_prog.get_uniform("dir_light.base.color"), 1, &_sunlight.color[0]); // TODO: Also from skybox?
+        glUniform3fv(dir_prog.get_uniform("dir_light.dir"), 1, &sunlight_dir[0]);
+        glUniform3fv(dir_prog.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
 
-        glUniform2fv(_dir_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+        glUniform2fv(dir_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
         _quad->draw([](const Material &){});
+    };
+
+    if(_sunlight.enabled)
+    {
+        if(_sunlight.casts_shadow)
+        {
+            // create shadow map
+            _spot_dir_shadow_fbo.bind();
+            glViewport(0, 0, 512, 512);
+            _spot_dir_shadow_prog.use();
+            glDepthMask(GL_TRUE);
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glEnable(GL_POLYGON_OFFSET_FILL);
+
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            // TODO: make these a method of Dir_light
+            glm::mat4 dir_view_mat = glm::lookAt(-_sunlight.dir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::mat4 dir_proj_mat = glm::ortho(-23.0f, 23.0f, -23.0f, 23.0f, -23.0f, 23.0f);
+
+            glm::mat4 view_proj = dir_proj_mat * dir_view_mat;
+            glm::mat4 dir_shadow_mat = scale_bias_mat * view_proj * glm::inverse(_cam->view_mat());
+
+            for(auto & ent: models)
+            {
+                auto model = ent->model();
+                if(!model->casts_shadow)
+                    continue;
+
+                glm::mat4 model_view_proj = view_proj * ent->model_mat();
+                glUniformMatrix4fv(_spot_dir_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+
+                model->draw([](const Material &){});
+            }
+
+            _lighting_fbo.bind();
+            glViewport(0, 0, 800, 600);
+            _dir_light_shadow_prog.use();
+            glDepthMask(GL_FALSE);
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+
+            glUniformMatrix4fv(_dir_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &dir_shadow_mat[0][0]);
+            dir_common(_dir_light_shadow_prog, cam_light_forward, viewport_size);
+        }
+        else
+        {
+            _dir_light_prog.use();
+            dir_common(_dir_light_prog, cam_light_forward, viewport_size);
+        }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
