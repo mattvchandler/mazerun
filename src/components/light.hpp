@@ -94,7 +94,7 @@ public:
     virtual ~Dir_light() = default;
 
     glm::mat4 shadow_view_mat();
-    glm::mat4 shadow_proj_mat();
+    glm::mat4 shadow_proj_mat(const float width, const float height, const float depth);
 
     glm::vec3 dir;
 };

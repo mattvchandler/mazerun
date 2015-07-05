@@ -490,6 +490,7 @@ void World::draw()
         {
             // TODO: blocky shadows? cascaded shadow maps?
             //      http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
+            //      https://gamedev.stackexchange.com/questions/68016/shadow-mapping-with-directional-light
             // create shadow map
             _spot_dir_shadow_fbo.bind();
             glViewport(0, 0, 512, 512);
@@ -571,11 +572,7 @@ void World::draw()
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            // TODO: make these a method of Dir_light
-            glm::mat4 dir_view_mat = glm::lookAt(-_sunlight.dir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            glm::mat4 dir_proj_mat = glm::ortho(-23.0f, 23.0f, -23.0f, 23.0f, -23.0f, 23.0f);
-
-            glm::mat4 view_proj = dir_proj_mat * dir_view_mat;
+            glm::mat4 view_proj = _sunlight.shadow_proj_mat(45.0f, 45.0f, 45.0f) * _sunlight.shadow_view_mat();
             glm::mat4 dir_shadow_mat = scale_bias_mat * view_proj * glm::inverse(_cam->view_mat());
 
             for(auto & ent: models)

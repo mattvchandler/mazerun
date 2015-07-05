@@ -62,7 +62,7 @@ Spot_light::Spot_light(const bool enabled, const glm::vec3 & color, const bool c
 
 glm::mat4 Spot_light::shadow_view_mat()
 {
-    // find an orthographic vector
+    // find an orthogonal vector
     glm::vec3 up = glm::normalize(glm::vec3(dir.y, -dir.x, 0.0f) + glm::vec3(-dir.z, 0.0f, dir.x));
 
     return glm::lookAt(pos, pos + dir, up);
@@ -81,10 +81,10 @@ Dir_light::Dir_light(const bool enabled, const glm::vec3 & color, const bool cas
 
 glm::mat4 Dir_light::shadow_view_mat()
 {
-    return glm::mat4(1.0f);
+    return glm::lookAt(-dir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // TODO: should the up vector be orthogonal?
 }
 
-glm::mat4 Dir_light::shadow_proj_mat()
+glm::mat4 Dir_light::shadow_proj_mat(const float width, const float height, const float depth)
 {
-    return glm::mat4(1.0f);
+    return glm::ortho(-0.5f * width, 0.5f * width, -0.5f * height, 0.5f * height, -0.5f * depth, 0.5f * depth);
 }
