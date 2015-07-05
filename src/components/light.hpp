@@ -55,8 +55,10 @@ public:
         const float quad_atten);
     virtual ~Point_light() = default;
 
-    glm::mat4 shadow_view_mat(const glm::vec3 & axis);
-    glm::mat4 shadow_proj_mat(const glm::vec3 & axis);
+    typedef enum {POSITIVE_X, NEGATIVE_X, POSITIVE_Y, NEGATIVE_Y, POSITIVE_Z, NEGATIVE_Z} Shadow_dir;
+
+    glm::mat4 shadow_view_mat(const Shadow_dir dir);
+    glm::mat4 shadow_proj_mat();
 
     glm::vec3 pos;
     // attenuation properties

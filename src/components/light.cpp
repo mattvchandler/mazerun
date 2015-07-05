@@ -41,14 +41,60 @@ Point_light::Point_light(const bool enabled, const glm::vec3 & color, const bool
 {
 }
 
-glm::mat4 Point_light::shadow_view_mat(const glm::vec3 & axis)
+glm::mat4 Point_light::shadow_view_mat(const Shadow_dir dir)
 {
-    return glm::mat4(1.0f);
+    glm::mat4 view_mat;
+    switch(dir)
+    {
+    case POSITIVE_X:
+        view_mat = glm::mat4(
+            glm::vec4(0.0f, 0.0f, -1.0f, 0.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    case NEGATIVE_X:
+        view_mat = glm::mat4(
+            glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    case POSITIVE_Y:
+        view_mat = glm::mat4(
+            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, -1.0f, 0.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    case NEGATIVE_Y:
+        view_mat = glm::mat4(
+            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+            glm::vec4(0.0f, -1.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    case POSITIVE_Z:
+        view_mat = glm::mat4(
+            glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, -1.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    case NEGATIVE_Z:
+        view_mat = glm::mat4(
+            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    }
+    return view_mat;
 }
 
-glm::mat4 Point_light::shadow_proj_mat(const glm::vec3 & axis)
+glm::mat4 Point_light::shadow_proj_mat()
 {
-    return glm::mat4(1.0f);
+    return glm::perspective((float)(0.5 * M_PI), 1.0f, 0.1f, 100.0f);
 }
 
 Spot_light::Spot_light(const bool enabled, const glm::vec3 & color, const bool casts_shadow,
