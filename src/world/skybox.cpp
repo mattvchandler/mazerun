@@ -105,13 +105,13 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
     glDepthFunc(GL_LEQUAL);
 
     _prog.use();
+    glActiveTexture(GL_TEXTURE0);
     _tex->bind();
 
     glm::mat4 model_view_proj = proj * glm::translate(cam.view_mat(), cam.pos());
 
     glUniformMatrix4fv(_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
-    glActiveTexture(GL_TEXTURE0);
     _vao.bind();
     glDrawElements(GL_TRIANGLES, _num_indexes, GL_UNSIGNED_INT, (GLvoid *)0);
 
