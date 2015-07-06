@@ -386,6 +386,7 @@ void World::draw()
             glUniformMatrix3fv(_ent_prepass.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
             model->draw(set_prepass_material);
+            check_error("World::draw - prepass");
         }
 
         // collect lighting info
@@ -447,6 +448,7 @@ void World::draw()
         glUniform1f(_point_light_prog.get_uniform("point_light.quad_atten"), point_light->quad_atten);
 
         _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+        check_error("World::draw - point light quad");
     }
 
     glActiveTexture(GL_TEXTURE3);
@@ -515,6 +517,7 @@ void World::draw()
                 glUniformMatrix4fv(_spot_dir_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
                 model->draw([](const Material &){});
+                check_error("World::draw - spot light shadow map");
             }
 
             _lighting_fbo.bind();
@@ -527,6 +530,7 @@ void World::draw()
 
             glUniformMatrix4fv(_spot_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[0][0]);
             spot_common(_spot_light_shadow_prog, *ent, *spot_light);
+            check_error("World::draw - spot light shadow quad");
 
             use_shadow = true;
         }
@@ -539,6 +543,7 @@ void World::draw()
             }
 
             spot_common(_spot_light_prog, *ent, *spot_light);
+            check_error("World::draw - spot light quad");
         }
     }
 
@@ -585,6 +590,7 @@ void World::draw()
                 glUniformMatrix4fv(_spot_dir_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
                 model->draw([](const Material &){});
+                check_error("World::draw - dir light shadow map");
             }
 
             _lighting_fbo.bind();
@@ -597,11 +603,13 @@ void World::draw()
 
             glUniformMatrix4fv(_dir_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &dir_shadow_mat[0][0]);
             dir_common(_dir_light_shadow_prog, cam_light_forward, viewport_size);
+            check_error("World::draw - dir light shadow quad");
         }
         else
         {
             _dir_light_prog.use();
             dir_common(_dir_light_prog, cam_light_forward, viewport_size);
+            check_error("World::draw - dir light quad");
         }
     }
 
@@ -624,6 +632,7 @@ void World::draw()
     glActiveTexture(GL_TEXTURE0);
     _g_fbo_depth_tex->bind();
     _quad->draw([](const Material &){});
+    check_error("World::draw - default depthbuffer fill");
 
     // main drawing pass
     glDepthMask(GL_FALSE);
@@ -670,10 +679,12 @@ void World::draw()
         glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
         model->draw(set_material);
+        check_error("World::draw - main pass");
     }
     glDisable(GL_POLYGON_OFFSET_FILL);
 
     _skybox.draw(*_cam, _proj);
+    check_error("World::draw - skybox");
 
     // TODO: antialiasing
 
