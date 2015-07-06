@@ -667,7 +667,7 @@ void World::draw()
         glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
         glm::mat4 model_view_proj = _proj * model_view;
 
-        glUniformMatrix4fv(_ent_prepass.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+        glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
         model->draw(set_material);
     }
