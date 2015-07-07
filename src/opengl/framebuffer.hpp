@@ -45,6 +45,7 @@ public:
     static Texture_2D * create_tex(const GLuint width, const GLuint height);
     static Texture_2D * create_depth_tex(const GLuint width, const GLuint height);
     static Texture_2D * create_shadow_tex(const GLuint width, const GLuint height);
+    static Texture_cubemap * create_shadow_cube_tex(const GLuint width, const GLuint height);
 
 private:
 
