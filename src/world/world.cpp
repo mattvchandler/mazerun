@@ -101,6 +101,10 @@ World::World():
         std::make_pair("shaders/point_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
+    _point_light_shadow_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/point_light_shadow.frag", GL_FRAGMENT_SHADER),
+        std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
     _spot_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/spot_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
@@ -116,6 +120,9 @@ World::World():
     _dir_light_shadow_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/dir_light_shadow.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0)}),
+    _point_shadow_prog({std::make_pair("shaders/point_shadow.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/point_shadow.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
     _spot_dir_shadow_prog({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
@@ -136,9 +143,12 @@ World::World():
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
     _diffuse_fbo_tex(FBO::create_tex(800, 600)),
     _specular_fbo_tex(FBO::create_tex(800, 600)),
+    _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
+    _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _quad(Quad::create())
 {
+    // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
     _ents.emplace_back(create_player());
@@ -192,6 +202,26 @@ World::World():
     glUniform1i(_point_light_prog.get_uniform("shininess_map"), 1);
     glUniform1i(_point_light_prog.get_uniform("normal_map"), 2);
     glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
+
+    _point_light_shadow_prog.use();
+    _point_light_shadow_prog.add_uniform("point_light.base.color");
+    _point_light_shadow_prog.add_uniform("point_light.pos_eye");
+    _point_light_shadow_prog.add_uniform("point_light.const_atten");
+    _point_light_shadow_prog.add_uniform("point_light.linear_atten");
+    _point_light_shadow_prog.add_uniform("point_light.quad_atten");
+    _point_light_shadow_prog.add_uniform("pos_map");
+    _point_light_shadow_prog.add_uniform("shininess_map");
+    _point_light_shadow_prog.add_uniform("normal_map");
+    _point_light_shadow_prog.add_uniform("viewport_size");
+    _point_light_shadow_prog.add_uniform("cam_light_forward");
+    _point_light_shadow_prog.add_uniform("shadow_map");
+    _point_light_shadow_prog.add_uniform("light_world_pos");
+    _point_light_shadow_prog.add_uniform("inv_cam_view");
+    glUniform1i(_point_light_shadow_prog.get_uniform("pos_map"), 0);
+    glUniform1i(_point_light_shadow_prog.get_uniform("shininess_map"), 1);
+    glUniform1i(_point_light_shadow_prog.get_uniform("normal_map"), 2);
+    glUniform1i(_point_light_shadow_prog.get_uniform("shadow_map"), 3);
+    glUniform3fv(_point_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_prog.use();
     _spot_light_prog.add_uniform("spot_light.base.color");
@@ -259,6 +289,11 @@ World::World():
     glUniform1i(_dir_light_shadow_prog.get_uniform("normal_map"), 2);
     glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 3);
 
+    _point_shadow_prog.use();
+    _point_shadow_prog.add_uniform("model_view_proj");
+    _point_shadow_prog.add_uniform("model");
+    _point_shadow_prog.add_uniform("light_world_pos");
+
     _spot_dir_shadow_prog.use();
     _spot_dir_shadow_prog.add_uniform("model_view_proj");
 
@@ -293,6 +328,7 @@ World::World():
     glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 5);
     glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 6);
 
+    // TODO: remove
     _fullscreen_tex.use();
     _fullscreen_tex.add_uniform("viewport_size");
     _fullscreen_tex.add_uniform("tex");
@@ -321,6 +357,14 @@ World::World():
 
     _lighting_fbo.verify();
 
+    _point_shadow_fbo.bind();
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, _point_shadow_fbo_tex->get_id(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _point_shadow_fbo_depth_tex->get_id(), 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    _point_shadow_fbo.verify();
+
     _spot_dir_shadow_fbo.bind();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _spot_dir_shadow_fbo_tex->get_id(), 0);
     glDrawBuffer(GL_NONE);
@@ -338,9 +382,9 @@ World::World():
 // TODO: FPS display
 void World::draw()
 {
+    // TODO: no lighting until camera moved, and when pointed down
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
 
-    // glm::mat4 spot_shadow_mat[max_spot_lights];
     std::vector<Entity *> point_lights;
     std::vector<Entity *> spot_lights;
     std::vector<Entity *> models;
@@ -407,13 +451,15 @@ void World::draw()
         }
     }
 
+    // Lighting pass
     const glm::mat4 scale_bias_mat(
         glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
         glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
         glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
         glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-    // Lighting pass
+    glm::mat4 inv_cam_view = glm::inverse(_cam->view_mat());
+
     _lighting_fbo.bind();
 
     glDepthMask(GL_FALSE);
@@ -427,28 +473,111 @@ void World::draw()
     _g_fbo_shininess_tex->bind();
     glActiveTexture(GL_TEXTURE2);
     _g_fbo_normal_tex->bind();
+    glActiveTexture(GL_TEXTURE3);
+    _point_shadow_fbo_tex->bind();
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    _point_light_prog.use();
+    _point_light_shadow_prog.use();
+    glUniform2fv(_point_light_shadow_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
+    _point_light_prog.use();
     glUniform2fv(_point_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+
+    // common point lighting
+    auto point_common = [this](const Shader_prog & point_prog, const Entity & ent, const Point_light & point_light)
+    {
+        glm::mat4 model_view = _cam->view_mat() * ent.model_mat();
+        glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light.pos, 1.0f));
+
+        glUniform3fv(point_prog.get_uniform("point_light.base.color"), 1, &point_light.color[0]);
+        glUniform3fv(point_prog.get_uniform("point_light.pos_eye"), 1, &point_light_pos_eye[0]);
+        glUniform1f(point_prog.get_uniform("point_light.const_atten"), point_light.const_atten);
+        glUniform1f(point_prog.get_uniform("point_light.linear_atten"), point_light.linear_atten);
+        glUniform1f(point_prog.get_uniform("point_light.quad_atten"), point_light.quad_atten);
+
+        _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+    };
+
+    bool use_shadow = false;
 
     for(auto & ent: point_lights)
     {
         Point_light * point_light = dynamic_cast<Point_light *>(ent->light());
 
-        glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
-        glm::vec3 point_light_pos_eye = glm::vec3(model_view * glm::vec4(point_light->pos, 1.0f));
+        if(point_light->casts_shadow)
+        {
+            // TODO: blocky shadows
+            // create shadow map
+            _point_shadow_fbo.bind();
+            glViewport(0, 0, 512, 512);
+            _point_shadow_prog.use();
+            glDepthMask(GL_TRUE);
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glClearColor(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-        glUniform3fv(_point_light_prog.get_uniform("point_light.base.color"), 1, &point_light->color[0]);
-        glUniform3fv(_point_light_prog.get_uniform("point_light.pos_eye"), 1, &point_light_pos_eye[0]);
-        glUniform1f(_point_light_prog.get_uniform("point_light.const_atten"), point_light->const_atten);
-        glUniform1f(_point_light_prog.get_uniform("point_light.linear_atten"), point_light->linear_atten);
-        glUniform1f(_point_light_prog.get_uniform("point_light.quad_atten"), point_light->quad_atten);
+            glm::vec3 light_world_pos = glm::vec3(ent->model_mat() * glm::vec4(point_light->pos, 1.0f));
 
-        _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
-        check_error("World::draw - point light quad");
+            for(const auto & dir: {
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+                GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+                GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+                GL_TEXTURE_CUBE_MAP_NEGATIVE_Z})
+            {
+                glm::mat4 view_proj = point_light->shadow_proj_mat() * point_light->shadow_view_mat(dir) * glm::translate(glm::mat4(), -light_world_pos);
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dir, _point_shadow_fbo_tex->get_id(), 0);
+                _point_shadow_fbo.verify();
+
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                for(auto & ent_2: models)
+                {
+                    auto model = ent_2->model();
+                    if(!model->casts_shadow)
+                        continue;
+
+                    glm::mat4 model_mat = ent_2->model_mat();
+                    glm::mat4 model_view_proj = view_proj * model_mat;
+                    glUniformMatrix4fv(_point_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+                    glUniformMatrix4fv(_point_shadow_prog.get_uniform("model"), 1, GL_FALSE, &model_mat[0][0]);
+                    glUniform3fv(_point_shadow_prog.get_uniform("light_world_pos"), 1, &light_world_pos[0]);
+
+                    model->draw([](const Material &){});
+                    check_error("World::draw - spot light shadow map");
+                }
+            }
+
+            _lighting_fbo.bind();
+            glViewport(0, 0, 800, 600);
+            _point_light_shadow_prog.use();
+            glDepthMask(GL_FALSE);
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+            glUniformMatrix4fv(_point_light_shadow_prog.get_uniform("inv_cam_view"), 1, GL_FALSE, &inv_cam_view[0][0]);
+            glUniform3fv(_point_light_shadow_prog.get_uniform("light_world_pos"), 1, &light_world_pos[0]);
+
+            point_common(_point_light_shadow_prog, *ent, *point_light);
+            check_error("World::draw - point light shadow quad");
+
+            use_shadow = true;
+        }
+        else
+        {
+            if(use_shadow)
+            {
+                use_shadow = false;
+                _point_light_prog.use();
+            }
+
+            point_common(_point_light_prog, *ent, *point_light);
+            check_error("World::draw - point light quad");
+        }
     }
 
     glActiveTexture(GL_TEXTURE3);
@@ -461,7 +590,6 @@ void World::draw()
 
     _spot_light_prog.use();
     glUniform2fv(_spot_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
-    bool use_shadow = false;
 
     // common spot lighting
     auto spot_common = [this](const Shader_prog & spot_prog, const Entity & ent, const Spot_light & spot_light)
@@ -484,15 +612,14 @@ void World::draw()
         _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
     };
 
+    use_shadow = false;
+
     for(auto & ent: spot_lights)
     {
         Spot_light * spot_light = dynamic_cast<Spot_light *>(ent->light());
 
         if(spot_light->casts_shadow)
         {
-            // TODO: blocky shadows? cascaded shadow maps?
-            //      http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
-            //      https://gamedev.stackexchange.com/questions/68016/shadow-mapping-with-directional-light
             // create shadow map
             _spot_dir_shadow_fbo.bind();
             glViewport(0, 0, 512, 512);
@@ -505,7 +632,7 @@ void World::draw()
             glClear(GL_DEPTH_BUFFER_BIT);
 
             glm::mat4 view_proj = spot_light->shadow_proj_mat() * spot_light->shadow_view_mat() * ent->view_mat();
-            glm::mat4 spot_shadow_mat = scale_bias_mat * view_proj * glm::inverse(_cam->view_mat());
+            glm::mat4 spot_shadow_mat = scale_bias_mat * view_proj * inv_cam_view;
 
             for(auto & ent_2: models)
             {
@@ -566,6 +693,9 @@ void World::draw()
     {
         if(_sunlight.casts_shadow)
         {
+            // TODO: blocky shadows? cascaded shadow maps?
+            //      http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
+            //      https://gamedev.stackexchange.com/questions/68016/shadow-mapping-with-directional-light
             // create shadow map
             _spot_dir_shadow_fbo.bind();
             glViewport(0, 0, 512, 512);
