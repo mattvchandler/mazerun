@@ -34,6 +34,8 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "util/logger.hpp"
+
 Light::Light(const bool enabled, const glm::vec3 & color, const bool casts_shadow):
     enabled(enabled), color(color), casts_shadow(casts_shadow)
 {
@@ -47,52 +49,55 @@ Point_light::Point_light(const bool enabled, const glm::vec3 & color, const bool
 {
 }
 
-glm::mat4 Point_light::shadow_view_mat(const Shadow_dir dir)
+glm::mat4 Point_light::shadow_view_mat(const GLenum dir)
 {
     glm::mat4 view_mat;
     switch(dir)
     {
-    case POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
         view_mat = glm::mat4(
             glm::vec4(0.0f, 0.0f, -1.0f, 0.0f),
-            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
-            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
-            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        break;
-    case NEGATIVE_X:
-        view_mat = glm::mat4(
-            glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
-            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, -1.0f, 0.0f, 0.0f),
             glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         break;
-    case POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+        view_mat = glm::mat4(
+            glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+            glm::vec4(0.0f, -1.0f, 0.0f, 0.0f),
+            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
         view_mat = glm::mat4(
             glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, -1.0f, 0.0f),
             glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         break;
-    case NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
         view_mat = glm::mat4(
             glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
             glm::vec4(0.0f, -1.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         break;
-    case POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
         view_mat = glm::mat4(
-            glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f),
-            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, -1.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, -1.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         break;
-    case NEGATIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         view_mat = glm::mat4(
-            glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
-            glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+            glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec4(0.0f, -1.0f, 0.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        break;
+    default:
+        Logger_locator::get()(Logger::ERROR, "Point_light::shadow_view_mat called with invalid enum");
         break;
     }
     return view_mat;
