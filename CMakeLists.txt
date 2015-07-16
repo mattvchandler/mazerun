@@ -33,6 +33,7 @@ find_package(SFML 2 COMPONENTS audio graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
+find_package(Freetype REQUIRED)
 find_package(Threads REQUIRED)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     find_package(X11 REQUIRED)
@@ -44,9 +45,10 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${ASSIMP_INCLUDE_DIRS}
     ${SIGC_INCLUDE_DIRS}
-    ${GLM_INCLUDE_DIRS}
     ${SFML_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
+    ${GLM_INCLUDE_DIRS}
+    ${FREETYPE_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
     )
 link_directories(
@@ -54,12 +56,19 @@ link_directories(
     ${SIGC_LIBRARIES_DIRS}
     ${SFML_LIBRARIES_DIRS}
     ${GLEW_LIBRARIES_DIRS}
+    ${FREETYPE_LIBRARIES_DIRS}
     ${X11_LIBRARIES_DIRS}
     )
 
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
 set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazerun)
+# TODO: fontconfig?
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set(fontdir "C:/Windows/Fonts")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(fontdir "/usr/share/fonts/truetype/dejavu")
+endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
     ${PROJECT_BINARY_DIR}/src/config.hpp)
@@ -97,6 +106,7 @@ add_executable(${PROJECT_NAME}
     src/opengl/gl_wrappers.cpp
     src/opengl/shader_prog.cpp
     src/opengl/texture.cpp
+    src/util/font.cpp
     src/util/message.cpp
     src/world/entity.cpp
     src/world/quad.cpp
@@ -107,6 +117,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${ASSIMP_LIBRARIES}
     ${SIGC_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
     ${SFML_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}

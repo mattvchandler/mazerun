@@ -46,6 +46,7 @@
 
 #include <SFML/Audio.hpp>
 
+#include "config.hpp"
 #include "entities/player.hpp"
 #include "entities/testmdl.hpp"
 #include "opengl/gl_helpers.hpp"
@@ -137,7 +138,7 @@ World::World():
     _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed?
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _g_fbo_pos_tex(FBO::create_tex(800, 600)),
+    _g_fbo_pos_tex(FBO::create_tex(800, 600)), // TODO: resize
     _g_fbo_shininess_tex(FBO::create_tex(800, 600)),
     _g_fbo_normal_tex(FBO::create_tex(800, 600)),
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
@@ -146,7 +147,8 @@ World::World():
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
-    _quad(Quad::create())
+    _quad(Quad::create()),
+    _font(FONT_BASE_DIR "/DejaVuSans.ttf", 16)
 {
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
@@ -339,6 +341,7 @@ World::World():
     // setup FBOs
     _g_fbo.bind();
 
+    // TODO: put shininess in the alpha channel for depth
     int i = 0;
     for(auto tex_id: {_g_fbo_pos_tex->get_id(), _g_fbo_shininess_tex->get_id(), _g_fbo_normal_tex->get_id()})
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (i++), GL_TEXTURE_2D, tex_id, 0);
@@ -371,9 +374,9 @@ World::World():
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    check_error("World::World");
-
     Message_locator::get().add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
+
+    check_error("World::World");
 }
 
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
@@ -829,6 +832,7 @@ void World::resize()
     _proj = glm::perspective((float)M_PI / 6.0f,
         (float)_win.getSize().x / (float)_win.getSize().y, 0.1f, 1000.0f);
     // TODO: request redraw
+    // TODO: resize framebuffer attachments
 }
 
 void World::game_loop()
@@ -860,22 +864,22 @@ void World::event_loop()
             // TODO: have events trigger signals that listeners can recieve?
             switch(ev.type)
             {
-                case sf::Event::Closed:
-                    _running = false;
-                    break;
-                case sf::Event::GainedFocus:
-                    _focused = true;
-                    break;
-                case sf::Event::LostFocus:
-                    _focused = false;
-                    break;
-                case sf::Event::Resized:
-                    _do_resize = true;
-                    break;
-                case sf::Event::KeyPressed:
-                    Message_locator::get().queue_event<sf::Keyboard::Key>("key_down", ev.key.code);
-                default:
-                    break;
+            case sf::Event::Closed:
+                _running = false;
+                break;
+            case sf::Event::GainedFocus:
+                _focused = true;
+                break;
+            case sf::Event::LostFocus:
+                _focused = false;
+                break;
+            case sf::Event::Resized:
+                _do_resize = true;
+                break;
+            case sf::Event::KeyPressed:
+                Message_locator::get().queue_event<sf::Keyboard::Key>("key_down", ev.key.code);
+            default:
+                break;
             }
         }
         if(!_running || interrupted)

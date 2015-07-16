@@ -39,6 +39,7 @@
 #include "components/light.hpp"
 #include "entities/walls.hpp"
 #include "opengl/shader_prog.hpp"
+#include "util/font.hpp"
 #include "util/message.hpp"
 #include "world/entity.hpp"
 #include "world/quad.hpp"
@@ -78,6 +79,7 @@ private:
 
     Skybox _skybox;
     Dir_light _sunlight;
+
     Shader_prog _ent_prepass;
     Shader_prog _point_light_prog;
     Shader_prog _point_light_shadow_prog;
@@ -106,7 +108,10 @@ private:
     std::unique_ptr<Texture_2D> _point_shadow_fbo_depth_tex; // TODO: should be renderbuffer
     std::unique_ptr<Texture_2D> _spot_dir_shadow_fbo_tex;
 
+    // simple quad used for rendering effects
     Quad * _quad;
+
+    Font _font;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better
