@@ -37,7 +37,7 @@
 #include "util/logger.hpp"
 
 // TODO: documentation
-Font::Font(const std::string & font_file, const unsigned int font_size,
+Font_sys::Font_sys(const std::string & font_file, const unsigned int font_size,
     const unsigned int v_dpi, const unsigned int h_dpi)
 {
     Logger_locator::get()(Logger::DBG, "Loading font file: " + font_file + " size: " + std::to_string(font_size));
@@ -119,7 +119,7 @@ Font::Font(const std::string & font_file, const unsigned int font_size,
     ++_lib_ref_cnt;
 }
 
-Font::~Font()
+Font_sys::~Font_sys()
 {
     FT_Done_Face(_face);
 
@@ -132,13 +132,13 @@ Font::~Font()
 }
 
 // TODO: replace w/ opengl calls
-void Font::render_text(const std::string & utf8_input, const std::string & filename)
+void Font_sys::render_text(const std::string & utf8_input, const std::string & filename)
 {
     // libiconv has a weird API, and requires a non-const input
     render_text(std::string(utf8_input), filename);
 }
 
-void Font::render_text(std::string & utf8_input, const std::string & filename)
+void Font_sys::render_text(std::string & utf8_input, const std::string & filename)
 {
     std::u32string utf32_str;
 
@@ -259,7 +259,7 @@ void Font::render_text(std::string & utf8_input, const std::string & filename)
     }
 }
 
-Font::Freetype_lib::Freetype_lib()
+Font_sys::Freetype_lib::Freetype_lib()
 {
     Logger_locator::get()(Logger::DBG, "Loading freetype library");
     FT_Error err = FT_Init_FreeType(&_lib);
@@ -269,23 +269,23 @@ Font::Freetype_lib::Freetype_lib()
         throw std::system_error(err, std::system_category(), "Error loading freetype library");
     }
 }
-Font::Freetype_lib::~Freetype_lib()
+Font_sys::Freetype_lib::~Freetype_lib()
 {
     Logger_locator::get()(Logger::DBG, "Unloading freetype library");
     FT_Done_FreeType(_lib);
 }
 
-FT_Library & Font::Freetype_lib::get_lib()
+FT_Library & Font_sys::Freetype_lib::get_lib()
 {
     return _lib;
 }
 
-const FT_Library & Font::Freetype_lib::get_lib() const
+const FT_Library & Font_sys::Freetype_lib::get_lib() const
 {
     return _lib;
 }
 
-Font::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::string & from_encoding)
+Font_sys::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::string & from_encoding)
 {
     Logger_locator::get()(Logger::DBG, "Loading libiconv");
     errno = 0;
@@ -308,13 +308,13 @@ Font::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::string & 
         }
     }
 }
-Font::Iconv_lib::~Iconv_lib()
+Font_sys::Iconv_lib::~Iconv_lib()
 {
     Logger_locator::get()(Logger::DBG, "unloading libiconv");
     iconv_close(_lib);
 }
 
-std::size_t Font::Iconv_lib::convert(char *& input, std::size_t & num_input_bytes,
+std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_bytes,
     char *& output, std::size_t & num_output_bytes)
 {
     errno = 0;
@@ -341,7 +341,7 @@ std::size_t Font::Iconv_lib::convert(char *& input, std::size_t & num_input_byte
     return bytes_converted;
 }
 
-std::unordered_map<uint32_t, Font::Page>::iterator Font::load_page(const uint32_t page_no)
+std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const uint32_t page_no)
 {
     std::ostringstream ostream;
     ostream<<"Loading font page "<<std::hex<<std::showbase<<page_no;
@@ -409,6 +409,6 @@ std::unordered_map<uint32_t, Font::Page>::iterator Font::load_page(const uint32_
     return page_i;
 }
 
-unsigned int Font::_lib_ref_cnt = 0;
-std::unique_ptr<Font::Freetype_lib> Font::_ft_lib;
-std::unique_ptr<Font::Iconv_lib> Font::_iconv_lib;
+unsigned int Font_sys::_lib_ref_cnt = 0;
+std::unique_ptr<Font_sys::Freetype_lib> Font_sys::_ft_lib;
+std::unique_ptr<Font_sys::Iconv_lib> Font_sys::_iconv_lib;

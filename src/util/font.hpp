@@ -35,12 +35,12 @@
 
 #include <iconv.h>
 
-class Font
+class Font_sys
 {
 public:
-    Font(const std::string & font_file, const unsigned int font_size,
+    Font_sys(const std::string & font_file, const unsigned int font_size,
         const unsigned int v_dpi = 96, const unsigned int h_dpi = 96);
-    ~Font();
+    ~Font_sys();
 
     // TODO: replace w/ opengl calls
     void render_text(const std::string & utf8_input, const std::string & filename);

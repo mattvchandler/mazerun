@@ -111,7 +111,7 @@ private:
     // simple quad used for rendering effects
     Quad * _quad;
 
-    Font _font;
+    Font_sys _font;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better
