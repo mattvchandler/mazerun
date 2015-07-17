@@ -28,6 +28,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModu
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(ASSIMP assimp REQUIRED)
 pkg_check_modules(SIGC sigc++-2.0 REQUIRED)
+pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
 
 find_package(SFML 2 COMPONENTS audio graphics system window REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -45,6 +46,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${ASSIMP_INCLUDE_DIRS}
     ${SIGC_INCLUDE_DIRS}
+    ${FREETYPE_INCLUDE_DIRS}
     ${SFML_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${GLM_INCLUDE_DIRS}
@@ -54,6 +56,7 @@ include_directories(
 link_directories(
     ${ASSIMP_LIBRARIES_DIRS}
     ${SIGC_LIBRARIES_DIRS}
+    ${FREETYPE_LIBRARIES_DIRS}
     ${SFML_LIBRARIES_DIRS}
     ${GLEW_LIBRARIES_DIRS}
     ${FREETYPE_LIBRARIES_DIRS}
@@ -63,12 +66,6 @@ link_directories(
 # configure variables
 set(bindir ${CMAKE_INSTALL_PREFIX}/bin)
 set(datadir ${CMAKE_INSTALL_PREFIX}/share/mazerun)
-# TODO: fontconfig?
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(fontdir "C:/Windows/Fonts")
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(fontdir "/usr/share/fonts/truetype/dejavu")
-endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.hpp.in
     ${PROJECT_BINARY_DIR}/src/config.hpp)
@@ -117,6 +114,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${ASSIMP_LIBRARIES}
     ${SIGC_LIBRARIES}
+    ${FONTCONFIG_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${SFML_LIBRARIES}
     ${GLEW_LIBRARIES}

@@ -37,10 +37,9 @@
 #include "util/logger.hpp"
 
 // TODO: documentation
-Font_sys::Font_sys(const std::string & font_file, const unsigned int font_size,
+Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     const unsigned int v_dpi, const unsigned int h_dpi)
 {
-    Logger_locator::get()(Logger::DBG, "Loading font file: " + font_file + " size: " + std::to_string(font_size));
     if(_lib_ref_cnt == 0)
     {
         _ft_lib.reset(new Freetype_lib);
@@ -54,7 +53,48 @@ Font_sys::Font_sys(const std::string & font_file, const unsigned int font_size,
             _ft_lib.reset();
             throw;
         }
+        try
+        {
+            _fontconfig_lib.reset(new Fontconfig_lib);
+        }
+        catch(std::exception & e)
+        {
+            _ft_lib.reset();
+            _iconv_lib.reset();
+            throw;
+        }
     }
+
+    FcPattern * font_pat = FcNameParse(reinterpret_cast<const FcChar8 *>(font_name.c_str()));
+    FcConfigSubstitute(_fontconfig_lib->get_config(), font_pat, FcMatchPattern);
+    FcDefaultSubstitute(font_pat);
+
+    FcResult result;
+    FcPattern * matched_font_pat = FcFontMatch(_fontconfig_lib->get_config(), font_pat, &result);
+    FcPatternDestroy(font_pat);
+
+    std::string font_file;
+    if(matched_font_pat)
+    {
+        FcChar8 * font_path_c;
+        FcPatternGetString(matched_font_pat, FC_FILE, 0, &font_path_c);
+
+        font_file = reinterpret_cast<char *>(font_path_c);
+
+        Logger_locator::get()(Logger::DBG, "Found font file: " + font_file + " matching: " + font_name);
+
+        FcPatternDestroy(matched_font_pat);
+    }
+    else
+    {
+        _ft_lib.reset();
+        _iconv_lib.reset();
+        _fontconfig_lib.reset();
+
+        Logger_locator::get()(Logger::DBG, "Could not find font file matching: " + font_name);
+        throw std::runtime_error("Could not find font file matching: " + font_name);
+    }
+    Logger_locator::get()(Logger::DBG, "Loading font file: " + font_file + " size: " + std::to_string(font_size));
 
     FT_Error err = FT_New_Face(_ft_lib->get_lib(), font_file.c_str(), 0, &_face);
 
@@ -64,6 +104,7 @@ Font_sys::Font_sys(const std::string & font_file, const unsigned int font_size,
         {
             _ft_lib.reset();
             _iconv_lib.reset();
+            _fontconfig_lib.reset();
         }
         if(err == FT_Err_Unknown_File_Format)
         {
@@ -85,6 +126,7 @@ Font_sys::Font_sys(const std::string & font_file, const unsigned int font_size,
         {
             _ft_lib.reset();
             _iconv_lib.reset();
+            _fontconfig_lib.reset();
         }
         Logger_locator::get()(Logger::ERROR, "No unicode charmap in font file: " + font_file);
         throw std::system_error(err, std::system_category(), "No unicode charmap in font file: " + font_file);
@@ -100,6 +142,7 @@ Font_sys::Font_sys(const std::string & font_file, const unsigned int font_size,
         {
             _ft_lib.reset();
             _iconv_lib.reset();
+            _fontconfig_lib.reset();
         }
         Logger_locator::get()(Logger::ERROR, "Can't set font size: " + std::to_string(font_size) + " for font file: " + font_file);
         throw std::system_error(err, std::system_category(), "Can't set font size: " + std::to_string(font_size) + " for font file: " + font_file);
@@ -127,6 +170,7 @@ Font_sys::~Font_sys()
     {
         _ft_lib.reset();
         _iconv_lib.reset();
+        _fontconfig_lib.reset();
     }
     Logger_locator::get()(Logger::DBG, "Unloading font");
 }
@@ -259,88 +303,6 @@ void Font_sys::render_text(std::string & utf8_input, const std::string & filenam
     }
 }
 
-Font_sys::Freetype_lib::Freetype_lib()
-{
-    Logger_locator::get()(Logger::DBG, "Loading freetype library");
-    FT_Error err = FT_Init_FreeType(&_lib);
-    if(err != FT_Err_Ok)
-    {
-        Logger_locator::get()(Logger::ERROR, "Error loading freetype library");
-        throw std::system_error(err, std::system_category(), "Error loading freetype library");
-    }
-}
-Font_sys::Freetype_lib::~Freetype_lib()
-{
-    Logger_locator::get()(Logger::DBG, "Unloading freetype library");
-    FT_Done_FreeType(_lib);
-}
-
-FT_Library & Font_sys::Freetype_lib::get_lib()
-{
-    return _lib;
-}
-
-const FT_Library & Font_sys::Freetype_lib::get_lib() const
-{
-    return _lib;
-}
-
-Font_sys::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::string & from_encoding)
-{
-    Logger_locator::get()(Logger::DBG, "Loading libiconv");
-    errno = 0;
-    _lib = iconv_open(to_encoding.c_str(), from_encoding.c_str());
-    if(errno != 0)
-    {
-        if(errno == EINVAL)
-        {
-            Logger_locator::get()(Logger::ERROR, "Error loading libiconv: can't convert " + from_encoding + " to " + to_encoding);
-            auto err = std::system_error(errno, std::system_category(), "Error loading libiconv: can't convert " + from_encoding + " to " + to_encoding);
-            errno = 0;
-            throw err;
-        }
-        else
-        {
-            Logger_locator::get()(Logger::ERROR, std::string("Error loading libiconv: ") + std::strerror(errno));
-            auto err = std::system_error(errno, std::system_category(), std::string("Error loading libiconv: ") + std::strerror(errno));
-            errno = 0;
-            throw err;
-        }
-    }
-}
-Font_sys::Iconv_lib::~Iconv_lib()
-{
-    Logger_locator::get()(Logger::DBG, "unloading libiconv");
-    iconv_close(_lib);
-}
-
-std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_bytes,
-    char *& output, std::size_t & num_output_bytes)
-{
-    errno = 0;
-    std::size_t bytes_converted = iconv(_lib, &input, &num_input_bytes, &output, &num_output_bytes);
-    if((bytes_converted == (size_t)-1 && errno != 0) || (errno != 0 && errno != E2BIG))
-    {
-        std::system_error err;
-        switch(errno)
-        {
-        case EILSEQ:
-            Logger_locator::get()(Logger::WARN, "Illiegal char sequence in iconv conversion");
-            err = std::system_error(errno, std::system_category(), "Illiegal char sequence in iconv conversion");
-            break;
-        case EINVAL:
-            Logger_locator::get()(Logger::WARN, "Incomplete char sequence in iconv conversion");
-            err = std::system_error(errno, std::system_category(), "Incomplete char sequence in iconv conversion");
-            break;
-        default:
-            Logger_locator::get()(Logger::WARN, std::string("Unknown error in iconv conversion") + std::strerror(errno));
-            err = std::system_error(errno, std::system_category(), std::string("Unknown error in iconv conversion") + std::strerror(errno));
-            break;
-        }
-    }
-    return bytes_converted;
-}
-
 std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const uint32_t page_no)
 {
     std::ostringstream ostream;
@@ -409,6 +371,117 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
     return page_i;
 }
 
+Font_sys::Freetype_lib::Freetype_lib()
+{
+    Logger_locator::get()(Logger::DBG, "Loading freetype library");
+    FT_Error err = FT_Init_FreeType(&_lib);
+    if(err != FT_Err_Ok)
+    {
+        Logger_locator::get()(Logger::ERROR, "Error loading freetype library");
+        throw std::system_error(err, std::system_category(), "Error loading freetype library");
+    }
+}
+Font_sys::Freetype_lib::~Freetype_lib()
+{
+    Logger_locator::get()(Logger::DBG, "Unloading freetype library");
+    FT_Done_FreeType(_lib);
+}
+
+FT_Library & Font_sys::Freetype_lib::get_lib()
+{
+    return _lib;
+}
+
+const FT_Library & Font_sys::Freetype_lib::get_lib() const
+{
+    return _lib;
+}
+
+Font_sys::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::string & from_encoding)
+{
+    Logger_locator::get()(Logger::DBG, "Loading libiconv");
+    errno = 0;
+    _lib = iconv_open(to_encoding.c_str(), from_encoding.c_str());
+    if(errno != 0)
+    {
+        if(errno == EINVAL)
+        {
+            Logger_locator::get()(Logger::ERROR, "Error loading libiconv: can't convert " + from_encoding + " to " + to_encoding);
+            auto err = std::system_error(errno, std::system_category(), "Error loading libiconv: can't convert " + from_encoding + " to " + to_encoding);
+            errno = 0;
+            throw err;
+        }
+        else
+        {
+            Logger_locator::get()(Logger::ERROR, std::string("Error loading libiconv: ") + std::strerror(errno));
+            auto err = std::system_error(errno, std::system_category(), std::string("Error loading libiconv: ") + std::strerror(errno));
+            errno = 0;
+            throw err;
+        }
+    }
+}
+Font_sys::Iconv_lib::~Iconv_lib()
+{
+    Logger_locator::get()(Logger::DBG, "Unloading libiconv");
+    iconv_close(_lib);
+}
+
+std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_bytes,
+    char *& output, std::size_t & num_output_bytes)
+{
+    errno = 0;
+    std::size_t bytes_converted = iconv(_lib, &input, &num_input_bytes, &output, &num_output_bytes);
+    if((bytes_converted == (size_t)-1 && errno != 0) || (errno != 0 && errno != E2BIG))
+    {
+        std::system_error err;
+        switch(errno)
+        {
+        case EILSEQ:
+            Logger_locator::get()(Logger::WARN, "Illiegal char sequence in iconv conversion");
+            err = std::system_error(errno, std::system_category(), "Illiegal char sequence in iconv conversion");
+            break;
+        case EINVAL:
+            Logger_locator::get()(Logger::WARN, "Incomplete char sequence in iconv conversion");
+            err = std::system_error(errno, std::system_category(), "Incomplete char sequence in iconv conversion");
+            break;
+        default:
+            Logger_locator::get()(Logger::WARN, std::string("Unknown error in iconv conversion") + std::strerror(errno));
+            err = std::system_error(errno, std::system_category(), std::string("Unknown error in iconv conversion") + std::strerror(errno));
+            break;
+        }
+    }
+    return bytes_converted;
+}
+
+Font_sys::Fontconfig_lib::Fontconfig_lib()
+{
+    Logger_locator::get()(Logger::DBG, "Loading fontconfig");
+    if(!FcInit())
+    {
+        Logger_locator::get()(Logger::ERROR, "Error loading fontcondig");
+        throw std::runtime_error("Error loading freetype library");
+    }
+    _fc_config = FcInitLoadConfigAndFonts();
+}
+
+Font_sys::Fontconfig_lib::~Fontconfig_lib()
+{
+    Logger_locator::get()(Logger::DBG, "Unloading fontconfig");
+    FcConfigDestroy(_fc_config);
+    FcFini();
+}
+
+FcConfig * Font_sys::Fontconfig_lib::get_config()
+{
+    return _fc_config;
+}
+
+const FcConfig * Font_sys::Fontconfig_lib::get_config() const
+{
+    return _fc_config;
+}
+
 unsigned int Font_sys::_lib_ref_cnt = 0;
 std::unique_ptr<Font_sys::Freetype_lib> Font_sys::_ft_lib;
 std::unique_ptr<Font_sys::Iconv_lib> Font_sys::_iconv_lib;
+std::unique_ptr<Font_sys::Fontconfig_lib> Font_sys::_fontconfig_lib;

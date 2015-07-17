@@ -35,7 +35,6 @@
 #define VERSION_PATCH_STR "@VERSION_PATCH@"
 
 #define RESOURCE_BASE_DIR "@datadir@"
-#define FONT_BASE_DIR "@fontdir@"
 
 #define PROJECT_TITLE "@PROJECT_TITLE@"
 #define PROJECT_AUTHOR "@PROJECT_AUTHOR@"

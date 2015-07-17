@@ -46,7 +46,6 @@
 
 #include <SFML/Audio.hpp>
 
-#include "config.hpp"
 #include "entities/player.hpp"
 #include "entities/testmdl.hpp"
 #include "opengl/gl_helpers.hpp"
@@ -148,7 +147,7 @@ World::World():
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _quad(Quad::create()),
-    _font(FONT_BASE_DIR "/DejaVuSans.ttf", 16)
+    _font("DejaVu Sans", 16)
 {
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");

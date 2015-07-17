@@ -35,10 +35,12 @@
 
 #include <iconv.h>
 
+#include <fontconfig/fontconfig.h>
+
 class Font_sys
 {
 public:
-    Font_sys(const std::string & font_file, const unsigned int font_size,
+    Font_sys(const std::string & font_name, const unsigned int font_size,
         const unsigned int v_dpi = 96, const unsigned int h_dpi = 96);
     ~Font_sys();
 
@@ -74,6 +76,19 @@ protected:
         iconv_t _lib;
     };
 
+    class Fontconfig_lib
+    {
+    public:
+        Fontconfig_lib();
+        ~Fontconfig_lib();
+
+        FcConfig * get_config();
+        const FcConfig * get_config() const;
+
+    protected:
+        FcConfig * _fc_config;
+    };
+
     struct Char_info
     {
         FT_Vector origin;
@@ -102,6 +117,7 @@ protected:
     static unsigned int _lib_ref_cnt;
     static std::unique_ptr<Freetype_lib> _ft_lib;
     static std::unique_ptr<Iconv_lib> _iconv_lib;
+    static std::unique_ptr<Fontconfig_lib> _fontconfig_lib;
 };
 
 #endif // FONT_HPP
