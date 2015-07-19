@@ -109,7 +109,7 @@ private:
     std::unique_ptr<Texture_2D> _spot_dir_shadow_fbo_tex;
 
     // simple quad used for rendering effects
-    Quad * _quad;
+    Quad _quad;
 
     Font_sys _font;
 

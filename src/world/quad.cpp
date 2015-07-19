@@ -30,36 +30,8 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
-Quad * Quad::create()
+Quad::Quad(): _vbo(GL_ARRAY_BUFFER)
 {
-    auto quad_it = Model_cache_locator::get().mdl_index.find("QUAD");
-    if(quad_it != Model_cache_locator::get().mdl_index.end())
-    {
-        return dynamic_cast<Quad *>(quad_it->second.get());
-    }
-    else
-    {
-        Quad * quad = new Quad;
-        Model_cache_locator::get().mdl_index.emplace("QUAD", std::unique_ptr<Model>(quad));
-        return quad;
-    }
-}
-
-void Quad::draw(const std::function<void(const Material &)> & set_material) const
-{
-    _vao.bind();
-
-    set_material(*_meshes[0].mat);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, _meshes[0].count);
-
-    glBindVertexArray(0); // TODO: get prev val?
-
-    check_error("Quad::Draw");
-}
-
-Quad::Quad(): Model(false)
-{
-    _key = "QUAD";
     Logger_locator::get()(Logger::DBG, "Creating Quad");
 
     std::vector<glm::vec3> vert_pos =
@@ -70,71 +42,26 @@ Quad::Quad(): Model(false)
         glm::vec3(1.0f, 1.0f, 0.0f)
     };
 
-    std::vector<glm::vec2> vert_tex_coords
-    {
-        glm::vec2(0.0f, 0.0f),
-        glm::vec2(1.0f, 0.0f),
-        glm::vec2(0.0f, 1.0f),
-        glm::vec2(1.0f, 1.0f)
-    };
-
-    std::vector<glm::vec3> vert_normals
-    {
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f)
-    };
-
-    std::vector<glm::vec3> vert_tangents
-    {
-        glm::vec3(1.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f)
-    };
-
-    _meshes.emplace_back();
-    Mesh & mesh = _meshes.back();
-
-    mesh.count = vert_pos.size();
-
     _vao.bind();
     _vbo.bind();
 
-    glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size() +
-        sizeof(glm::vec3) * vert_normals.size() +
-        sizeof(glm::vec3) * vert_tangents.size(), NULL, GL_STATIC_DRAW);
+    glBufferData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(), NULL, GL_STATIC_DRAW);
 
     glBufferSubData(_vbo.type(), 0, sizeof(glm::vec3) * vert_pos.size(), vert_pos.data());
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
-
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size(),
-        sizeof(glm::vec2) * vert_tex_coords.size(), vert_tex_coords.data());
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size()));
-    glEnableVertexAttribArray(1);
-
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size(),
-        sizeof(glm::vec3) * vert_normals.size(), vert_normals.data());
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size()));
-    glEnableVertexAttribArray(2);
-
-    glBufferSubData(_vbo.type(), sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size() +
-        sizeof(glm::vec3) * vert_normals.size(),
-        sizeof(glm::vec3) * vert_tangents.size(), vert_tangents.data());
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(sizeof(glm::vec3) * vert_pos.size() +
-        sizeof(glm::vec2) * vert_tex_coords.size() +
-        sizeof(glm::vec3) * vert_normals.size()));
-    glEnableVertexAttribArray(3);
     glBindVertexArray(0);
 
-    _mats.emplace_back();
-    mesh.mat = &_mats.back();
-
     check_error("Quad::Quad");
+}
+
+void Quad::draw() const
+{
+    _vao.bind();
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glBindVertexArray(0); // TODO: get prev val?
+
+    check_error("Quad::Draw");
 }

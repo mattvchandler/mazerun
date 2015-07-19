@@ -146,7 +146,6 @@ World::World():
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
-    _quad(Quad::create()),
     _font("DejaVu Sans", 16)
 {
     // TODO: standardize naming
@@ -498,7 +497,7 @@ void World::draw()
         glUniform1f(point_prog.get_uniform("point_light.linear_atten"), point_light.linear_atten);
         glUniform1f(point_prog.get_uniform("point_light.quad_atten"), point_light.quad_atten);
 
-        _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+        _quad.draw(); // TODO: sphere or smaller quad instead?
     };
 
     bool use_shadow = false;
@@ -611,7 +610,7 @@ void World::draw()
         glUniform1f(spot_prog.get_uniform("spot_light.linear_atten"), spot_light.linear_atten);
         glUniform1f(spot_prog.get_uniform("spot_light.quad_atten"), spot_light.quad_atten);
 
-        _quad->draw([](const Material &){}); // TODO: sphere or smaller quad instead?
+        _quad.draw(); // TODO: sphere or smaller quad instead?
     };
 
     use_shadow = false;
@@ -688,7 +687,7 @@ void World::draw()
 
         glUniform2fv(dir_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
-        _quad->draw([](const Material &){});
+        _quad.draw();
     };
 
     if(_sunlight.enabled)
@@ -763,7 +762,7 @@ void World::draw()
 
     glActiveTexture(GL_TEXTURE0);
     _g_fbo_depth_tex->bind();
-    _quad->draw([](const Material &){});
+    _quad.draw();
     check_error("World::draw - default depthbuffer fill");
 
     // main drawing pass

@@ -24,16 +24,16 @@
 #ifndef QUAD_HPP
 #define QUAD_HPP
 
-#include "components/model.hpp"
+#include "opengl/gl_wrappers.hpp"
 
-class Quad final: public Model
+class Quad final: sf::NonCopyable
 {
 public:
-    static Quad * create();
-    void draw(const std::function<void(const Material &)> & set_material) const;
-
-private:
     Quad();
+    void draw() const;
+private:
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
 };
 
 #endif // QUAD_HPP
