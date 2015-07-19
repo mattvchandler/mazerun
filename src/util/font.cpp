@@ -434,24 +434,25 @@ std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_
 {
     errno = 0;
     std::size_t bytes_converted = iconv(_lib, &input, &num_input_bytes, &output, &num_output_bytes);
-    if((bytes_converted == (size_t)-1 && errno != 0) || (errno != 0 && errno != E2BIG))
+    if((errno != 0 && errno != E2BIG))
     {
         std::system_error err;
         switch(errno)
         {
         case EILSEQ:
-            Logger_locator::get()(Logger::WARN, "Illiegal char sequence in iconv conversion");
-            err = std::system_error(errno, std::system_category(), "Illiegal char sequence in iconv conversion");
+            Logger_locator::get()(Logger::WARN, "Illiegal char sequence in iconv conversion: ");
+            err = std::system_error(errno, std::system_category(), "Illiegal char sequence in iconv conversion: ");
             break;
         case EINVAL:
-            Logger_locator::get()(Logger::WARN, "Incomplete char sequence in iconv conversion");
-            err = std::system_error(errno, std::system_category(), "Incomplete char sequence in iconv conversion");
+            Logger_locator::get()(Logger::WARN, "Incomplete char sequence in iconv conversion: ");
+            err = std::system_error(errno, std::system_category(), "Incomplete char sequence in iconv conversion: ");
             break;
         default:
-            Logger_locator::get()(Logger::WARN, std::string("Unknown error in iconv conversion") + std::strerror(errno));
-            err = std::system_error(errno, std::system_category(), std::string("Unknown error in iconv conversion") + std::strerror(errno));
+            Logger_locator::get()(Logger::WARN, std::string("Unknown error in iconv conversion: ") + std::strerror(errno));
+            err = std::system_error(errno, std::system_category(), std::string("Unknown error in iconv conversion: ") + std::strerror(errno));
             break;
         }
+        throw err;
     }
     return bytes_converted;
 }
