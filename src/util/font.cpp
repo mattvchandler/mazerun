@@ -36,6 +36,8 @@
 
 #include "util/logger.hpp"
 
+// TODO: text object for static text?
+
 // TODO: documentation
 Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     const unsigned int v_dpi, const unsigned int h_dpi)
@@ -149,13 +151,13 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     }
 
     // TODO: padding
-    _cell_bbox.xMin = FT_MulFix(_face->bbox.xMin, _face->size->metrics.x_scale) / 64;
-    _cell_bbox.yMin = FT_MulFix(_face->bbox.yMin, _face->size->metrics.y_scale) / 64;
-    _cell_bbox.xMax = FT_MulFix(_face->bbox.xMax, _face->size->metrics.x_scale) / 64;
-    _cell_bbox.yMax = FT_MulFix(_face->bbox.yMax, _face->size->metrics.y_scale) / 64;
+    _cell_bbox.ul.x = FT_MulFix(_face->bbox.xMin, _face->size->metrics.x_scale) / 64;
+    _cell_bbox.ul.y = FT_MulFix(_face->bbox.yMax, _face->size->metrics.y_scale) / 64;
+    _cell_bbox.lr.x = FT_MulFix(_face->bbox.xMax, _face->size->metrics.x_scale) / 64;
+    _cell_bbox.lr.y = FT_MulFix(_face->bbox.yMin, _face->size->metrics.y_scale) / 64;
 
-    _tex_width = (_cell_bbox.xMax - _cell_bbox.xMin) * 16;
-    _tex_height = (_cell_bbox.yMax - _cell_bbox.yMin) * 16;
+    _tex_width = _cell_bbox.width() * 16;
+    _tex_height = _cell_bbox.height() * 16;
 
     _has_kerning_info = FT_HAS_KERNING(_face);
 
@@ -186,13 +188,13 @@ void Font_sys::render_text(std::string & utf8_input, const std::string & filenam
 {
     std::u32string utf32_str;
 
-    FT_Vector pen = {0, 0};
+    glm::ivec2 pen = {0, 0};
 
-    FT_BBox text_bounds;
-    text_bounds.xMin = std::numeric_limits<int>::max();
-    text_bounds.yMin = std::numeric_limits<int>::max();
-    text_bounds.xMax = std::numeric_limits<int>::min();
-    text_bounds.yMax = std::numeric_limits<int>::min();
+    Bbox<int> text_bounds;
+    text_bounds.ul.x = std::numeric_limits<int>::max();
+    text_bounds.ul.y = std::numeric_limits<int>::min();
+    text_bounds.lr.x = std::numeric_limits<int>::min();
+    text_bounds.lr.y = std::numeric_limits<int>::max();
 
     // TODO: do we really need to get the bound box?
     FT_UInt prev_glyph_i = 0;
@@ -230,23 +232,22 @@ void Font_sys::render_text(std::string & utf8_input, const std::string & filenam
             pen.y += kerning.y / 64;
         }
 
-        text_bounds.xMin = std::min(text_bounds.xMin, pen.x + c.bbox.xMin);
-        text_bounds.yMin = std::min(text_bounds.yMin, pen.y + c.bbox.yMin);
-        text_bounds.xMax = std::max(text_bounds.xMax, pen.x + c.bbox.xMax);
-        text_bounds.yMax = std::max(text_bounds.yMax, pen.y + c.bbox.yMax);
+        text_bounds.ul.x = std::min(text_bounds.ul.x, pen.x + c.bbox.ul.x);
+        text_bounds.ul.y = std::max(text_bounds.ul.y, pen.y + c.bbox.ul.y);
+        text_bounds.lr.x = std::max(text_bounds.lr.x, pen.x + c.bbox.lr.x);
+        text_bounds.lr.y = std::min(text_bounds.lr.y, pen.y + c.bbox.lr.y);
 
-        pen.x += c.advance.x / 64;
-        pen.y += c.advance.y / 64;
+        pen += c.advance / 64;
 
         prev_glyph_i = c.glyph_i;
     }
 
-    std::size_t img_width = text_bounds.xMax - text_bounds.xMin;
-    std::size_t img_height = text_bounds.yMax - text_bounds.yMin;
+    std::size_t img_width = text_bounds.width();
+    std::size_t img_height = text_bounds.height();
     std::vector<char> pixmap(img_height * img_width, 0);
 
-    pen.x = -text_bounds.xMin;
-    pen.y = text_bounds.yMax;
+    pen.x = -text_bounds.ul.x;
+    pen.y = text_bounds.ul.y;
 
     prev_glyph_i = 0;
 
@@ -269,18 +270,18 @@ void Font_sys::render_text(std::string & utf8_input, const std::string & filenam
             pen.y += kerning.y / 64;
         }
 
-        for(int y = 0; y < c.bbox.yMax - c.bbox.yMin; ++y)
+        for(int y = 0; y < c.bbox.height(); ++y)
         {
-            for(int x = 0; x < c.bbox.xMax - c.bbox.xMin; ++x)
+            for(int x = 0; x < c.bbox.width(); ++x)
             {
-                long img_y = pen.y - c.bbox.yMax + y;
-                long img_x = pen.x + c.bbox.xMin + x;
+                long img_y = pen.y - c.bbox.ul.y + y;
+                long img_x = pen.x + c.bbox.ul.x + x;
 
                 unsigned short tbl_row = (code_pt >> 4) & 0xF;
                 unsigned short tbl_col = code_pt & 0xF;
 
-                long tbl_y = tbl_row * (_cell_bbox.yMax - _cell_bbox.yMin) + _cell_bbox.yMax - c.bbox.yMax + y;
-                long tbl_x = tbl_col * (_cell_bbox.xMax - _cell_bbox.xMin) - _cell_bbox.xMin + c.bbox.xMin + x;
+                long tbl_y = tbl_row * _cell_bbox.height() + _cell_bbox.ul.y - c.bbox.ul.y + y;
+                long tbl_x = tbl_col * _cell_bbox.width() - _cell_bbox.ul.x + c.bbox.ul.x + x;
 
                 pixmap[img_y * img_width + img_x] += page.tex[tbl_y * _tex_width + tbl_x];
             }
@@ -312,7 +313,7 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
     auto page_i = _page_map.emplace(std::make_pair(page_no, Page())).first;
     Page & page = page_i->second;
 
-    page.tex.resize(_tex_width * _tex_height, 0); // TODO: luminance w/ alpha
+    page.tex.resize(_tex_width * _tex_height, 0);
 
     FT_GlyphSlot slot = _face->glyph;
 
@@ -333,21 +334,22 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
         FT_Bitmap * bmp = &slot->bitmap;
         Char_info & c = page.char_info[code_pt & 0xFF];
 
-        c.origin.x = -_cell_bbox.xMin + slot->bitmap_left;
-        c.origin.y = _cell_bbox.yMax - slot->bitmap_top;
-        c.bbox.xMin = slot->bitmap_left;
-        c.bbox.xMax = (int)bmp->width + slot->bitmap_left;
-        c.bbox.yMin = slot->bitmap_top - (int)bmp->rows;
-        c.bbox.yMax = slot->bitmap_top;
-        c.advance = slot->advance;
+        c.origin.x = -_cell_bbox.ul.x + slot->bitmap_left;
+        c.origin.y = _cell_bbox.ul.y - slot->bitmap_top;
+        c.bbox.ul.x = slot->bitmap_left;
+        c.bbox.ul.y = slot->bitmap_top;
+        c.bbox.lr.x = (int)bmp->width + slot->bitmap_left;
+        c.bbox.lr.y = slot->bitmap_top - (int)bmp->rows;
+        c.advance.x = slot->advance.x;
+        c.advance.y = slot->advance.y;
         c.glyph_i = glyph_i;
 
         for(std::size_t y = 0; y < (std::size_t)bmp->rows; ++y)
         {
             for(std::size_t x = 0; x < (std::size_t)bmp->width; ++x)
             {
-                long tbl_img_y = tbl_row * (_cell_bbox.yMax - _cell_bbox.yMin) + _cell_bbox.yMax - slot->bitmap_top + y;
-                long tbl_img_x = tbl_col * (_cell_bbox.xMax - _cell_bbox.xMin) - _cell_bbox.xMin + slot->bitmap_left + x;
+                long tbl_img_y = tbl_row * _cell_bbox.height() + _cell_bbox.ul.y - slot->bitmap_top + y;
+                long tbl_img_x = tbl_col * _cell_bbox.width() - _cell_bbox.ul.x + slot->bitmap_left + x;
 
                 // TODO: monochrome fonts?
                 page.tex[tbl_img_y * _tex_width + tbl_img_x] = bmp->buffer[y * bmp->width + x];
@@ -420,6 +422,7 @@ Font_sys::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::strin
         }
     }
 }
+
 Font_sys::Iconv_lib::~Iconv_lib()
 {
     Logger_locator::get()(Logger::DBG, "Unloading libiconv");

@@ -37,6 +37,33 @@
 
 #include <fontconfig/fontconfig.h>
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+
+template<typename T>
+struct Bbox
+{
+    #if(defined(GLM_PRECISION_LOWP_FLOAT))
+    glm::tvec2<T, glm::lowp> ul;
+    glm::tvec2<T, glm::lowp> lr;
+    #elif(defined(GLM_PRECISION_MEDIUMP_FLOAT))
+    glm::tvec2<T, glm::mediump> ul;
+    glm::tvec2<T, glm::mediump> lr;
+    #else
+    glm::tvec2<T, glm::highp> ul;
+    glm::tvec2<T, glm::highp> lr;
+    #endif
+
+    T width() const
+    {
+        return lr.x - ul.x;
+    }
+    T height() const
+    {
+        return ul.y - lr.y;
+    }
+};
+
 class Font_sys
 {
 public:
@@ -60,7 +87,6 @@ protected:
 
     protected:
         FT_Library _lib;
-
     };
 
     class Iconv_lib
@@ -91,9 +117,9 @@ protected:
 
     struct Char_info
     {
-        FT_Vector origin;
-        FT_Vector advance;
-        FT_BBox bbox;
+        glm::ivec2 origin;
+        glm::ivec2 advance;
+        Bbox<int> bbox;
         FT_UInt glyph_i;
     };
 
@@ -108,7 +134,7 @@ protected:
     FT_Face _face;
     bool _has_kerning_info;
 
-    FT_BBox _cell_bbox;
+    Bbox<int> _cell_bbox;
 
     size_t _tex_width, _tex_height;
 
