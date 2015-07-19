@@ -180,12 +180,6 @@ Font_sys::~Font_sys()
 // TODO: replace w/ opengl calls
 void Font_sys::render_text(const std::string & utf8_input, const std::string & filename)
 {
-    // libiconv has a weird API, and requires a non-const input
-    render_text(std::string(utf8_input), filename);
-}
-
-void Font_sys::render_text(std::string & utf8_input, const std::string & filename)
-{
     std::u32string utf32_str;
 
     glm::ivec2 pen = {0, 0};
@@ -199,7 +193,7 @@ void Font_sys::render_text(std::string & utf8_input, const std::string & filenam
     // TODO: do we really need to get the bound box?
     FT_UInt prev_glyph_i = 0;
 
-    char * in = &utf8_input[0];
+    char * in = const_cast<char *>(&utf8_input[0]);
     std::size_t in_left = utf8_input.size();
     while(in_left > 0)
     {

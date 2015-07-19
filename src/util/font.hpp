@@ -73,7 +73,6 @@ public:
 
     // TODO: replace w/ opengl calls
     void render_text(const std::string & utf8_input, const std::string & filename);
-    void render_text(std::string & utf8_input, const std::string & filename);
 
 protected:
     class Freetype_lib
