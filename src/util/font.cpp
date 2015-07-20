@@ -23,9 +23,7 @@
 
 #include "util/font.hpp"
 
-#include <fstream>
 #include <iomanip>
-#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
@@ -34,13 +32,18 @@
 #include <cerrno>
 #include <cstring> // for std::strerror
 
+#include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
 // TODO: text object for static text?
 
 // TODO: documentation
 Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
-    const unsigned int v_dpi, const unsigned int h_dpi)
+    const unsigned int v_dpi, const unsigned int h_dpi):
+    _vbo(GL_ARRAY_BUFFER),
+    _prog({std::make_pair("shaders/text.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/text.frag", GL_FRAGMENT_SHADER)},
+        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)})
 {
     if(_lib_ref_cnt == 0)
     {
@@ -162,6 +165,22 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     _has_kerning_info = FT_HAS_KERNING(_face);
 
     ++_lib_ref_cnt;
+
+    _vao.bind();
+    _vbo.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec2), NULL);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec2), (const GLvoid *)sizeof(glm::vec2));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+    _prog.use();
+    _prog.add_uniform("font_page");
+    _prog.add_uniform("color");
+    glUniform1i(_prog.get_uniform("font_page"), 0);
+    glUseProgram(0);
+
+    check_error("Font_sys::Font_sys");
 }
 
 Font_sys::~Font_sys()
@@ -177,20 +196,14 @@ Font_sys::~Font_sys()
     Logger_locator::get()(Logger::DBG, "Unloading font");
 }
 
-// TODO: replace w/ opengl calls
-void Font_sys::render_text(const std::string & utf8_input, const std::string & filename)
+void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & color,
+    const glm::vec2 & start)
 {
-    std::u32string utf32_str;
+    // interleaved: VTVTVTVT…
+    std::vector<glm::vec2> screen_and_tex_coords;
 
-    glm::ivec2 pen = {0, 0};
+    glm::vec2 pen = start;
 
-    Bbox<int> text_bounds;
-    text_bounds.ul.x = std::numeric_limits<int>::max();
-    text_bounds.ul.y = std::numeric_limits<int>::min();
-    text_bounds.lr.x = std::numeric_limits<int>::min();
-    text_bounds.lr.y = std::numeric_limits<int>::max();
-
-    // TODO: do we really need to get the bound box?
     FT_UInt prev_glyph_i = 0;
 
     char * in = const_cast<char *>(&utf8_input[0]);
@@ -202,7 +215,6 @@ void Font_sys::render_text(const std::string & utf8_input, const std::string & f
         std::size_t out_left = sizeof(uint32_t);
 
         _iconv_lib->convert(in, in_left, out, out_left);
-        utf32_str.push_back(code_pt);
 
         auto page_i = _page_map.find(code_pt >> 8);
         if(page_i == _page_map.end())
@@ -226,76 +238,62 @@ void Font_sys::render_text(const std::string & utf8_input, const std::string & f
             pen.y += kerning.y / 64;
         }
 
-        text_bounds.ul.x = std::min(text_bounds.ul.x, pen.x + c.bbox.ul.x);
-        text_bounds.ul.y = std::max(text_bounds.ul.y, pen.y + c.bbox.ul.y);
-        text_bounds.lr.x = std::max(text_bounds.lr.x, pen.x + c.bbox.lr.x);
-        text_bounds.lr.y = std::min(text_bounds.lr.y, pen.y + c.bbox.lr.y);
+        std::size_t tex_row = (code_pt >> 4) & 0xF;
+        std::size_t tex_col = code_pt & 0xF;
+
+        glm::vec2 tex_origin = {(float)(tex_col * _cell_bbox.width() - _cell_bbox.ul.x),
+            (float)(tex_row * _cell_bbox.height() + _cell_bbox.ul.y)};
+
+        // TODO: screen coords or % or pixel coords?
+        screen_and_tex_coords.push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords.push_back({(tex_origin.x + c.bbox.ul.x) / _tex_width,
+            (tex_origin.y - c.bbox.lr.y) / _tex_height});
+        screen_and_tex_coords.push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords.push_back({(tex_origin.x + c.bbox.lr.x) / _tex_width,
+            (tex_origin.y - c.bbox.lr.y) / _tex_height});
+        screen_and_tex_coords.push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords.push_back({(tex_origin.x + c.bbox.ul.x) / _tex_width,
+            (tex_origin.y - c.bbox.ul.y) / _tex_height});
+
+        screen_and_tex_coords.push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords.push_back({(tex_origin.x + c.bbox.ul.x) / _tex_width,
+            (tex_origin.y - c.bbox.ul.y) / _tex_height});
+        screen_and_tex_coords.push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords.push_back({(tex_origin.x + c.bbox.lr.x) / _tex_width,
+            (tex_origin.y - c.bbox.lr.y) / _tex_height});
+        screen_and_tex_coords.push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords.push_back({(tex_origin.x + c.bbox.lr.x) / _tex_width,
+            (tex_origin.y - c.bbox.ul.y) / _tex_height});
 
         pen += c.advance / 64;
 
         prev_glyph_i = c.glyph_i;
     }
 
-    std::size_t img_width = text_bounds.width();
-    std::size_t img_height = text_bounds.height();
-    std::vector<char> pixmap(img_height * img_width, 0);
+    _prog.use();
+    glUniform4fv(_prog.get_uniform("color"), 1, &color[0]);
+    glActiveTexture(GL_TEXTURE0);
+    _page_map[0].tex->bind();
 
-    pen.x = -text_bounds.ul.x;
-    pen.y = text_bounds.ul.y;
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND); // TODO: replace with transparency
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    prev_glyph_i = 0;
+    _vao.bind();
+    _vbo.bind();
 
-    for(const auto & code_pt: utf32_str)
-    {
-        auto page_i = _page_map.find(code_pt >> 8);
-        Page & page = page_i->second;
-        Char_info & c = page.char_info[code_pt & 0xFF];
+    glBufferData(_vbo.type(), sizeof(glm::vec2) * screen_and_tex_coords.size(), NULL, GL_DYNAMIC_DRAW);
+    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec2) * screen_and_tex_coords.size(), screen_and_tex_coords.data());
+    glDrawArrays(GL_TRIANGLES, 0, screen_and_tex_coords.size() / 2);
 
-        if(_has_kerning_info && prev_glyph_i && c.glyph_i)
-        {
-            FT_Vector kerning = {0, 0};
-            if(FT_Get_Kerning(_face, prev_glyph_i, c.glyph_i, FT_KERNING_DEFAULT, &kerning) != FT_Err_Ok)
-            {
-                std::ostringstream ostream;
-                ostream<<"Can't load kerning for: "<<std::hex<<std::showbase<<code_pt;
-                Logger_locator::get()(Logger::WARN, ostream.str());
-            }
-            pen.x += kerning.x / 64;
-            pen.y += kerning.y / 64;
-        }
-
-        for(int y = 0; y < c.bbox.height(); ++y)
-        {
-            for(int x = 0; x < c.bbox.width(); ++x)
-            {
-                long img_y = pen.y - c.bbox.ul.y + y;
-                long img_x = pen.x + c.bbox.ul.x + x;
-
-                unsigned short tbl_row = (code_pt >> 4) & 0xF;
-                unsigned short tbl_col = code_pt & 0xF;
-
-                long tbl_y = tbl_row * _cell_bbox.height() + _cell_bbox.ul.y - c.bbox.ul.y + y;
-                long tbl_x = tbl_col * _cell_bbox.width() - _cell_bbox.ul.x + c.bbox.ul.x + x;
-
-                pixmap[img_y * img_width + img_x] += page.tex[tbl_y * _tex_width + tbl_x];
-            }
-        }
-
-        pen.x += c.advance.x / 64;
-        pen.y += c.advance.y / 64;
-
-        prev_glyph_i = c.glyph_i;
-    }
-
-    std::ofstream out_file(filename, std::ios_base::binary);
-    out_file<<"P5\n"<<img_width<<" "<<img_height<<"\n"<<255<<"\n";
-    for(size_t y = 0; y < img_height; ++y)
-    {
-        for(size_t x = 0; x < img_width; ++x)
-        {
-            out_file<<pixmap[y * img_width + x];
-        }
-    }
+    glBindVertexArray(0);
+    check_error("Font_sys::render_text");
 }
 
 std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const uint32_t page_no)
@@ -307,7 +305,7 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
     auto page_i = _page_map.emplace(std::make_pair(page_no, Page())).first;
     Page & page = page_i->second;
 
-    page.tex.resize(_tex_width * _tex_height, 0);
+    std::vector<char> tex_data(_tex_width * _tex_height, 0);
 
     FT_GlyphSlot slot = _face->glyph;
 
@@ -346,23 +344,22 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
                 long tbl_img_x = tbl_col * _cell_bbox.width() - _cell_bbox.ul.x + slot->bitmap_left + x;
 
                 // TODO: monochrome fonts?
-                page.tex[tbl_img_y * _tex_width + tbl_img_x] = bmp->buffer[y * bmp->width + x];
+                tex_data[tbl_img_y * _tex_width + tbl_img_x] = bmp->buffer[y * bmp->width + x];
             }
         }
     }
 
-    // TODO: remove
-    /*
-    std::ofstream out_file("page-" + std::to_string(page_no), std::ios_base::binary);
-    out_file<<"P5\n"<<_tex_width<<" "<<_tex_height<<"\n"<<255<<"\n";
-    for(size_t y = 0; y < _tex_height; ++y)
-    {
-        for(size_t x = 0; x < _tex_width; ++x)
-        {
-            out_file<<page.tex[y * _tex_width + x];
-        }
-    }
-    */
+    page.tex.reset(new Texture_2D);
+    page.tex->bind();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _tex_width, _tex_height,
+        0, GL_RED, GL_UNSIGNED_BYTE, tex_data.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // set params
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     return page_i;
 }

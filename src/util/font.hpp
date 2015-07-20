@@ -27,7 +27,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <vector> // TODO: remove
 #include <cstdint>
 
 #include <ft2build.h>
@@ -37,22 +36,15 @@
 
 #include <fontconfig/fontconfig.h>
 
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
+#include "opengl/gl_wrappers.hpp"
+#include "opengl/shader_prog.hpp"
+#include "opengl/texture.hpp"
 
 template<typename T>
 struct Bbox
 {
-    #if(defined(GLM_PRECISION_LOWP_FLOAT))
-    glm::tvec2<T, glm::lowp> ul;
-    glm::tvec2<T, glm::lowp> lr;
-    #elif(defined(GLM_PRECISION_MEDIUMP_FLOAT))
-    glm::tvec2<T, glm::mediump> ul;
-    glm::tvec2<T, glm::mediump> lr;
-    #else
-    glm::tvec2<T, glm::highp> ul;
-    glm::tvec2<T, glm::highp> lr;
-    #endif
+    glm::tvec2<T> ul;
+    glm::tvec2<T> lr;
 
     T width() const
     {
@@ -71,8 +63,8 @@ public:
         const unsigned int v_dpi = 96, const unsigned int h_dpi = 96);
     ~Font_sys();
 
-    // TODO: replace w/ opengl calls
-    void render_text(const std::string & utf8_input, const std::string & filename);
+void render_text(const std::string & utf8_input, const glm::vec4 & color,
+    const glm::vec2 & start);
 
 protected:
     class Freetype_lib
@@ -124,7 +116,7 @@ protected:
 
     struct Page
     {
-        std::vector<char> tex; // TODO: replace w/ texture
+        std::unique_ptr<Texture_2D> tex; // TODO: replace w/ texture
         Char_info char_info[256];
     };
 
@@ -138,6 +130,11 @@ protected:
     size_t _tex_width, _tex_height;
 
     std::unordered_map<uint32_t, Page> _page_map;
+
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
+
+    Shader_prog _prog;
 
     static unsigned int _lib_ref_cnt;
     static std::unique_ptr<Freetype_lib> _ft_lib;

@@ -146,7 +146,7 @@ World::World():
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
-    _font("DejaVu Sans", 16)
+    _font("DejaVu Sans", 18)
 {
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
@@ -818,6 +818,9 @@ void World::draw()
     check_error("World::draw - skybox");
 
     // TODO: antialiasing
+
+    _font.render_text("ASDF Test message (pg 1 only)", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+        glm::vec2(10.0f, 30.0f));
 
     _win.display();
     check_error("World::draw - end");
