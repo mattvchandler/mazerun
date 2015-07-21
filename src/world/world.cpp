@@ -819,7 +819,7 @@ void World::draw()
 
     // TODO: antialiasing
 
-    _font.render_text("ASDF Test message (pg 1 only)", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+    _font.render_text(u8"ASDF … more pages now‽: Á💩☹☢☣☠\u0303", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
         glm::vec2(10.0f, 30.0f));
 
     _win.display();
