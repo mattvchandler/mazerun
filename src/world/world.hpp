@@ -112,6 +112,7 @@ private:
     Quad _quad;
 
     Font_sys _font;
+    Static_text _s_text;
 
     // entity tables
     std::vector<Entity> _ents; // TODO: list might be better

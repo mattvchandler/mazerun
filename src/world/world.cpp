@@ -146,7 +146,9 @@ World::World():
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
-    _font("Symbola", 18)
+    _font("Symbola", 18),
+    _s_text(_font, u8"ASDF … more pages now‽: Á🐙💩☹☢☣☠\u0301",
+        glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec2(10.0f, 30.0f))
 {
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
@@ -819,8 +821,7 @@ void World::draw()
 
     // TODO: antialiasing
 
-    _font.render_text(u8"ASDF … more pages now‽: Á🐙💩☹☢☣☠\u0301", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
-        glm::vec2(10.0f, 30.0f));
+    _s_text.render_text(_font);
 
     _win.display();
     check_error("World::draw - end");

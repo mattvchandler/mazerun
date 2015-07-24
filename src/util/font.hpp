@@ -56,7 +56,14 @@ struct Bbox
     }
 };
 
-class Font_sys
+struct Coord_data
+{
+    uint32_t page_no;
+    std::size_t start;
+    std::size_t num_elements;
+};
+
+class Font_sys final
 {
 public:
     Font_sys(const std::string & font_name, const unsigned int font_size,
@@ -67,6 +74,11 @@ void render_text(const std::string & utf8_input, const glm::vec4 & color,
     const glm::vec2 & start);
 
 protected:
+    friend class Static_text;
+    friend std::pair<std::vector<glm::vec2>, std::vector<Coord_data>>
+        build_text(const std::string & utf8_input, const glm::vec2 & start,
+        Font_sys & font_sys);
+
     class Freetype_lib
     {
     public:
@@ -93,7 +105,7 @@ protected:
         iconv_t _lib;
     };
 
-    class Fontconfig_lib
+    class Fontconfig_lib final
     {
     public:
         Fontconfig_lib();
@@ -140,6 +152,20 @@ protected:
     static std::unique_ptr<Freetype_lib> _ft_lib;
     static std::unique_ptr<Iconv_lib> _iconv_lib;
     static std::unique_ptr<Fontconfig_lib> _fontconfig_lib;
+};
+
+class Static_text final
+{
+public:
+    Static_text(Font_sys & font, const std::string & utf8_input,
+        const glm::vec4 & color, const glm::vec2 & start);
+    void render_text(Font_sys & font);
+
+protected:
+    GL_vertex_array _vao;
+    GL_buffer _vbo;
+    glm::vec4 _color;
+    std::vector<Coord_data> _coord_data;
 };
 
 #endif // FONT_HPP

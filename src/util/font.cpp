@@ -35,7 +35,101 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
-// TODO: text object for static text?
+std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std::string & utf8_input, const glm::vec2 & start,
+    Font_sys & font_sys)
+{
+    glm::vec2 pen = start;
+
+    FT_UInt prev_glyph_i = 0;
+
+    std::unordered_map<uint32_t, std::vector<glm::vec2>> screen_and_tex_coords;
+
+    char * in = const_cast<char *>(&utf8_input[0]);
+    std::size_t in_left = utf8_input.size();
+    while(in_left > 0)
+    {
+        uint32_t code_pt;
+        char * out = reinterpret_cast<char *>(&code_pt);
+        std::size_t out_left = sizeof(uint32_t);
+
+        font_sys._iconv_lib->convert(in, in_left, out, out_left);
+
+        uint32_t page_no = code_pt >> 8;
+        auto page_i = font_sys._page_map.find(page_no);
+        if(page_i == font_sys._page_map.end())
+        {
+            page_i = font_sys.load_page(code_pt >> 8);
+        }
+
+        Font_sys::Page & page = page_i->second;
+        Font_sys::Char_info & c = page.char_info[code_pt & 0xFF];
+
+        if(font_sys._has_kerning_info && prev_glyph_i && c.glyph_i)
+        {
+            FT_Vector kerning = {0, 0};
+            if(FT_Get_Kerning(font_sys._face, prev_glyph_i, c.glyph_i, FT_KERNING_DEFAULT, &kerning) != FT_Err_Ok)
+            {
+                std::ostringstream ostream;
+                ostream<<"Can't load kerning for: "<<std::hex<<std::showbase<<code_pt;
+                Logger_locator::get()(Logger::WARN, ostream.str());
+            }
+            pen.x += kerning.x / 64;
+            pen.y += kerning.y / 64;
+        }
+
+        std::size_t tex_row = (code_pt >> 4) & 0xF;
+        std::size_t tex_col = code_pt & 0xF;
+
+        glm::vec2 tex_origin = {(float)(tex_col * font_sys._cell_bbox.width() - font_sys._cell_bbox.ul.x),
+            (float)(tex_row * font_sys._cell_bbox.height() + font_sys._cell_bbox.ul.y)};
+
+        // TODO: screen coords or % or pixel coords?
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
+            (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
+            (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
+            (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
+
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
+            (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
+            (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
+            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
+            (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
+
+        pen += c.advance / 64;
+
+        prev_glyph_i = c.glyph_i;
+    }
+
+    std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> coord_data;
+
+    for(const auto & page: screen_and_tex_coords)
+    {
+        coord_data.second.emplace_back();
+        Coord_data & c = coord_data.second.back();
+
+        c.page_no = page.first;
+
+        c.start = coord_data.first.size() / 2;
+        coord_data.first.insert(coord_data.first.end(), page.second.begin(), page.second.end());
+        c.num_elements = coord_data.first.size() / 2 - c.start;
+    }
+    return coord_data;
+}
 
 // TODO: documentation
 Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
@@ -199,110 +293,13 @@ Font_sys::~Font_sys()
 void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & color,
     const glm::vec2 & start)
 {
-    glm::vec2 pen = start;
-
-    FT_UInt prev_glyph_i = 0;
-
-    std::unordered_map<uint32_t, std::vector<glm::vec2>> screen_and_tex_coords;
-
-    char * in = const_cast<char *>(&utf8_input[0]);
-    std::size_t in_left = utf8_input.size();
-    while(in_left > 0)
-    {
-        uint32_t code_pt;
-        char * out = reinterpret_cast<char *>(&code_pt);
-        std::size_t out_left = sizeof(uint32_t);
-
-        _iconv_lib->convert(in, in_left, out, out_left);
-
-        uint32_t page_no = code_pt >> 8;
-        auto page_i = _page_map.find(page_no);
-        if(page_i == _page_map.end())
-        {
-            page_i = load_page(code_pt >> 8);
-        }
-
-        Page & page = page_i->second;
-        Char_info & c = page.char_info[code_pt & 0xFF];
-
-        if(_has_kerning_info && prev_glyph_i && c.glyph_i)
-        {
-            FT_Vector kerning = {0, 0};
-            if(FT_Get_Kerning(_face, prev_glyph_i, c.glyph_i, FT_KERNING_DEFAULT, &kerning) != FT_Err_Ok)
-            {
-                std::ostringstream ostream;
-                ostream<<"Can't load kerning for: "<<std::hex<<std::showbase<<code_pt;
-                Logger_locator::get()(Logger::WARN, ostream.str());
-            }
-            pen.x += kerning.x / 64;
-            pen.y += kerning.y / 64;
-        }
-
-        std::size_t tex_row = (code_pt >> 4) & 0xF;
-        std::size_t tex_col = code_pt & 0xF;
-
-        glm::vec2 tex_origin = {(float)(tex_col * _cell_bbox.width() - _cell_bbox.ul.x),
-            (float)(tex_row * _cell_bbox.height() + _cell_bbox.ul.y)};
-
-        // TODO: screen coords or % or pixel coords?
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
-        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / _tex_width,
-            (tex_origin.y - c.bbox.lr.y) / _tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
-        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / _tex_width,
-            (tex_origin.y - c.bbox.lr.y) / _tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
-        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / _tex_width,
-            (tex_origin.y - c.bbox.ul.y) / _tex_height});
-
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
-        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / _tex_width,
-            (tex_origin.y - c.bbox.ul.y) / _tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
-        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / _tex_width,
-            (tex_origin.y - c.bbox.lr.y) / _tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
-        screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / _tex_width,
-            (tex_origin.y - c.bbox.ul.y) / _tex_height});
-
-        pen += c.advance / 64;
-
-        prev_glyph_i = c.glyph_i;
-    }
-
-    struct Coord_data
-    {
-        uint32_t page_no;
-        std::size_t start;
-        std::size_t num_elements;
-    };
-
-    std::vector<Coord_data> coord_data;
-    std::vector<glm::vec2> master_coords;
-
-    for(const auto & page: screen_and_tex_coords)
-    {
-        coord_data.emplace_back();
-        Coord_data & c = coord_data.back();
-
-        c.page_no = page.first;
-
-        c.start = master_coords.size() / 2;
-        master_coords.insert(master_coords.end(), page.second.begin(), page.second.end());
-        c.num_elements = master_coords.size() / 2 - c.start;
-    }
+    auto coord_data = build_text(utf8_input, start, *this);
 
     _vao.bind();
     _vbo.bind();
 
-    glBufferData(_vbo.type(), sizeof(glm::vec2) * master_coords.size(), NULL, GL_DYNAMIC_DRAW);
-    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec2) * master_coords.size(), master_coords.data());
+    glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(), NULL, GL_DYNAMIC_DRAW);
+    glBufferSubData(_vbo.type(), 0, sizeof(glm::vec2) * coord_data.first.size(), coord_data.first.data());
 
     _prog.use();
     glUniform4fv(_prog.get_uniform("color"), 1, &color[0]);
@@ -312,7 +309,7 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
-    for(const auto & cd: coord_data)
+    for(const auto & cd: coord_data.second)
     {
         _page_map[cd.page_no].tex->bind();
         glDrawArrays(GL_TRIANGLES, cd.start, cd.num_elements);
@@ -506,3 +503,51 @@ unsigned int Font_sys::_lib_ref_cnt = 0;
 std::unique_ptr<Font_sys::Freetype_lib> Font_sys::_ft_lib;
 std::unique_ptr<Font_sys::Iconv_lib> Font_sys::_iconv_lib;
 std::unique_ptr<Font_sys::Fontconfig_lib> Font_sys::_fontconfig_lib;
+
+Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
+    const glm::vec4 & color, const glm::vec2 & start):
+    _vbo(GL_ARRAY_BUFFER),
+    _color(color)
+{
+    Logger_locator::get()(Logger::DBG, "Creating static text");
+    auto coord_data = build_text(utf8_input, start, font);
+
+    _coord_data = coord_data.second;
+
+    _vao.bind();
+    _vbo.bind();
+    glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(),
+        coord_data.first.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec2), NULL);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec2), (const GLvoid *)sizeof(glm::vec2));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    check_error("Static_text::Static_text");
+}
+
+// TODO: make static libs struct, add shader prog to it
+void Static_text::render_text(Font_sys & font)
+{
+    font._prog.use();
+    glUniform4fv(font._prog.get_uniform("color"), 1, &_color[0]);
+
+    _vao.bind();
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glActiveTexture(GL_TEXTURE0);
+
+    for(const auto & cd: _coord_data)
+    {
+        font._page_map[cd.page_no].tex->bind();
+        glDrawArrays(GL_TRIANGLES, cd.start, cd.num_elements);
+    }
+
+    glBindVertexArray(0);
+    check_error("Static_text::render_text");
+}
