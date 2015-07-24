@@ -35,6 +35,9 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
+// TODO: text alignment options
+// TODO: text scaling
+
 std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std::string & utf8_input, const glm::vec2 & start,
     Font_sys & font_sys)
 {

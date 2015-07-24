@@ -29,8 +29,9 @@
 
 #include <atomic>
 #include <chrono>
-#include <iostream>
+#include <iomanip>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <system_error>
 #include <thread>
@@ -147,7 +148,7 @@ World::World():
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _font("Symbola", 18),
-    _s_text(_font, u8"ASDF … more pages now‽: Á🐙💩☹☢☣☠\u0301",
+    _s_text(_font, u8"🐙💩☹☢☣☠\u0301",
         glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec2(10.0f, 30.0f))
 {
     // TODO: standardize naming
@@ -382,7 +383,6 @@ World::World():
 // TODO: picking. Should we always do a pick pass, or make a 'pick' method?
     // need: picking shader, target ent ptr
 // TODO: weird lighting artifacts
-// TODO: FPS display
 void World::draw()
 {
     // TODO: no lighting until camera moved, and when pointed down
@@ -822,6 +822,22 @@ void World::draw()
     // TODO: antialiasing
 
     _s_text.render_text(_font);
+
+    static int frame_count = 0;
+    static float fps = 0.0f;
+    if(frame_count++ >= 10)
+    {
+        static auto last_frame = std::chrono::high_resolution_clock::now();
+        auto now =  std::chrono::high_resolution_clock::now();
+        fps = (float)frame_count / std::chrono::duration<float, std::ratio<1, 1>>(now - last_frame).count();
+        last_frame = now;
+        frame_count = 0;
+    }
+
+    static std::ostringstream fps_format;
+    fps_format.str("");
+    fps_format<<std::setprecision(3)<<std::fixed<<fps<<" fps";
+    _font.render_text(fps_format.str(), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(680.0f, 30.0f));
 
     _win.display();
     check_error("World::draw - end");
