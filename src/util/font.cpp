@@ -52,7 +52,7 @@ std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std:
         char * out = reinterpret_cast<char *>(&code_pt);
         std::size_t out_left = sizeof(uint32_t);
 
-        font_sys._iconv_lib->convert(in, in_left, out, out_left);
+        font_sys._static_common->iconv_lib.convert(in, in_left, out, out_left);
 
         uint32_t page_no = code_pt >> 8;
         auto page_i = font_sys._page_map.find(page_no);
@@ -134,42 +134,22 @@ std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std:
 // TODO: documentation
 Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     const unsigned int v_dpi, const unsigned int h_dpi):
-    _vbo(GL_ARRAY_BUFFER),
-    _prog({std::make_pair("shaders/text.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/text.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)})
+    _vbo(GL_ARRAY_BUFFER)
 {
     if(_lib_ref_cnt == 0)
     {
-        _ft_lib.reset(new Freetype_lib);
-
-        try
-        {
-            _iconv_lib.reset(new Iconv_lib("UTF-32LE", "UTF-8"));
-        }
-        catch(std::exception & e)
-        {
-            _ft_lib.reset();
-            throw;
-        }
-        try
-        {
-            _fontconfig_lib.reset(new Fontconfig_lib);
-        }
-        catch(std::exception & e)
-        {
-            _ft_lib.reset();
-            _iconv_lib.reset();
-            throw;
-        }
+        _static_common.reset(new Static_common("UTF-32LE", "UTF-8",
+            {std::make_pair("shaders/text.vert", GL_VERTEX_SHADER),
+            std::make_pair("shaders/text.frag", GL_FRAGMENT_SHADER)},
+            {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}));
     }
 
     FcPattern * font_pat = FcNameParse(reinterpret_cast<const FcChar8 *>(font_name.c_str()));
-    FcConfigSubstitute(_fontconfig_lib->get_config(), font_pat, FcMatchPattern);
+    FcConfigSubstitute(_static_common->fontconfig_lib.get_config(), font_pat, FcMatchPattern);
     FcDefaultSubstitute(font_pat);
 
     FcResult result;
-    FcPattern * matched_font_pat = FcFontMatch(_fontconfig_lib->get_config(), font_pat, &result);
+    FcPattern * matched_font_pat = FcFontMatch(_static_common->fontconfig_lib.get_config(), font_pat, &result);
     FcPatternDestroy(font_pat);
 
     std::string font_file;
@@ -186,25 +166,21 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     }
     else
     {
-        _ft_lib.reset();
-        _iconv_lib.reset();
-        _fontconfig_lib.reset();
+        if(_lib_ref_cnt == 0)
+            _static_common.reset();
 
         Logger_locator::get()(Logger::DBG, "Could not find font file matching: " + font_name);
         throw std::runtime_error("Could not find font file matching: " + font_name);
     }
     Logger_locator::get()(Logger::DBG, "Loading font file: " + font_file + " size: " + std::to_string(font_size));
 
-    FT_Error err = FT_New_Face(_ft_lib->get_lib(), font_file.c_str(), 0, &_face);
+    FT_Error err = FT_New_Face(_static_common->ft_lib.get_lib(), font_file.c_str(), 0, &_face);
 
     if(err != FT_Err_Ok)
     {
         if(_lib_ref_cnt == 0)
-        {
-            _ft_lib.reset();
-            _iconv_lib.reset();
-            _fontconfig_lib.reset();
-        }
+            _static_common.reset();
+
         if(err == FT_Err_Unknown_File_Format)
         {
             Logger_locator::get()(Logger::ERROR, "Unknown format for font file: " + font_file);
@@ -222,11 +198,8 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         FT_Done_Face(_face);
 
         if(_lib_ref_cnt == 0)
-        {
-            _ft_lib.reset();
-            _iconv_lib.reset();
-            _fontconfig_lib.reset();
-        }
+            _static_common.reset();
+
         Logger_locator::get()(Logger::ERROR, "No unicode charmap in font file: " + font_file);
         throw std::system_error(err, std::system_category(), "No unicode charmap in font file: " + font_file);
     }
@@ -238,11 +211,8 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         FT_Done_Face(_face);
 
         if(_lib_ref_cnt == 0)
-        {
-            _ft_lib.reset();
-            _iconv_lib.reset();
-            _fontconfig_lib.reset();
-        }
+            _static_common.reset();
+
         Logger_locator::get()(Logger::ERROR, "Can't set font size: " + std::to_string(font_size) + " for font file: " + font_file);
         throw std::system_error(err, std::system_category(), "Can't set font size: " + std::to_string(font_size) + " for font file: " + font_file);
     }
@@ -268,10 +238,10 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
-    _prog.use();
-    _prog.add_uniform("font_page");
-    _prog.add_uniform("color");
-    glUniform1i(_prog.get_uniform("font_page"), 0);
+    _static_common->prog.use();
+    _static_common->prog.add_uniform("font_page");
+    _static_common->prog.add_uniform("color");
+    glUniform1i(_static_common->prog.get_uniform("font_page"), 0);
     glUseProgram(0);
 
     check_error("Font_sys::Font_sys");
@@ -282,11 +252,8 @@ Font_sys::~Font_sys()
     FT_Done_Face(_face);
 
     if(--_lib_ref_cnt == 0)
-    {
-        _ft_lib.reset();
-        _iconv_lib.reset();
-        _fontconfig_lib.reset();
-    }
+        _static_common.reset();
+
     Logger_locator::get()(Logger::DBG, "Unloading font");
 }
 
@@ -301,8 +268,8 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(), NULL, GL_DYNAMIC_DRAW);
     glBufferSubData(_vbo.type(), 0, sizeof(glm::vec2) * coord_data.first.size(), coord_data.first.data());
 
-    _prog.use();
-    glUniform4fv(_prog.get_uniform("color"), 1, &color[0]);
+    _static_common->prog.use();
+    glUniform4fv(_static_common->prog.get_uniform("color"), 1, &color[0]);
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -499,10 +466,16 @@ const FcConfig * Font_sys::Fontconfig_lib::get_config() const
     return _fc_config;
 }
 
+Font_sys::Static_common::Static_common(const std::string & to_encoding, const std::string & from_encoding,
+    const std::vector<std::pair<std::string, GLenum>> & sources,
+    const std::vector<std::pair<std::string, GLuint>> & attribs,
+    const std::vector<std::pair<std::string, GLuint>> & frag_data):
+    iconv_lib(to_encoding, from_encoding),
+    prog(sources, attribs, frag_data)
+{}
+
 unsigned int Font_sys::_lib_ref_cnt = 0;
-std::unique_ptr<Font_sys::Freetype_lib> Font_sys::_ft_lib;
-std::unique_ptr<Font_sys::Iconv_lib> Font_sys::_iconv_lib;
-std::unique_ptr<Font_sys::Fontconfig_lib> Font_sys::_fontconfig_lib;
+std::unique_ptr<Font_sys::Static_common> Font_sys::_static_common;
 
 Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
     const glm::vec4 & color, const glm::vec2 & start):
@@ -532,8 +505,8 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
 // TODO: make static libs struct, add shader prog to it
 void Static_text::render_text(Font_sys & font)
 {
-    font._prog.use();
-    glUniform4fv(font._prog.get_uniform("color"), 1, &_color[0]);
+    font._static_common->prog.use();
+    glUniform4fv(font._static_common->prog.get_uniform("color"), 1, &_color[0]);
 
     _vao.bind();
 

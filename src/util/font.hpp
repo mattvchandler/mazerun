@@ -118,6 +118,19 @@ protected:
         FcConfig * _fc_config;
     };
 
+    struct Static_common
+    {
+        Static_common(const std::string & to_encoding, const std::string & from_encoding,
+            const std::vector<std::pair<std::string, GLenum>> & sources,
+            const std::vector<std::pair<std::string, GLuint>> & attribs,
+            const std::vector<std::pair<std::string, GLuint>> & frag_data = {});
+
+        Freetype_lib ft_lib;
+        Iconv_lib iconv_lib;
+        Fontconfig_lib fontconfig_lib;
+        Shader_prog prog;
+    };
+
     struct Char_info
     {
         glm::ivec2 origin;
@@ -146,12 +159,8 @@ protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;
 
-    Shader_prog _prog;
-
     static unsigned int _lib_ref_cnt;
-    static std::unique_ptr<Freetype_lib> _ft_lib;
-    static std::unique_ptr<Iconv_lib> _iconv_lib;
-    static std::unique_ptr<Fontconfig_lib> _fontconfig_lib;
+    static std::unique_ptr<Static_common> _static_common;
 };
 
 class Static_text final
