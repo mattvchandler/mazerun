@@ -148,8 +148,7 @@ World::World():
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _font("Symbola", 18),
-    _s_text(_font, u8"🐙💩☹☢☣☠\u0301",
-        glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec2(10.0f, 30.0f))
+    _s_text(_font, u8"🐙💩☹☢☣☠\u0301", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 {
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
@@ -821,7 +820,7 @@ void World::draw()
 
     // TODO: antialiasing
 
-    _s_text.render_text(_font);
+    _s_text.render_text(_font, glm::vec2(10.0f, 30.0f));
 
     static int frame_count = 0;
     static float fps = 0.0f;

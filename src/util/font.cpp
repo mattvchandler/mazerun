@@ -36,12 +36,12 @@
 #include "util/logger.hpp"
 
 // TODO: text alignment options
-// TODO: text scaling
+// TODO: text scaling / get window size
 
-std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std::string & utf8_input, const glm::vec2 & start,
+std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std::string & utf8_input,
     Font_sys & font_sys)
 {
-    glm::vec2 pen = start;
+    glm::vec2 pen(0.0f, 0.0f);
 
     FT_UInt prev_glyph_i = 0;
 
@@ -87,29 +87,29 @@ std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std:
             (float)(tex_row * font_sys._cell_bbox.height() + font_sys._cell_bbox.ul.y)};
 
         // TODO: screen coords or % or pixel coords?
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f,
+            (pen.y - c.bbox.lr.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f,
+            (pen.y - c.bbox.lr.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f,
+            (pen.y - c.bbox.ul.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
 
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f,
+            (pen.y - c.bbox.ul.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.lr.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f,
+            (pen.y - c.bbox.lr.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f - 1.0f,
-            1.0f - (pen.y - c.bbox.ul.y) / 300.0f});
+        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f,
+            (pen.y - c.bbox.ul.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
 
@@ -220,7 +220,6 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         throw std::system_error(err, std::system_category(), "Can't set font size: " + std::to_string(font_size) + " for font file: " + font_file);
     }
 
-    // TODO: padding
     _cell_bbox.ul.x = FT_MulFix(_face->bbox.xMin, _face->size->metrics.x_scale) / 64 - 2;
     _cell_bbox.ul.y = FT_MulFix(_face->bbox.yMax, _face->size->metrics.y_scale) / 64 + 2;
     _cell_bbox.lr.x = FT_MulFix(_face->bbox.xMax, _face->size->metrics.x_scale) / 64 + 2;
@@ -242,6 +241,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     glBindVertexArray(0);
 
     _static_common->prog.use();
+    _static_common->prog.add_uniform("start_offset");
     _static_common->prog.add_uniform("font_page");
     _static_common->prog.add_uniform("color");
     glUniform1i(_static_common->prog.get_uniform("font_page"), 0);
@@ -261,9 +261,11 @@ Font_sys::~Font_sys()
 }
 
 void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & color,
-    const glm::vec2 & start)
+    const glm::vec2 & pos)
 {
-    auto coord_data = build_text(utf8_input, start, *this);
+    glm::vec2 start_offset(pos.x / 400.0f - 1.0f, 1.0f - pos.y / 300.0f);
+
+    auto coord_data = build_text(utf8_input, *this);
 
     _vao.bind();
     _vbo.bind();
@@ -272,6 +274,7 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     glBufferSubData(_vbo.type(), 0, sizeof(glm::vec2) * coord_data.first.size(), coord_data.first.data());
 
     _static_common->prog.use();
+    glUniform2fv(_static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
     glUniform4fv(_static_common->prog.get_uniform("color"), 1, &color[0]);
 
     glDisable(GL_DEPTH_TEST);
@@ -481,12 +484,12 @@ unsigned int Font_sys::_lib_ref_cnt = 0;
 std::unique_ptr<Font_sys::Static_common> Font_sys::_static_common;
 
 Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
-    const glm::vec4 & color, const glm::vec2 & start):
+    const glm::vec4 & color):
     _vbo(GL_ARRAY_BUFFER),
     _color(color)
 {
     Logger_locator::get()(Logger::DBG, "Creating static text");
-    auto coord_data = build_text(utf8_input, start, font);
+    auto coord_data = build_text(utf8_input, font);
 
     _coord_data = coord_data.second;
 
@@ -505,10 +508,34 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
     check_error("Static_text::Static_text");
 }
 
-// TODO: make static libs struct, add shader prog to it
-void Static_text::render_text(Font_sys & font)
+void Static_text::set_text(Font_sys & font, const std::string & utf8_input)
 {
+    auto coord_data = build_text(utf8_input, font);
+
+    _coord_data = coord_data.second;
+
+    _vao.bind();
+    _vbo.bind();
+    glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(),
+        coord_data.first.data(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+
+    check_error("Static_text::Static_text");
+}
+
+void Static_text::set_color(const glm::vec4 & color)
+{
+    _color = color;
+}
+
+// TODO: alignment
+void Static_text::render_text(Font_sys & font, const glm::vec2 & pos)
+{
+    glm::vec2 start_offset(pos.x / 400.0f - 1.0f, 1.0f - pos.y / 300.0f);
+
     font._static_common->prog.use();
+    glUniform2fv(font._static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
     glUniform4fv(font._static_common->prog.get_uniform("color"), 1, &_color[0]);
 
     _vao.bind();

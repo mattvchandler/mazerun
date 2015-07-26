@@ -26,10 +26,12 @@
 in vec2 vert_pos;
 in vec2 vert_tex_coords;
 
+uniform vec2 start_offset;
+
 out vec2 tex_coord;
 
 void main()
 {
     tex_coord = vert_tex_coords;
-    gl_Position = vec4(vert_pos, 0.0, 1.0);
+    gl_Position = vec4(start_offset + vert_pos, 0.0, 1.0);
 }

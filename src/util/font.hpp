@@ -71,13 +71,12 @@ public:
     ~Font_sys();
 
 void render_text(const std::string & utf8_input, const glm::vec4 & color,
-    const glm::vec2 & start);
+    const glm::vec2 & pos);
 
 protected:
     friend class Static_text;
     friend std::pair<std::vector<glm::vec2>, std::vector<Coord_data>>
-        build_text(const std::string & utf8_input, const glm::vec2 & start,
-        Font_sys & font_sys);
+        build_text(const std::string & utf8_input, Font_sys & font_sys);
 
     class Freetype_lib
     {
@@ -167,8 +166,10 @@ class Static_text final
 {
 public:
     Static_text(Font_sys & font, const std::string & utf8_input,
-        const glm::vec4 & color, const glm::vec2 & start);
-    void render_text(Font_sys & font);
+        const glm::vec4 & color);
+    void render_text(Font_sys & font, const glm::vec2 & pos);
+    void set_text(Font_sys & font, const std::string & utf8_input);
+    void set_color(const glm::vec4 & color);
 
 protected:
     GL_vertex_array _vao;
