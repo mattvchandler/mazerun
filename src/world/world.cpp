@@ -820,7 +820,8 @@ void World::draw()
 
     // TODO: antialiasing
 
-    _s_text.render_text(_font, glm::vec2(10.0f, 30.0f));
+    _s_text.render_text(_font, glm::vec2(10.0f, 10.0f),
+        Font_sys::ORIGIN_HORIZ_LEFT | Font_sys::ORIGIN_VERT_TOP);
 
     static int frame_count = 0;
     static float fps = 0.0f;
@@ -836,7 +837,8 @@ void World::draw()
     static std::ostringstream fps_format;
     fps_format.str("");
     fps_format<<std::setprecision(3)<<std::fixed<<fps<<" fps";
-    _font.render_text(fps_format.str(), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(680.0f, 30.0f));
+    _font.render_text(fps_format.str(), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(790.0f, 10.0f),
+        Font_sys::ORIGIN_HORIZ_RIGHT | Font_sys::ORIGIN_VERT_TOP);
 
     _win.display();
     check_error("World::draw - end");

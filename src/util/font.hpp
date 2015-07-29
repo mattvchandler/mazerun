@@ -43,12 +43,15 @@
 class Font_sys final
 {
 public:
+    enum {ORIGIN_HORIZ_BASELINE = 0x00, ORIGIN_HORIZ_LEFT = 0x01, ORIGIN_HORIZ_RIGHT = 0x02, ORIGIN_HORIZ_CENTER = 0x03,
+        ORIGIN_VERT_BASELINE = 0x00, ORIGIN_VERT_TOP = 0x04, ORIGIN_VERT_BOTTOM = 0x08, ORIGIN_VERT_CENTER = 0x0C};
+
     Font_sys(const std::string & font_name, const unsigned int font_size,
         const unsigned int v_dpi = 96, const unsigned int h_dpi = 96);
     ~Font_sys();
 
     void render_text(const std::string & utf8_input, const glm::vec4 & color,
-        const glm::vec2 & pos);
+        const glm::vec2 & pos, const int align_flags = 0);
 
 protected:
     class Freetype_lib
@@ -156,7 +159,8 @@ protected:
 
     friend class Static_text;
     friend std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>>
-        build_text(const std::string & utf8_input, Font_sys & font_sys);
+        build_text(const std::string & utf8_input, Font_sys & font_sys,
+        Font_sys::Bbox<float> & font_box_out);
 
     static unsigned int _lib_ref_cnt;
     static std::unique_ptr<Static_common> _static_common;
@@ -166,7 +170,7 @@ class Static_text final
 {
 public:
     Static_text(Font_sys & font, const std::string & utf8_input, const glm::vec4 & color);
-    void render_text(Font_sys & font, const glm::vec2 & pos);
+    void render_text(Font_sys & font, const glm::vec2 & pos, const int align_flags = 0);
     void set_text(Font_sys & font, const std::string & utf8_input);
     void set_color(const glm::vec4 & color);
 
@@ -175,6 +179,7 @@ protected:
     GL_buffer _vbo;
     glm::vec4 _color;
     std::vector<Font_sys::Coord_data> _coord_data;
+    Font_sys::Bbox<float> _text_box;
 };
 
 #endif // FONT_HPP

@@ -24,6 +24,7 @@
 #include "util/font.hpp"
 
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
@@ -40,13 +41,18 @@
 // TODO: handle newlines, tab, carriage return?
 
 std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(const std::string & utf8_input,
-    Font_sys & font_sys)
+    Font_sys & font_sys, Font_sys::Bbox<float> & font_box_out)
 {
     glm::vec2 pen(0.0f, 0.0f);
 
     FT_UInt prev_glyph_i = 0;
 
     std::unordered_map<uint32_t, std::vector<glm::vec2>> screen_and_tex_coords;
+
+    font_box_out.ul.x = std::numeric_limits<float>::max();
+    font_box_out.ul.y = std::numeric_limits<float>::min();
+    font_box_out.lr.x = std::numeric_limits<float>::min();
+    font_box_out.lr.y = std::numeric_limits<float>::max();
 
     char * in = const_cast<char *>(&utf8_input[0]);
     std::size_t in_left = utf8_input.size();
@@ -113,6 +119,11 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
             (pen.y - c.bbox.ul.y) / -300.0f});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
+
+        font_box_out.ul.x = std::min(font_box_out.ul.x, pen.x + c.bbox.ul.x);
+        font_box_out.ul.y = std::max(font_box_out.ul.y, pen.y + c.bbox.ul.y);
+        font_box_out.lr.x = std::max(font_box_out.lr.x, pen.x + c.bbox.lr.x);
+        font_box_out.lr.y = std::min(font_box_out.lr.y, pen.y + c.bbox.lr.y);
 
         pen += c.advance / 64;
 
@@ -263,11 +274,47 @@ Font_sys::~Font_sys()
 }
 
 void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & color,
-    const glm::vec2 & pos)
+    const glm::vec2 & pos, const int align_flags)
 {
-    glm::vec2 start_offset(pos.x / 400.0f - 1.0f, 1.0f - pos.y / 300.0f);
+    Bbox<float> text_box;
+    auto coord_data = build_text(utf8_input, *this, text_box);
 
-    auto coord_data = build_text(utf8_input, *this);
+    glm::vec2 start_offset = pos;
+
+    int horiz_align = align_flags & 0x3;
+    switch(horiz_align)
+    {
+    case Font_sys::ORIGIN_HORIZ_BASELINE:
+        break;
+    case Font_sys::ORIGIN_HORIZ_LEFT:
+        start_offset.x -= text_box.ul.x;
+        break;
+    case Font_sys::ORIGIN_HORIZ_RIGHT:
+        start_offset.x -= text_box.lr.x;
+        break;
+    case Font_sys::ORIGIN_HORIZ_CENTER:
+        start_offset.x -= text_box.ul.x + text_box.width() / 2.0f;
+        break;
+    }
+
+    int vert_align = align_flags & 0xC;
+    switch(vert_align)
+    {
+    case Font_sys::ORIGIN_VERT_BASELINE:
+        break;
+    case Font_sys::ORIGIN_VERT_TOP:
+        start_offset.y += text_box.ul.y;
+        break;
+    case Font_sys::ORIGIN_VERT_BOTTOM:
+        start_offset.y += text_box.lr.y;
+        break;
+    case Font_sys::ORIGIN_VERT_CENTER:
+        start_offset.y += text_box.lr.y + text_box.height() / 2.0f;
+        break;
+    }
+
+    start_offset.x = start_offset.x / 400.0f - 1.0f;
+    start_offset.y = 1.0f - start_offset.y / 300.0f;
 
     _vao.bind();
     _vbo.bind();
@@ -493,7 +540,7 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
 {
     Logger_locator::get()(Logger::DBG, "Creating static text");
 
-    auto coord_data = build_text(utf8_input, font);
+    auto coord_data = build_text(utf8_input, font, _text_box);
 
     _coord_data = coord_data.second;
 
@@ -514,7 +561,7 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
 
 void Static_text::set_text(Font_sys & font, const std::string & utf8_input)
 {
-    auto coord_data = build_text(utf8_input, font);
+    auto coord_data = build_text(utf8_input, font, _text_box);
 
     _coord_data = coord_data.second;
 
@@ -534,9 +581,44 @@ void Static_text::set_color(const glm::vec4 & color)
 }
 
 // TODO: alignment
-void Static_text::render_text(Font_sys & font, const glm::vec2 & pos)
+void Static_text::render_text(Font_sys & font, const glm::vec2 & pos, const int align_flags)
 {
-    glm::vec2 start_offset(pos.x / 400.0f - 1.0f, 1.0f - pos.y / 300.0f);
+    glm::vec2 start_offset = pos;
+
+    int horiz_align = align_flags & 0x3;
+    switch(horiz_align)
+    {
+    case Font_sys::ORIGIN_HORIZ_BASELINE:
+        break;
+    case Font_sys::ORIGIN_HORIZ_LEFT:
+        start_offset.x -= _text_box.ul.x;
+        break;
+    case Font_sys::ORIGIN_HORIZ_RIGHT:
+        start_offset.x -= _text_box.lr.x;
+        break;
+    case Font_sys::ORIGIN_HORIZ_CENTER:
+        start_offset.x -= _text_box.ul.x + _text_box.width() / 2.0f;
+        break;
+    }
+
+    int vert_align = align_flags & 0xC;
+    switch(vert_align)
+    {
+    case Font_sys::ORIGIN_VERT_BASELINE:
+        break;
+    case Font_sys::ORIGIN_VERT_TOP:
+        start_offset.y += _text_box.ul.y;
+        break;
+    case Font_sys::ORIGIN_VERT_BOTTOM:
+        start_offset.y += _text_box.lr.y;
+        break;
+    case Font_sys::ORIGIN_VERT_CENTER:
+        start_offset.y += _text_box.lr.y + _text_box.height() / 2.0f;
+        break;
+    }
+
+    start_offset.x = start_offset.x / 400.0f - 1.0f;
+    start_offset.y = 1.0f - start_offset.y / 300.0f;
 
     font._static_common->prog.use();
     glUniform2fv(font._static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
