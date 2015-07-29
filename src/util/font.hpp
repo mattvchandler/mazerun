@@ -40,29 +40,6 @@
 #include "opengl/shader_prog.hpp"
 #include "opengl/texture.hpp"
 
-template<typename T>
-struct Bbox
-{
-    glm::tvec2<T> ul;
-    glm::tvec2<T> lr;
-
-    T width() const
-    {
-        return lr.x - ul.x;
-    }
-    T height() const
-    {
-        return ul.y - lr.y;
-    }
-};
-
-struct Coord_data
-{
-    uint32_t page_no;
-    std::size_t start;
-    std::size_t num_elements;
-};
-
 class Font_sys final
 {
 public:
@@ -70,14 +47,10 @@ public:
         const unsigned int v_dpi = 96, const unsigned int h_dpi = 96);
     ~Font_sys();
 
-void render_text(const std::string & utf8_input, const glm::vec4 & color,
-    const glm::vec2 & pos);
+    void render_text(const std::string & utf8_input, const glm::vec4 & color,
+        const glm::vec2 & pos);
 
 protected:
-    friend class Static_text;
-    friend std::pair<std::vector<glm::vec2>, std::vector<Coord_data>>
-        build_text(const std::string & utf8_input, Font_sys & font_sys);
-
     class Freetype_lib
     {
     public:
@@ -130,6 +103,29 @@ protected:
         Shader_prog prog;
     };
 
+    template<typename T>
+    struct Bbox
+    {
+        glm::tvec2<T> ul;
+        glm::tvec2<T> lr;
+
+        T width() const
+        {
+            return lr.x - ul.x;
+        }
+        T height() const
+        {
+            return ul.y - lr.y;
+        }
+    };
+
+    struct Coord_data
+    {
+        uint32_t page_no;
+        std::size_t start;
+        std::size_t num_elements;
+    };
+
     struct Char_info
     {
         glm::ivec2 origin;
@@ -158,6 +154,10 @@ protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;
 
+    friend class Static_text;
+    friend std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>>
+        build_text(const std::string & utf8_input, Font_sys & font_sys);
+
     static unsigned int _lib_ref_cnt;
     static std::unique_ptr<Static_common> _static_common;
 };
@@ -165,8 +165,7 @@ protected:
 class Static_text final
 {
 public:
-    Static_text(Font_sys & font, const std::string & utf8_input,
-        const glm::vec4 & color);
+    Static_text(Font_sys & font, const std::string & utf8_input, const glm::vec4 & color);
     void render_text(Font_sys & font, const glm::vec2 & pos);
     void set_text(Font_sys & font, const std::string & utf8_input);
     void set_color(const glm::vec4 & color);
@@ -175,7 +174,7 @@ protected:
     GL_vertex_array _vao;
     GL_buffer _vbo;
     glm::vec4 _color;
-    std::vector<Coord_data> _coord_data;
+    std::vector<Font_sys::Coord_data> _coord_data;
 };
 
 #endif // FONT_HPP

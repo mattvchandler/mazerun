@@ -37,8 +37,9 @@
 
 // TODO: text alignment options
 // TODO: text scaling / get window size
+// TODO: handle newlines, tab, carriage return?
 
-std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std::string & utf8_input,
+std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(const std::string & utf8_input,
     Font_sys & font_sys)
 {
     glm::vec2 pen(0.0f, 0.0f);
@@ -118,12 +119,12 @@ std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std:
         prev_glyph_i = c.glyph_i;
     }
 
-    std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> coord_data;
+    std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> coord_data;
 
     for(const auto & page: screen_and_tex_coords)
     {
         coord_data.second.emplace_back();
-        Coord_data & c = coord_data.second.back();
+        Font_sys::Coord_data & c = coord_data.second.back();
 
         c.page_no = page.first;
 
@@ -131,6 +132,7 @@ std::pair<std::vector<glm::vec2>, std::vector<Coord_data>> build_text(const std:
         coord_data.first.insert(coord_data.first.end(), page.second.begin(), page.second.end());
         c.num_elements = coord_data.first.size() / 2 - c.start;
     }
+
     return coord_data;
 }
 
@@ -370,6 +372,7 @@ Font_sys::Freetype_lib::Freetype_lib()
         throw std::system_error(err, std::system_category(), "Error loading freetype library");
     }
 }
+
 Font_sys::Freetype_lib::~Freetype_lib()
 {
     Logger_locator::get()(Logger::DBG, "Unloading freetype library");
@@ -489,6 +492,7 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
     _color(color)
 {
     Logger_locator::get()(Logger::DBG, "Creating static text");
+
     auto coord_data = build_text(utf8_input, font);
 
     _coord_data = coord_data.second;
