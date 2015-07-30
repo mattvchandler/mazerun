@@ -148,7 +148,7 @@ World::World():
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _font("Symbola", 18),
-    _s_text(_font, u8"🐙💩☹☢☣☠\u0301", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
+    _s_text(_font, u8"🐙💩☹☢☣☠\u0301\nASDF‽", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 {
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");

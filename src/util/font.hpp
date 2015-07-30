@@ -149,6 +149,7 @@ protected:
     bool _has_kerning_info;
 
     Bbox<int> _cell_bbox;
+    int _line_height;
 
     size_t _tex_width, _tex_height;
 

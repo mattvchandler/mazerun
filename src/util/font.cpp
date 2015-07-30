@@ -58,6 +58,16 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
     std::size_t in_left = utf8_input.size();
     while(in_left > 0)
     {
+        if(*in == '\n')
+        {
+            pen.x = 0;
+            pen.y += font_sys._line_height;
+            prev_glyph_i = 0;
+            ++in;
+            --in_left;
+            continue;
+        }
+
         uint32_t code_pt;
         char * out = reinterpret_cast<char *>(&code_pt);
         std::size_t out_left = sizeof(uint32_t);
@@ -237,6 +247,8 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     _cell_bbox.ul.y = FT_MulFix(_face->bbox.yMax, _face->size->metrics.y_scale) / 64 + 2;
     _cell_bbox.lr.x = FT_MulFix(_face->bbox.xMax, _face->size->metrics.x_scale) / 64 + 2;
     _cell_bbox.lr.y = FT_MulFix(_face->bbox.yMin, _face->size->metrics.y_scale) / 64 - 2;
+
+    _line_height = FT_MulFix(_face->height, _face->size->metrics.y_scale) / 64;
 
     _tex_width = _cell_bbox.width() * 16;
     _tex_height = _cell_bbox.height() * 16;
