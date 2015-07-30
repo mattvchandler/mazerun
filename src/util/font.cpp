@@ -50,9 +50,9 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
     std::unordered_map<uint32_t, std::vector<glm::vec2>> screen_and_tex_coords;
 
     font_box_out.ul.x = std::numeric_limits<float>::max();
-    font_box_out.ul.y = std::numeric_limits<float>::min();
+    font_box_out.ul.y = std::numeric_limits<float>::max();
     font_box_out.lr.x = std::numeric_limits<float>::min();
-    font_box_out.lr.y = std::numeric_limits<float>::max();
+    font_box_out.lr.y = std::numeric_limits<float>::min();
 
     char * in = const_cast<char *>(&utf8_input[0]);
     std::size_t in_left = utf8_input.size();
@@ -131,9 +131,9 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
 
         font_box_out.ul.x = std::min(font_box_out.ul.x, pen.x + c.bbox.ul.x);
-        font_box_out.ul.y = std::max(font_box_out.ul.y, pen.y + c.bbox.ul.y);
+        font_box_out.ul.y = std::min(font_box_out.ul.y, pen.y - c.bbox.ul.y);
         font_box_out.lr.x = std::max(font_box_out.lr.x, pen.x + c.bbox.lr.x);
-        font_box_out.lr.y = std::min(font_box_out.lr.y, pen.y + c.bbox.lr.y);
+        font_box_out.lr.y = std::max(font_box_out.lr.y, pen.y - c.bbox.lr.y);
 
         pen += c.advance / 64;
 
@@ -315,13 +315,13 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     case Font_sys::ORIGIN_VERT_BASELINE:
         break;
     case Font_sys::ORIGIN_VERT_TOP:
-        start_offset.y += text_box.ul.y;
+        start_offset.y -= text_box.ul.y;
         break;
     case Font_sys::ORIGIN_VERT_BOTTOM:
-        start_offset.y += text_box.lr.y;
+        start_offset.y -= text_box.lr.y;
         break;
     case Font_sys::ORIGIN_VERT_CENTER:
-        start_offset.y += text_box.lr.y + text_box.height() / 2.0f;
+        start_offset.y -= text_box.lr.y + text_box.height() / 2.0f;
         break;
     }
 
@@ -619,13 +619,13 @@ void Static_text::render_text(Font_sys & font, const glm::vec2 & pos, const int 
     case Font_sys::ORIGIN_VERT_BASELINE:
         break;
     case Font_sys::ORIGIN_VERT_TOP:
-        start_offset.y += _text_box.ul.y;
+        start_offset.y -= _text_box.ul.y;
         break;
     case Font_sys::ORIGIN_VERT_BOTTOM:
-        start_offset.y += _text_box.lr.y;
+        start_offset.y -= _text_box.lr.y;
         break;
     case Font_sys::ORIGIN_VERT_CENTER:
-        start_offset.y += _text_box.lr.y + _text_box.height() / 2.0f;
+        start_offset.y -= _text_box.lr.y + _text_box.height() / 2.0f;
         break;
     }
 
