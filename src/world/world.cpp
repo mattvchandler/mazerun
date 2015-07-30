@@ -677,7 +677,7 @@ void World::draw()
         }
     }
 
-    auto dir_common = [this](const Shader_prog & dir_prog, const glm::vec3 & cam_light_forward, const glm::vec2 & viewport_size)
+    auto dir_common = [this, &cam_light_forward, &viewport_size](const Shader_prog & dir_prog)
     {
         glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam->view_mat()))) *
             glm::normalize(-_sunlight.dir));
@@ -735,13 +735,13 @@ void World::draw()
             glDisable(GL_POLYGON_OFFSET_FILL);
 
             glUniformMatrix4fv(_dir_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &dir_shadow_mat[0][0]);
-            dir_common(_dir_light_shadow_prog, cam_light_forward, viewport_size);
+            dir_common(_dir_light_shadow_prog);
             check_error("World::draw - dir light shadow quad");
         }
         else
         {
             _dir_light_prog.use();
-            dir_common(_dir_light_prog, cam_light_forward, viewport_size);
+            dir_common(_dir_light_prog);
             check_error("World::draw - dir light quad");
         }
     }
