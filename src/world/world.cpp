@@ -386,6 +386,7 @@ void World::draw()
 {
     // TODO: no lighting until camera moved, and when pointed down
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
+    glm::vec2 win_size(_win.getSize().x, _win.getSize().y);
 
     std::vector<Entity *> point_lights;
     std::vector<Entity *> spot_lights;
@@ -746,8 +747,8 @@ void World::draw()
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, _win.getSize().x, _win.getSize().y);
-    viewport_size = {(float)_win.getSize().x, (float)_win.getSize().y};
+    glViewport(0, 0, win_size.x, win_size.y);
+    viewport_size = win_size;
 
     // set default framebuffer depth buffer from G buffer
     glDisable(GL_BLEND);
@@ -820,7 +821,7 @@ void World::draw()
 
     // TODO: antialiasing
 
-    _s_text.render_text(_font, glm::vec2(10.0f, 10.0f),
+    _s_text.render_text(_font, win_size, glm::vec2(10.0f, 10.0f),
         Font_sys::ORIGIN_HORIZ_LEFT | Font_sys::ORIGIN_VERT_TOP);
 
     static int frame_count = 0;
@@ -837,8 +838,8 @@ void World::draw()
     static std::ostringstream fps_format;
     fps_format.str("");
     fps_format<<std::setprecision(3)<<std::fixed<<fps<<" fps";
-    _font.render_text(fps_format.str(), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(790.0f, 10.0f),
-        Font_sys::ORIGIN_HORIZ_RIGHT | Font_sys::ORIGIN_VERT_TOP);
+    _font.render_text(fps_format.str(), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), win_size,
+        glm::vec2(win_size.x - 10.0f, 10.0f), Font_sys::ORIGIN_HORIZ_RIGHT | Font_sys::ORIGIN_VERT_TOP);
 
     _win.display();
     check_error("World::draw - end");

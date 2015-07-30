@@ -51,7 +51,7 @@ public:
     ~Font_sys();
 
     void render_text(const std::string & utf8_input, const glm::vec4 & color,
-        const glm::vec2 & pos, const int align_flags = 0);
+        const glm::vec2 & win_size, const glm::vec2 & pos, const int align_flags = 0);
 
 protected:
     class Freetype_lib
@@ -171,7 +171,8 @@ class Static_text final
 {
 public:
     Static_text(Font_sys & font, const std::string & utf8_input, const glm::vec4 & color);
-    void render_text(Font_sys & font, const glm::vec2 & pos, const int align_flags = 0);
+    void render_text(Font_sys & font, const glm::vec2 & win_size,
+        const glm::vec2 & pos, const int align_flags = 0);
     void set_text(Font_sys & font, const std::string & utf8_input);
     void set_color(const glm::vec4 & color);
 

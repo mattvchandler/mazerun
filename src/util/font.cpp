@@ -36,10 +36,6 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
-// TODO: text alignment options
-// TODO: text scaling / get window size
-// TODO: handle newlines, tab, carriage return?
-
 std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(const std::string & utf8_input,
     Font_sys & font_sys, Font_sys::Bbox<float> & font_box_out)
 {
@@ -94,7 +90,7 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
                 Logger_locator::get()(Logger::WARN, ostream.str());
             }
             pen.x += kerning.x / 64;
-            pen.y += kerning.y / 64;
+            pen.y -= kerning.y / 64;
         }
 
         std::size_t tex_row = (code_pt >> 4) & 0xF;
@@ -104,29 +100,35 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
             (float)(tex_row * font_sys._cell_bbox.height() + font_sys._cell_bbox.ul.y)};
 
         // TODO: screen coords or % or pixel coords?
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f,
-            (pen.y - c.bbox.lr.y) / -300.0f});
+        // lower left corner
+        screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.ul.x,
+            pen.y - c.bbox.lr.y});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f,
-            (pen.y - c.bbox.lr.y) / -300.0f});
+        // lower right corner
+        screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.lr.x,
+            pen.y - c.bbox.lr.y});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f,
-            (pen.y - c.bbox.ul.y) / -300.0f});
+        // upper left corner
+        screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.ul.x,
+            pen.y - c.bbox.ul.y});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
 
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.ul.x) / 400.0f,
-            (pen.y - c.bbox.ul.y) / -300.0f});
+        // upper left corner
+        screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.ul.x,
+            pen.y - c.bbox.ul.y});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.ul.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f,
-            (pen.y - c.bbox.lr.y) / -300.0f});
+        // lower right corner
+        screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.lr.x,
+            pen.y - c.bbox.lr.y});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.lr.y) / font_sys._tex_height});
-        screen_and_tex_coords[page_no].push_back({(pen.x + c.bbox.lr.x) / 400.0f,
-            (pen.y - c.bbox.ul.y) / -300.0f});
+        // upper right corner
+        screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.lr.x,
+            pen.y - c.bbox.ul.y});
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
 
@@ -135,7 +137,8 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
         font_box_out.lr.x = std::max(font_box_out.lr.x, pen.x + c.bbox.lr.x);
         font_box_out.lr.y = std::max(font_box_out.lr.y, pen.y - c.bbox.lr.y);
 
-        pen += c.advance / 64;
+        pen.x += c.advance.x / 64;
+        pen.y -= c.advance.y / 64;
 
         prev_glyph_i = c.glyph_i;
     }
@@ -267,6 +270,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
 
     _static_common->prog.use();
     _static_common->prog.add_uniform("start_offset");
+    _static_common->prog.add_uniform("win_size");
     _static_common->prog.add_uniform("font_page");
     _static_common->prog.add_uniform("color");
     glUniform1i(_static_common->prog.get_uniform("font_page"), 0);
@@ -286,7 +290,7 @@ Font_sys::~Font_sys()
 }
 
 void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & color,
-    const glm::vec2 & pos, const int align_flags)
+    const glm::vec2 & win_size, const glm::vec2 & pos, const int align_flags)
 {
     Bbox<float> text_box;
     auto coord_data = build_text(utf8_input, *this, text_box);
@@ -325,9 +329,6 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
         break;
     }
 
-    start_offset.x = start_offset.x / 400.0f - 1.0f;
-    start_offset.y = 1.0f - start_offset.y / 300.0f;
-
     _vao.bind();
     _vbo.bind();
 
@@ -336,6 +337,7 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
 
     _static_common->prog.use();
     glUniform2fv(_static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
+    glUniform2fv(_static_common->prog.get_uniform("win_size"), 1, &win_size[0]);
     glUniform4fv(_static_common->prog.get_uniform("color"), 1, &color[0]);
 
     glDisable(GL_DEPTH_TEST);
@@ -592,8 +594,8 @@ void Static_text::set_color(const glm::vec4 & color)
     _color = color;
 }
 
-// TODO: alignment
-void Static_text::render_text(Font_sys & font, const glm::vec2 & pos, const int align_flags)
+void Static_text::render_text(Font_sys & font, const glm::vec2 & win_size,
+    const glm::vec2 & pos, const int align_flags)
 {
     glm::vec2 start_offset = pos;
 
@@ -629,11 +631,9 @@ void Static_text::render_text(Font_sys & font, const glm::vec2 & pos, const int 
         break;
     }
 
-    start_offset.x = start_offset.x / 400.0f - 1.0f;
-    start_offset.y = 1.0f - start_offset.y / 300.0f;
-
     font._static_common->prog.use();
     glUniform2fv(font._static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
+    glUniform2fv(font._static_common->prog.get_uniform("win_size"), 1, &win_size[0]);
     glUniform4fv(font._static_common->prog.get_uniform("color"), 1, &_color[0]);
 
     _vao.bind();
