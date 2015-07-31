@@ -188,26 +188,4 @@ protected:
 
 };
 
-// object for text which does not change often
-class Static_text final
-{
-public:
-    // create and build text buffer object
-    Static_text(Font_sys & font, const std::string & utf8_input, const glm::vec4 & color);
-    // recreate text object with new string
-    void set_text(Font_sys & font, const std::string & utf8_input);
-    // set font color
-    void set_color(const glm::vec4 & color);
-    // render the text
-    void render_text(Font_sys & font, const glm::vec2 & win_size,
-        const glm::vec2 & pos, const int align_flags = 0);
-
-protected:
-    GL_vertex_array _vao;
-    GL_buffer _vbo;
-    glm::vec4 _color;
-    std::vector<Font_sys::Coord_data> _coord_data;
-    Font_sys::Bbox<float> _text_box;
-};
-
 #endif // FONT_HPP

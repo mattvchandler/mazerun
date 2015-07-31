@@ -104,7 +104,9 @@ add_executable(${PROJECT_NAME}
     src/opengl/shader_prog.cpp
     src/opengl/texture.cpp
     src/util/font.cpp
+    src/util/font_libs.cpp
     src/util/message.cpp
+    src/util/static_text.cpp
     src/world/entity.cpp
     src/world/quad.cpp
     src/world/skybox.cpp

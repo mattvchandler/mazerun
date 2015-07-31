@@ -41,6 +41,7 @@
 #include "opengl/shader_prog.hpp"
 #include "util/font.hpp"
 #include "util/message.hpp"
+#include "util/static_text.hpp"
 #include "world/entity.hpp"
 #include "world/quad.hpp"
 #include "world/skybox.hpp"
