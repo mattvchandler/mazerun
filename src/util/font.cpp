@@ -36,13 +36,13 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
+// Build buffer of quads for text display
 std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(const std::string & utf8_input,
     Font_sys & font_sys, Font_sys::Bbox<float> & font_box_out)
 {
     glm::vec2 pen(0.0f, 0.0f);
 
-    FT_UInt prev_glyph_i = 0;
-
+    // verts by font page
     std::unordered_map<uint32_t, std::vector<glm::vec2>> screen_and_tex_coords;
 
     font_box_out.ul.x = std::numeric_limits<float>::max();
@@ -50,10 +50,14 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
     font_box_out.lr.x = std::numeric_limits<float>::min();
     font_box_out.lr.y = std::numeric_limits<float>::min();
 
+    FT_UInt prev_glyph_i = 0;
+
+    // cast input to non-const for iconv
     char * in = const_cast<char *>(&utf8_input[0]);
     std::size_t in_left = utf8_input.size();
     while(in_left > 0)
     {
+        // handle newlines
         if(*in == '\n')
         {
             pen.x = 0;
@@ -64,14 +68,18 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
             continue;
         }
 
+        // extract next unicode code pt
         uint32_t code_pt;
         char * out = reinterpret_cast<char *>(&code_pt);
         std::size_t out_left = sizeof(uint32_t);
 
         font_sys._static_common->iconv_lib.convert(in, in_left, out, out_left);
 
+        // get font page struct
         uint32_t page_no = code_pt >> 8;
         auto page_i = font_sys._page_map.find(page_no);
+
+        // load page if not already loaded
         if(page_i == font_sys._page_map.end())
         {
             page_i = font_sys.load_page(code_pt >> 8);
@@ -80,6 +88,7 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
         Font_sys::Page & page = page_i->second;
         Font_sys::Char_info & c = page.char_info[code_pt & 0xFF];
 
+        // add kerning if necessary
         if(font_sys._has_kerning_info && prev_glyph_i && c.glyph_i)
         {
             FT_Vector kerning = {0, 0};
@@ -96,10 +105,12 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
         std::size_t tex_row = (code_pt >> 4) & 0xF;
         std::size_t tex_col = code_pt & 0xF;
 
+        // texture coord of glyph's origin
         glm::vec2 tex_origin = {(float)(tex_col * font_sys._cell_bbox.width() - font_sys._cell_bbox.ul.x),
             (float)(tex_row * font_sys._cell_bbox.height() + font_sys._cell_bbox.ul.y)};
 
-        // TODO: screen coords or % or pixel coords?
+        // push back vertex coords, and texture coords, interleaved, into a map by font page
+        // 1 unit to pixel scale
         // lower left corner
         screen_and_tex_coords[page_no].push_back({pen.x + c.bbox.ul.x,
             pen.y - c.bbox.lr.y});
@@ -132,17 +143,20 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
         screen_and_tex_coords[page_no].push_back({(tex_origin.x + c.bbox.lr.x) / font_sys._tex_width,
             (tex_origin.y - c.bbox.ul.y) / font_sys._tex_height});
 
+        // expand bounding box for whole string
         font_box_out.ul.x = std::min(font_box_out.ul.x, pen.x + c.bbox.ul.x);
         font_box_out.ul.y = std::min(font_box_out.ul.y, pen.y - c.bbox.ul.y);
         font_box_out.lr.x = std::max(font_box_out.lr.x, pen.x + c.bbox.lr.x);
         font_box_out.lr.y = std::max(font_box_out.lr.y, pen.y - c.bbox.lr.y);
 
+        // advance to next origin
         pen.x += c.advance.x / 64;
         pen.y -= c.advance.y / 64;
 
         prev_glyph_i = c.glyph_i;
     }
 
+    // reorganize texture data into a contiguous array
     std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> coord_data;
 
     for(const auto & page: screen_and_tex_coords)
@@ -160,11 +174,12 @@ std::pair<std::vector<glm::vec2>, std::vector<Font_sys::Coord_data>> build_text(
     return coord_data;
 }
 
-// TODO: documentation
+// Load font libraries and open a font file
 Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     const unsigned int v_dpi, const unsigned int h_dpi):
     _vbo(GL_ARRAY_BUFFER)
 {
+    // load freetype, iconv, and fontconfig libraries, and text shader - only once
     if(_lib_ref_cnt == 0)
     {
         _static_common.reset(new Static_common("UTF-32LE", "UTF-8",
@@ -173,6 +188,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
             {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}));
     }
 
+    // find file for given font
     FcPattern * font_pat = FcNameParse(reinterpret_cast<const FcChar8 *>(font_name.c_str()));
     FcConfigSubstitute(_static_common->fontconfig_lib.get_config(), font_pat, FcMatchPattern);
     FcDefaultSubstitute(font_pat);
@@ -201,8 +217,10 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         Logger_locator::get()(Logger::DBG, "Could not find font file matching: " + font_name);
         throw std::runtime_error("Could not find font file matching: " + font_name);
     }
+
     Logger_locator::get()(Logger::DBG, "Loading font file: " + font_file + " size: " + std::to_string(font_size));
 
+    // open the found file
     FT_Error err = FT_New_Face(_static_common->ft_lib.get_lib(), font_file.c_str(), 0, &_face);
 
     if(err != FT_Err_Ok)
@@ -222,6 +240,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         }
     }
 
+    // select unicide charmap (should be default for most fonts)
     if(FT_Select_Charmap(_face, FT_ENCODING_UNICODE) != FT_Err_Ok)
     {
         FT_Done_Face(_face);
@@ -233,6 +252,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         throw std::system_error(err, std::system_category(), "No unicode charmap in font file: " + font_file);
     }
 
+    // select font size
     if(FT_Set_Char_Size(_face, font_size * 64, font_size * 64, h_dpi, v_dpi) != FT_Err_Ok)
     {
         std::cerr<<"error setting size"<<std::endl;
@@ -246,11 +266,14 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
         throw std::system_error(err, std::system_category(), "Can't set font size: " + std::to_string(font_size) + " for font file: " + font_file);
     }
 
+    // get bounding box that will fit any glyph, plus 2 px padding
+    // some glyphs overflow the reported box (antialiasing?) so at least one px is needed
     _cell_bbox.ul.x = FT_MulFix(_face->bbox.xMin, _face->size->metrics.x_scale) / 64 - 2;
     _cell_bbox.ul.y = FT_MulFix(_face->bbox.yMax, _face->size->metrics.y_scale) / 64 + 2;
     _cell_bbox.lr.x = FT_MulFix(_face->bbox.xMax, _face->size->metrics.x_scale) / 64 + 2;
     _cell_bbox.lr.y = FT_MulFix(_face->bbox.yMin, _face->size->metrics.y_scale) / 64 - 2;
 
+    // get newline height
     _line_height = FT_MulFix(_face->height, _face->size->metrics.y_scale) / 64;
 
     _tex_width = _cell_bbox.width() * 16;
@@ -258,8 +281,10 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
 
     _has_kerning_info = FT_HAS_KERNING(_face);
 
+    // we're not going to throw now, so increment library ref count
     ++_lib_ref_cnt;
 
+    // create and set up vertex array and buffer
     _vao.bind();
     _vbo.bind();
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec2), NULL);
@@ -268,6 +293,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
+    // get shader uniform locations
     _static_common->prog.use();
     _static_common->prog.add_uniform("start_offset");
     _static_common->prog.add_uniform("win_size");
@@ -279,24 +305,29 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
     check_error("Font_sys::Font_sys");
 }
 
+// deallocate font
 Font_sys::~Font_sys()
 {
     FT_Done_Face(_face);
 
+    // only deallocate shared libs if this is the last Font_sys obj
     if(--_lib_ref_cnt == 0)
         _static_common.reset();
 
     Logger_locator::get()(Logger::DBG, "Unloading font");
 }
 
+// render text (rebuilds for each frame - use Static_text if text doesn't change)
 void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & color,
     const glm::vec2 & win_size, const glm::vec2 & pos, const int align_flags)
 {
+    // build text buffer objs
     Bbox<float> text_box;
     auto coord_data = build_text(utf8_input, *this, text_box);
 
     glm::vec2 start_offset = pos;
 
+    // offset origin to align to text bounding box
     int horiz_align = align_flags & 0x3;
     switch(horiz_align)
     {
@@ -332,9 +363,12 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     _vao.bind();
     _vbo.bind();
 
+    // load text into buffer object
+    // call glBufferData with NULL first - this is apparently faster for dynamic data loading
     glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(), NULL, GL_DYNAMIC_DRAW);
     glBufferSubData(_vbo.type(), 0, sizeof(glm::vec2) * coord_data.first.size(), coord_data.first.data());
 
+    // set up shader uniforms
     _static_common->prog.use();
     glUniform2fv(_static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
     glUniform2fv(_static_common->prog.get_uniform("win_size"), 1, &win_size[0]);
@@ -345,8 +379,10 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
+    // draw text, per page
     for(const auto & cd: coord_data.second)
     {
+        // bind the page's texture
         _page_map[cd.page_no].tex->bind();
         glDrawArrays(GL_TRIANGLES, cd.start, cd.num_elements);
     }
@@ -355,24 +391,29 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     check_error("Font_sys::render_text");
 }
 
+// create a font page texture
 std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const uint32_t page_no)
 {
     std::ostringstream ostream;
     ostream<<"Loading font page "<<std::hex<<std::showbase<<page_no;
     Logger_locator::get()(Logger::TRACE, ostream.str());
 
+    // this assumes the page has not been created yet
     auto page_i = _page_map.emplace(std::make_pair(page_no, Page())).first;
     Page & page = page_i->second;
 
+    // greyscale pixel storage
     std::vector<char> tex_data(_tex_width * _tex_height, 0);
 
     FT_GlyphSlot slot = _face->glyph;
 
+    // load each glyph in the page (256 per page)
     for(uint32_t code_pt = page_no << 8; code_pt < ((page_no + 1) << 8); code_pt++)
     {
         unsigned short tbl_row = (code_pt >> 4) & 0xF;
         unsigned short tbl_col = code_pt & 0xF;
 
+        // have freetype render the glyph
         FT_UInt glyph_i = FT_Get_Char_Index(_face, code_pt);
         if(FT_Load_Glyph(_face, glyph_i, FT_LOAD_RENDER) != FT_Err_Ok)
         {
@@ -385,6 +426,7 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
         FT_Bitmap * bmp = &slot->bitmap;
         Char_info & c = page.char_info[code_pt & 0xFF];
 
+        // set glyph properties
         c.origin.x = -_cell_bbox.ul.x + slot->bitmap_left;
         c.origin.y = _cell_bbox.ul.y - slot->bitmap_top;
         c.bbox.ul.x = slot->bitmap_left;
@@ -395,6 +437,7 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
         c.advance.y = slot->advance.y;
         c.glyph_i = glyph_i;
 
+        // copy glyph from freetype to texture storage
         for(std::size_t y = 0; y < (std::size_t)bmp->rows; ++y)
         {
             for(std::size_t x = 0; x < (std::size_t)bmp->width; ++x)
@@ -408,6 +451,7 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
         }
     }
 
+    // copy data to a new opengl texture
     page.tex.reset(new Texture_2D);
     page.tex->bind();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _tex_width, _tex_height,
@@ -423,6 +467,7 @@ std::unordered_map<uint32_t, Font_sys::Page>::iterator Font_sys::load_page(const
     return page_i;
 }
 
+// RAII class for freetype library
 Font_sys::Freetype_lib::Freetype_lib()
 {
     Logger_locator::get()(Logger::DBG, "Loading freetype library");
@@ -450,6 +495,7 @@ const FT_Library & Font_sys::Freetype_lib::get_lib() const
     return _lib;
 }
 
+// RAII class for iconv library for a given encoding conversion
 Font_sys::Iconv_lib::Iconv_lib(const std::string & to_encoding, const std::string & from_encoding)
 {
     Logger_locator::get()(Logger::DBG, "Loading libiconv");
@@ -480,6 +526,8 @@ Font_sys::Iconv_lib::~Iconv_lib()
     iconv_close(_lib);
 }
 
+// iconv unicode encoding conversion
+// exits w/o error for E2BIG, allowing for char-by-char conversion
 std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_bytes,
     char *& output, std::size_t & num_output_bytes)
 {
@@ -491,7 +539,7 @@ std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_
         switch(errno)
         {
         case EILSEQ:
-            Logger_locator::get()(Logger::WARN, "Illiegal char sequence in iconv conversion: ");
+            Logger_locator::get()(Logger::WARN, "Illegal char sequence in iconv conversion: ");
             err = std::system_error(errno, std::system_category(), "Illiegal char sequence in iconv conversion: ");
             break;
         case EINVAL:
@@ -508,6 +556,7 @@ std::size_t Font_sys::Iconv_lib::convert(char *& input, std::size_t & num_input_
     return bytes_converted;
 }
 
+// RAII class for fontconfig library
 Font_sys::Fontconfig_lib::Fontconfig_lib()
 {
     Logger_locator::get()(Logger::DBG, "Loading fontconfig");
@@ -547,6 +596,7 @@ Font_sys::Static_common::Static_common(const std::string & to_encoding, const st
 unsigned int Font_sys::_lib_ref_cnt = 0;
 std::unique_ptr<Font_sys::Static_common> Font_sys::_static_common;
 
+// create and build text buffer object
 Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
     const glm::vec4 & color):
     _vbo(GL_ARRAY_BUFFER),
@@ -554,10 +604,12 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
 {
     Logger_locator::get()(Logger::DBG, "Creating static text");
 
+    // build the text
     auto coord_data = build_text(utf8_input, font, _text_box);
 
     _coord_data = coord_data.second;
 
+    // set up buffer obj properties, load vertex data
     _vao.bind();
     _vbo.bind();
     glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(),
@@ -573,14 +625,17 @@ Static_text::Static_text(Font_sys & font, const std::string & utf8_input,
     check_error("Static_text::Static_text");
 }
 
+// recreate text object with new string
 void Static_text::set_text(Font_sys & font, const std::string & utf8_input)
 {
+    // build the text
     auto coord_data = build_text(utf8_input, font, _text_box);
 
     _coord_data = coord_data.second;
 
     _vao.bind();
     _vbo.bind();
+    // reload vertex data
     glBufferData(_vbo.type(), sizeof(glm::vec2) * coord_data.first.size(),
         coord_data.first.data(), GL_STATIC_DRAW);
 
@@ -589,17 +644,21 @@ void Static_text::set_text(Font_sys & font, const std::string & utf8_input)
     check_error("Static_text::Static_text");
 }
 
+// set font color
 void Static_text::set_color(const glm::vec4 & color)
 {
     _color = color;
 }
 
+// render the text
 void Static_text::render_text(Font_sys & font, const glm::vec2 & win_size,
     const glm::vec2 & pos, const int align_flags)
 {
     glm::vec2 start_offset = pos;
 
     int horiz_align = align_flags & 0x3;
+
+    // offset origin to align to text bounding box
     switch(horiz_align)
     {
     case Font_sys::ORIGIN_HORIZ_BASELINE:
@@ -631,6 +690,7 @@ void Static_text::render_text(Font_sys & font, const glm::vec2 & win_size,
         break;
     }
 
+    // set up shader uniforms
     font._static_common->prog.use();
     glUniform2fv(font._static_common->prog.get_uniform("start_offset"), 1, &start_offset[0]);
     glUniform2fv(font._static_common->prog.get_uniform("win_size"), 1, &win_size[0]);
@@ -643,8 +703,10 @@ void Static_text::render_text(Font_sys & font, const glm::vec2 & win_size,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
+    // draw text, per page
     for(const auto & cd: _coord_data)
     {
+        // bind the page's texture
         font._page_map[cd.page_no].tex->bind();
         glDrawArrays(GL_TRIANGLES, cd.start, cd.num_elements);
     }

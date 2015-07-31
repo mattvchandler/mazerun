@@ -40,20 +40,25 @@
 #include "opengl/shader_prog.hpp"
 #include "opengl/texture.hpp"
 
+// container for font and text rendering
 class Font_sys final
 {
 public:
     enum {ORIGIN_HORIZ_BASELINE = 0x00, ORIGIN_HORIZ_LEFT = 0x01, ORIGIN_HORIZ_RIGHT = 0x02, ORIGIN_HORIZ_CENTER = 0x03,
         ORIGIN_VERT_BASELINE = 0x00, ORIGIN_VERT_TOP = 0x04, ORIGIN_VERT_BOTTOM = 0x08, ORIGIN_VERT_CENTER = 0x0C};
 
+    // Load font libraries and open a font file
     Font_sys(const std::string & font_name, const unsigned int font_size,
         const unsigned int v_dpi = 96, const unsigned int h_dpi = 96);
+    // deallocate font
     ~Font_sys();
 
+    // render text (rebuilds for each frame - use Static_text if text doesn't change)
     void render_text(const std::string & utf8_input, const glm::vec4 & color,
         const glm::vec2 & win_size, const glm::vec2 & pos, const int align_flags = 0);
 
 protected:
+    // RAII class for freetype library
     class Freetype_lib
     {
     public:
@@ -67,12 +72,15 @@ protected:
         FT_Library _lib;
     };
 
+    // RAII class for iconv library for a given encoding conversion
     class Iconv_lib
     {
     public:
         Iconv_lib(const std::string & to_encoding, const std::string & from_encoding);
         ~Iconv_lib();
 
+        // iconv unicode encoding conversion
+        // exits w/o error for E2BIG, allowing for char-by-char conversion
         std::size_t convert(char *& input, std::size_t & num_input_bytes,
             char *& output, std::size_t & num_output_bytes);
 
@@ -80,6 +88,7 @@ protected:
         iconv_t _lib;
     };
 
+    // RAII class for fontconfig library
     class Fontconfig_lib final
     {
     public:
@@ -93,6 +102,8 @@ protected:
         FcConfig * _fc_config;
     };
 
+    // container for common libraries and shader program
+    // every Font_sys obj can use the same instance of these
     struct Static_common
     {
         Static_common(const std::string & to_encoding, const std::string & from_encoding,
@@ -106,6 +117,11 @@ protected:
         Shader_prog prog;
     };
 
+    // common libraries and reference count
+    static unsigned int _lib_ref_cnt;
+    static std::unique_ptr<Static_common> _static_common;
+
+    // bounding box
     template<typename T>
     struct Bbox
     {
@@ -122,6 +138,7 @@ protected:
         }
     };
 
+    // vertex buffer coordinate data
     struct Coord_data
     {
         uint32_t page_no;
@@ -129,6 +146,7 @@ protected:
         std::size_t num_elements;
     };
 
+    // character info
     struct Char_info
     {
         glm::ivec2 origin;
@@ -137,24 +155,29 @@ protected:
         FT_UInt glyph_i;
     };
 
+    // font page
     struct Page
     {
-        std::unique_ptr<Texture_2D> tex; // TODO: replace w/ texture
+        std::unique_ptr<Texture_2D> tex;
         Char_info char_info[256];
     };
 
+    // create a font page texture
     std::unordered_map<uint32_t, Page>::iterator load_page(const uint32_t page_no);
 
+    // font data
     FT_Face _face;
     bool _has_kerning_info;
-
     Bbox<int> _cell_bbox;
     int _line_height;
 
+    // texture size
     size_t _tex_width, _tex_height;
 
+    // font pages
     std::unordered_map<uint32_t, Page> _page_map;
 
+    // OpenGL vertex object
     GL_vertex_array _vao;
     GL_buffer _vbo;
 
@@ -163,18 +186,21 @@ protected:
         build_text(const std::string & utf8_input, Font_sys & font_sys,
         Font_sys::Bbox<float> & font_box_out);
 
-    static unsigned int _lib_ref_cnt;
-    static std::unique_ptr<Static_common> _static_common;
 };
 
+// object for text which does not change often
 class Static_text final
 {
 public:
+    // create and build text buffer object
     Static_text(Font_sys & font, const std::string & utf8_input, const glm::vec4 & color);
+    // recreate text object with new string
+    void set_text(Font_sys & font, const std::string & utf8_input);
+    // set font color
+    void set_color(const glm::vec4 & color);
+    // render the text
     void render_text(Font_sys & font, const glm::vec2 & win_size,
         const glm::vec2 & pos, const int align_flags = 0);
-    void set_text(Font_sys & font, const std::string & utf8_input);
-    void set_color(const glm::vec4 & color);
 
 protected:
     GL_vertex_array _vao;

@@ -34,6 +34,7 @@ out vec2 tex_coord;
 void main()
 {
     tex_coord = vert_tex_coords;
+    // convert pixel coords to screen coords
     vec2 pix_pos = vert_pos + start_offset;
     gl_Position = vec4(pix_pos.x * 2.0 / win_size.x - 1.0,
         1.0 - pix_pos.y * 2.0 / win_size.y, 0.0, 1.0);
