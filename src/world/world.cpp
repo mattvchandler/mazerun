@@ -144,10 +144,10 @@ World::World():
     _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed?
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _g_fbo_norm_shininess_tex(FBO::create_tex(800, 600)), // TODO: resize
+    _g_fbo_norm_shininess_tex(FBO::create_tex(800, 600, true)), // TODO: resize
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
-    _diffuse_fbo_tex(FBO::create_tex(800, 600)),
-    _specular_fbo_tex(FBO::create_tex(800, 600)),
+    _diffuse_fbo_tex(FBO::create_tex(800, 600, false)),
+    _specular_fbo_tex(FBO::create_tex(800, 600, false)),
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
