@@ -97,32 +97,37 @@ World::World():
     _ent_prepass({std::make_pair("shaders/prepass.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/prepass.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
-        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)},
-        {std::make_pair("g_shininess", 0), std::make_pair("g_norm", 1)}),
+        std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
     _point_light_prog({std::make_pair("shaders/lighting.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/point_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        {std::make_pair("vert_pos", 0)},
+        {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
     _point_light_shadow_prog({std::make_pair("shaders/lighting.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/point_light_shadow.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        {std::make_pair("vert_pos", 0)},
+        {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
     _spot_light_prog({std::make_pair("shaders/lighting.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/spot_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        {std::make_pair("vert_pos", 0)},
+        {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
     _spot_light_shadow_prog({std::make_pair("shaders/lighting.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/spot_light_shadow.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        {std::make_pair("vert_pos", 0)},
+        {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
     _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: should we use lighting.vert here?
         std::make_pair("shaders/dir_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        {std::make_pair("vert_pos", 0)},
+        {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
     _dir_light_shadow_prog({std::make_pair("shaders/lighting.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/dir_light_shadow.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
+        {std::make_pair("vert_pos", 0)},
+        {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
     _point_shadow_prog({std::make_pair("shaders/point_shadow.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/point_shadow.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
@@ -139,8 +144,7 @@ World::World():
     _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed?
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _g_fbo_shininess_tex(FBO::create_tex(800, 600)), // TODO: resize
-    _g_fbo_normal_tex(FBO::create_tex(800, 600)),
+    _g_fbo_norm_shininess_tex(FBO::create_tex(800, 600)), // TODO: resize
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
     _diffuse_fbo_tex(FBO::create_tex(800, 600)),
     _specular_fbo_tex(FBO::create_tex(800, 600)),
@@ -197,14 +201,12 @@ World::World():
     _point_light_prog.add_uniform("point_light.const_atten");
     _point_light_prog.add_uniform("point_light.linear_atten");
     _point_light_prog.add_uniform("point_light.quad_atten");
-    _point_light_prog.add_uniform("shininess_map");
-    _point_light_prog.add_uniform("normal_map");
+    _point_light_prog.add_uniform("norm_shininess_map");
     _point_light_prog.add_uniform("depth_map");
     _point_light_prog.add_uniform("viewport_size");
     _point_light_prog.add_uniform("cam_light_forward");
-    glUniform1i(_point_light_prog.get_uniform("shininess_map"), 0);
-    glUniform1i(_point_light_prog.get_uniform("normal_map"), 1);
-    glUniform1i(_point_light_prog.get_uniform("depth_map"), 2);
+    glUniform1i(_point_light_prog.get_uniform("norm_shininess_map"), 0);
+    glUniform1i(_point_light_prog.get_uniform("depth_map"), 1);
     glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _point_light_shadow_prog.use();
@@ -216,18 +218,16 @@ World::World():
     _point_light_shadow_prog.add_uniform("point_light.const_atten");
     _point_light_shadow_prog.add_uniform("point_light.linear_atten");
     _point_light_shadow_prog.add_uniform("point_light.quad_atten");
-    _point_light_shadow_prog.add_uniform("shininess_map");
-    _point_light_shadow_prog.add_uniform("normal_map");
+    _point_light_shadow_prog.add_uniform("norm_shininess_map");
     _point_light_shadow_prog.add_uniform("depth_map");
     _point_light_shadow_prog.add_uniform("viewport_size");
     _point_light_shadow_prog.add_uniform("cam_light_forward");
     _point_light_shadow_prog.add_uniform("shadow_map");
     _point_light_shadow_prog.add_uniform("light_world_pos");
     _point_light_shadow_prog.add_uniform("inv_cam_view");
-    glUniform1i(_point_light_shadow_prog.get_uniform("shininess_map"), 0);
-    glUniform1i(_point_light_shadow_prog.get_uniform("normal_map"), 1);
-    glUniform1i(_point_light_shadow_prog.get_uniform("depth_map"), 2);
-    glUniform1i(_point_light_shadow_prog.get_uniform("shadow_map"), 3);
+    glUniform1i(_point_light_shadow_prog.get_uniform("norm_shininess_map"), 0);
+    glUniform1i(_point_light_shadow_prog.get_uniform("depth_map"), 1);
+    glUniform1i(_point_light_shadow_prog.get_uniform("shadow_map"), 2);
     glUniform3fv(_point_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_prog.use();
@@ -242,14 +242,12 @@ World::World():
     _spot_light_prog.add_uniform("spot_light.const_atten");
     _spot_light_prog.add_uniform("spot_light.linear_atten");
     _spot_light_prog.add_uniform("spot_light.quad_atten");
-    _spot_light_prog.add_uniform("shininess_map");
-    _spot_light_prog.add_uniform("normal_map");
+    _spot_light_prog.add_uniform("norm_shininess_map");
     _spot_light_prog.add_uniform("depth_map");
     _spot_light_prog.add_uniform("viewport_size");
     _spot_light_prog.add_uniform("cam_light_forward");
-    glUniform1i(_spot_light_prog.get_uniform("shininess_map"), 0);
-    glUniform1i(_spot_light_prog.get_uniform("normal_map"), 1);
-    glUniform1i(_spot_light_prog.get_uniform("depth_map"), 2);
+    glUniform1i(_spot_light_prog.get_uniform("norm_shininess_map"), 0);
+    glUniform1i(_spot_light_prog.get_uniform("depth_map"), 1);
     glUniform3fv(_spot_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_shadow_prog.use();
@@ -264,28 +262,24 @@ World::World():
     _spot_light_shadow_prog.add_uniform("spot_light.const_atten");
     _spot_light_shadow_prog.add_uniform("spot_light.linear_atten");
     _spot_light_shadow_prog.add_uniform("spot_light.quad_atten");
-    _spot_light_shadow_prog.add_uniform("shininess_map");
-    _spot_light_shadow_prog.add_uniform("normal_map");
+    _spot_light_shadow_prog.add_uniform("norm_shininess_map");
     _spot_light_shadow_prog.add_uniform("depth_map");
     _spot_light_shadow_prog.add_uniform("viewport_size");
     _spot_light_shadow_prog.add_uniform("cam_light_forward");
     _spot_light_shadow_prog.add_uniform("shadow_mat");
     _spot_light_shadow_prog.add_uniform("shadow_map");
-    glUniform1i(_spot_light_shadow_prog.get_uniform("shininess_map"), 0);
-    glUniform1i(_spot_light_shadow_prog.get_uniform("normal_map"), 1);
-    glUniform1i(_spot_light_shadow_prog.get_uniform("depth_map"), 2);
-    glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 3);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("norm_shininess_map"), 0);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("depth_map"), 1);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 2);
     glUniform3fv(_spot_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _dir_light_prog.use();
     _dir_light_prog.add_uniform("dir_light.base.color");
     _dir_light_prog.add_uniform("dir_light.dir");
     _dir_light_prog.add_uniform("dir_light.half_vec");
-    _dir_light_prog.add_uniform("shininess_map");
-    _dir_light_prog.add_uniform("normal_map");
+    _dir_light_prog.add_uniform("norm_shininess_map");
     _dir_light_prog.add_uniform("viewport_size");
-    glUniform1i(_dir_light_prog.get_uniform("shininess_map"), 0);
-    glUniform1i(_dir_light_prog.get_uniform("normal_map"), 1);
+    glUniform1i(_dir_light_prog.get_uniform("norm_shininess_map"), 0);
 
     _dir_light_shadow_prog.use();
     _dir_light_shadow_prog.add_uniform("aspect");
@@ -294,16 +288,14 @@ World::World():
     _dir_light_shadow_prog.add_uniform("dir_light.base.color");
     _dir_light_shadow_prog.add_uniform("dir_light.dir");
     _dir_light_shadow_prog.add_uniform("dir_light.half_vec");
-    _dir_light_shadow_prog.add_uniform("shininess_map");
-    _dir_light_shadow_prog.add_uniform("normal_map");
+    _dir_light_shadow_prog.add_uniform("norm_shininess_map");
     _dir_light_shadow_prog.add_uniform("depth_map");
     _dir_light_shadow_prog.add_uniform("viewport_size");
     _dir_light_shadow_prog.add_uniform("shadow_map");
     _dir_light_shadow_prog.add_uniform("shadow_mat");
-    glUniform1i(_dir_light_shadow_prog.get_uniform("shininess_map"), 0);
-    glUniform1i(_dir_light_shadow_prog.get_uniform("normal_map"), 1);
-    glUniform1i(_dir_light_shadow_prog.get_uniform("depth_map"), 2);
-    glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 3);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("norm_shininess_map"), 0);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("depth_map"), 1);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 2);
 
     _point_shadow_prog.use();
     _point_shadow_prog.add_uniform("model_view_proj");
@@ -355,14 +347,9 @@ World::World():
     // setup FBOs
     _g_fbo.bind();
 
-    // TODO: put shininess in the alpha channel for depth
-    int i = 0;
-    for(auto tex_id: {_g_fbo_shininess_tex->get_id(), _g_fbo_normal_tex->get_id()})
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (i++), GL_TEXTURE_2D, tex_id, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _g_fbo_norm_shininess_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
-
-    const GLenum buffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, buffs);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
     _g_fbo.verify();
 
@@ -370,6 +357,7 @@ World::World():
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _diffuse_fbo_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
+    const GLenum buffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, buffs);
 
     _lighting_fbo.verify();
@@ -484,12 +472,10 @@ void World::draw()
     glBlendFunc(GL_ONE, GL_ONE);
 
     glActiveTexture(GL_TEXTURE0);
-    _g_fbo_shininess_tex->bind();
+    _g_fbo_norm_shininess_tex->bind();
     glActiveTexture(GL_TEXTURE1);
-    _g_fbo_normal_tex->bind();
-    glActiveTexture(GL_TEXTURE2);
     _g_fbo_depth_tex->bind();
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE2);
     _point_shadow_fbo_tex->bind();
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -602,7 +588,7 @@ void World::draw()
         }
     }
 
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE2);
     _spot_dir_shadow_fbo_tex->bind();
 
     glPolygonOffset(2.0f, 4.0f);

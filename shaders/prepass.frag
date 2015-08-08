@@ -37,8 +37,7 @@ struct Material
 
 uniform Material material;
 
-out vec4 g_shininess;
-out vec4 g_norm;
+out vec4 g_norm_shininess;
 
 vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, in vec2 tex_coord)
 {
@@ -59,6 +58,7 @@ vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, i
 
 void main()
 {
-    g_shininess = vec4(material.shininess * texture(material.shininess_map, tex_coord).r, 0.0, 0.0, 1.0);
-    g_norm = vec4(norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord), 1.0);
+    g_norm_shininess = vec4(norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord),
+        // shininess in alpha
+        material.shininess * texture(material.shininess_map, tex_coord).r);
 }

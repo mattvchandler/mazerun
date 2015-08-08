@@ -99,9 +99,8 @@ private:
     FBO _point_shadow_fbo;
     FBO _spot_dir_shadow_fbo;
 
-    std::unique_ptr<Texture_2D> _g_fbo_shininess_tex;
-    std::unique_ptr<Texture_2D> _g_fbo_normal_tex;
-    std::unique_ptr<Texture_2D> _g_fbo_depth_tex; // TODO: should be renderbuffer
+    std::unique_ptr<Texture_2D> _g_fbo_norm_shininess_tex;
+    std::unique_ptr<Texture_2D> _g_fbo_depth_tex;
     std::unique_ptr<Texture_2D> _diffuse_fbo_tex;
     std::unique_ptr<Texture_2D> _specular_fbo_tex;
     std::unique_ptr<Texture_cubemap> _point_shadow_fbo_tex;

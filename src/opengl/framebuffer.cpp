@@ -90,8 +90,8 @@ Texture_2D * FBO::create_tex(const GLuint width, const GLuint height)
 {
     Texture_2D * tex = new Texture_2D;
     tex->bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0,
-        GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0,
+        GL_RGBA, GL_FLOAT, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
