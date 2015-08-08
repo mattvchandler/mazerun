@@ -78,6 +78,14 @@ struct Dir_light
     vec3 half_vec;
 };
 
+vec3 calc_view_pos(in vec2 map_coords, in sampler2D depth_map, in mat4 proj_mat,
+    in vec2 view_ray)
+{
+    float depth = texture(depth_map, map_coords).r;
+    float z = -proj_mat[3][2] / (2.0 * depth - 1.0 + proj_mat[2][2]);
+    return vec3(view_ray * -z, z);
+}
+
 void calc_common_lighting(in vec3 normal_vec, in vec3 dir, in vec3 half_vec,
     in float shininess, in vec3 color, in float atten,
     out vec3 diffuse, out vec3 specular)

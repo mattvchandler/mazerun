@@ -1,5 +1,5 @@
-// prepass.vert
-// vertex shader for scene prepass
+// lighting.vert
+// lighting vert-shader
 
 // Copyright 2015 Matthew Chandler
 
@@ -24,24 +24,14 @@
 #version 130
 
 in vec3 vert_pos;
-in vec2 vert_tex_coords;
-in vec3 vert_normals;
-in vec3 vert_tangents;
 
-uniform mat4 model_view_proj;
-uniform mat3 normal_transform;
+out vec2 view_ray;
 
-out vec2 tex_coord;
-out vec3 normal_vec;
-out vec3 tangent;
+uniform float aspect;
+uniform float tan_half_fov;
 
 void main()
 {
-    tex_coord = vert_tex_coords;
-
-    // transform the into view space coordinates
-    normal_vec = normalize(normal_transform * vert_normals);
-    tangent = normalize(normal_transform * vert_tangents);
-
-    gl_Position = model_view_proj * vec4(vert_pos, 1.0);
+    view_ray = vec2(vert_pos.x * aspect * tan_half_fov, vert_pos.y * tan_half_fov);
+    gl_Position = vec4(vert_pos, 1.0);
 }

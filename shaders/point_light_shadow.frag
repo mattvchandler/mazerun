@@ -42,11 +42,18 @@ void calc_point_lighting(in vec3 pos, in vec3 forward, in vec3 normal_vec,
     in float shininess, in Point_light point_light,
     out vec3 diffuse, out vec3 specular);
 
+vec3 calc_view_pos(in vec2 map_coords, in sampler2D depth_map, in mat4 proj_mat,
+    in vec2 view_ray);
+
+in vec2 view_ray;
+
+uniform mat4 proj_mat;
+
 uniform Point_light point_light;
 
-uniform sampler2D pos_map;
 uniform sampler2D shininess_map;
 uniform sampler2D normal_map;
+uniform sampler2D depth_map;
 uniform vec2 viewport_size;
 
 // camera facing direction (always (0, 0, 1) when viewed from camera)
@@ -62,7 +69,7 @@ out vec4 specular;
 void main()
 {
     vec2 map_coords = gl_FragCoord.xy / viewport_size;
-    vec3 pos = texture(pos_map, map_coords).xyz;
+    vec3 pos = calc_view_pos(map_coords, depth_map, proj_mat, view_ray);
     float shininess = texture(shininess_map, map_coords).x;
     vec3 normal_vec = texture(normal_map, map_coords).xyz;
 
