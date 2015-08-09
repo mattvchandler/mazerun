@@ -38,6 +38,7 @@
 
 #include "components/light.hpp"
 #include "entities/walls.hpp"
+#include "opengl/framebuffer.hpp"
 #include "opengl/renderbuffer.hpp"
 #include "opengl/shader_prog.hpp"
 #include "util/font.hpp"

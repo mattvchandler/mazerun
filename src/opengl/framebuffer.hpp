@@ -35,23 +35,21 @@ class FBO final: public sf::NonCopyable
 {
 public:
     FBO();
-    virtual ~FBO();
-    virtual void bind() const;
+    ~FBO();
+    void bind() const;
     GLuint get_id() const;
     bool verify() const;
 
     static std::string error_string(GLenum error);
 
-    static Texture_2D * create_tex(const GLuint width, const GLuint height, const bool rgba = true);
+    static Texture_2D * create_color_tex(const GLuint width, const GLuint height, const bool rgba = true);
     static Texture_2D * create_depth_tex(const GLuint width, const GLuint height);
     static Texture_2D * create_shadow_tex(const GLuint width, const GLuint height);
     static Texture_cubemap * create_shadow_cube_tex(const GLuint width, const GLuint height);
 
 private:
 
-    GLuint _id;
+    GLuint _id = 0;
 };
-
-// TODO: renderbuffer class
 
 #endif // FRAMEBUFFER_HPP

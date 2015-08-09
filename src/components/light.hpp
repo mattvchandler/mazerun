@@ -31,7 +31,6 @@
 #include <SFML/OpenGL.hpp>
 
 #include "components/component.hpp"
-#include "opengl/framebuffer.hpp"
 
 class Light: public Component
 {

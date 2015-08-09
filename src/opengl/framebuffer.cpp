@@ -86,7 +86,7 @@ std::string FBO::error_string(GLenum error)
     }
 }
 
-Texture_2D * FBO::create_tex(const GLuint width, const GLuint height, const bool rgba)
+Texture_2D * FBO::create_color_tex(const GLuint width, const GLuint height, const bool rgba)
 {
     Texture_2D * tex = new Texture_2D;
     tex->bind();
