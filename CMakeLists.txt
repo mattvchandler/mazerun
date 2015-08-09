@@ -101,6 +101,7 @@ add_executable(${PROJECT_NAME}
     src/opengl/framebuffer.cpp
     src/opengl/gl_helpers.cpp
     src/opengl/gl_wrappers.cpp
+    src/opengl/renderbuffer.cpp
     src/opengl/shader_prog.cpp
     src/opengl/texture.cpp
     src/util/font.cpp

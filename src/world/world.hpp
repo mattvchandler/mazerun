@@ -38,6 +38,7 @@
 
 #include "components/light.hpp"
 #include "entities/walls.hpp"
+#include "opengl/renderbuffer.hpp"
 #include "opengl/shader_prog.hpp"
 #include "util/font.hpp"
 #include "util/message.hpp"
@@ -104,7 +105,7 @@ private:
     std::unique_ptr<Texture_2D> _diffuse_fbo_tex;
     std::unique_ptr<Texture_2D> _specular_fbo_tex;
     std::unique_ptr<Texture_cubemap> _point_shadow_fbo_tex;
-    std::unique_ptr<Texture_2D> _point_shadow_fbo_depth_tex; // TODO: should be renderbuffer
+    std::unique_ptr<Renderbuffer> _point_shadow_fbo_depth_rbo;
     std::unique_ptr<Texture_2D> _spot_dir_shadow_fbo_tex;
 
     // simple quad used for rendering effects

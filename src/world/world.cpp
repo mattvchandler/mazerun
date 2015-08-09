@@ -149,7 +149,7 @@ World::World():
     _diffuse_fbo_tex(FBO::create_tex(800, 600, false)),
     _specular_fbo_tex(FBO::create_tex(800, 600, false)),
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
-    _point_shadow_fbo_depth_tex(FBO::create_depth_tex(512, 512)),
+    _point_shadow_fbo_depth_rbo(Renderbuffer::create_depth(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _font("Symbola", 18),
     _s_text(_font, u8"🐙💩☹☢☣☠\u0301\nASDF‽", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
@@ -365,7 +365,7 @@ World::World():
     _point_shadow_fbo.bind();
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, _point_shadow_fbo_tex->get_id(), 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _point_shadow_fbo_depth_tex->get_id(), 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _point_shadow_fbo_depth_rbo->get_id());
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
     _point_shadow_fbo.verify();
