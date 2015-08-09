@@ -25,6 +25,7 @@
 #define SHADER_PROG_HPP
 
 #include <string>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -47,9 +48,24 @@ public:
     GLuint get_id() const;
     // TODO: probably my own exceptions, rather than use system exceptions
 
+    static void clear_cache();
+
 protected:
     std::unordered_map<std::string, GLuint> _uniforms; // convenience storage for uniform values
     GLuint _prog;
+
+    // TODO: most opengl classes are just wrappers around the ID. Should we have a base class?
+    class Shader_obj final: public sf::NonCopyable
+    {
+    public:
+        Shader_obj(const std::string & filename, const GLenum shader_type);
+        ~Shader_obj();
+        GLuint get_id() const;
+    private:
+        GLuint _id = 0;
+    };
+
+    static std::unordered_map<std::string, std::unique_ptr<Shader_obj>> _shader_cache;
 };
 
 #endif // SHADER_PROG_HPP

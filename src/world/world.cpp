@@ -57,9 +57,6 @@ thread_local std::random_device rng;
 
 extern std::atomic_bool interrupted; // defined in main.cpp
 
-// const unsigned int max_point_lights = 10; // TODO: get from config?
-// const unsigned int max_spot_lights = 10;
-
 Glew_init::Glew_init()
 {
     if(Glew_init::_initialized)
@@ -141,7 +138,7 @@ World::World():
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
     // TODO: what should FBO sizes be?
-    _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed?
+    _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
     _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, true)), // TODO: resize
@@ -378,6 +375,8 @@ World::World():
 
     Message_locator::get().add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
 
+    Shader_prog::clear_cache();
+
     check_error("World::World");
 }
 
@@ -390,6 +389,7 @@ void World::draw()
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
     glm::vec2 win_size(_win.getSize().x, _win.getSize().y);
 
+    // TODO: max on lighting, shadows?
     std::vector<Entity *> point_lights;
     std::vector<Entity *> spot_lights;
     std::vector<Entity *> models;
@@ -1001,7 +1001,6 @@ void World::main_loop()
         draw();
         _lock.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
-        // TODO: framerate display
     }
 }
 

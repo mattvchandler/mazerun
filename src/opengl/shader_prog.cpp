@@ -37,74 +37,22 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
     const std::vector<std::pair<std::string, GLuint>> & attribs,
     const std::vector<std::pair<std::string, GLuint>> & frag_data)
 {
-    std::vector<GLuint> shaders;
+    std::vector<Shader_obj *> shaders;
     for(const auto & source: sources)
     {
-        Logger_locator::get()(Logger::DBG, "Loading shader: " + source.first);
-        // open shader file
-        std::ifstream in(source.first, std::ios::binary | std::ios::in);
-        std::vector <char> buff;
-
-        if(in)
+        auto shader_it = _shader_cache.find(source.first);
+        if(shader_it == _shader_cache.end())
         {
-            in.seekg(0, std::ios::end);
-            std::size_t in_size = in.tellg();
-            in.seekg(0, std::ios::beg);
-
-            buff.resize(in_size + 1);
-            buff.back() = '\0';
-            in.read(buff.data(), in_size);
-
-            if(!in)
-            {
-                for(auto & shader: shaders)
-                    glDeleteShader(shader);
-                Logger_locator::get()(Logger::ERROR, std::string("Error reading shader file: ") + source.first);
-                throw std::ios_base::failure(std::string("Error reading shader file: ") + source.first);
-            }
+            shader_it = _shader_cache.emplace(source.first, std::unique_ptr<Shader_obj>(new Shader_obj(source.first, source.second))).first;
         }
-        else
-        {
-            for(auto & shader: shaders)
-                glDeleteShader(shader);
-            Logger_locator::get()(Logger::ERROR, std::string("Error opening shader file: ") + source.first);
-            throw std::ios_base::failure(std::string("Error opening shader file: ") + source.first);
-        }
-
-        // TODO: cache shader objects?
-
-        // compile shaders
-        shaders.push_back(glCreateShader(source.second));
-        const char * source_str = buff.data();
-        glShaderSource(shaders.back(), 1, &source_str, NULL);
-        glCompileShader(shaders.back());
-
-        // check for compilation errors
-        GLint compile_status;
-        glGetShaderiv(shaders.back(), GL_COMPILE_STATUS, &compile_status);
-
-        if(compile_status != GL_TRUE)
-        {
-            GLint log_length;
-            glGetShaderiv(shaders.back(), GL_INFO_LOG_LENGTH, &log_length);
-            std::vector<char> log(log_length + 1);
-            log.back() = '\0';
-            glGetShaderInfoLog(shaders.back(), log_length, NULL, log.data());
-
-            for(auto & shader: shaders)
-                glDeleteShader(shader);
-
-            Logger_locator::get()(Logger::ERROR, std::string("Error compiling shader: ") + source.first + std::string("\n") + std::string(log.data()));
-            throw std::system_error(compile_status, std::system_category(), std::string("Error compiling shader: ") +
-                source.first + std::string("\n") + std::string(log.data()));
-        }
+        shaders.push_back(shader_it->second.get());
     }
 
     _prog = glCreateProgram();
     Logger_locator::get()(Logger::TRACE, "Generating shader prog id: " + std::to_string(_prog));
 
     for(auto & shader: shaders)
-        glAttachShader(_prog, shader);
+        glAttachShader(_prog, shader->get_id());
 
     // bind given attributes (must be done before link)
     for(auto & attr: attribs)
@@ -115,9 +63,6 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
 
     Logger_locator::get()(Logger::DBG, "Linking shaders");
     glLinkProgram(_prog);
-
-    for(auto & shader: shaders)
-        glDeleteShader(shader);
 
     // check for link errors
     GLint link_status;
@@ -179,3 +124,80 @@ GLuint Shader_prog::get_id() const
 {
     return _prog;
 }
+
+void Shader_prog::clear_cache()
+{
+    _shader_cache.clear();
+}
+
+Shader_prog::Shader_obj::Shader_obj(const std::string & filename, const GLenum shader_type)
+{
+    Logger_locator::get()(Logger::DBG, "Loading shader: " + filename);
+
+    // open shader file
+    std::ifstream in(filename, std::ios::binary | std::ios::in);
+    std::vector <char> buff;
+
+    if(in)
+    {
+        in.seekg(0, std::ios::end);
+        std::size_t in_size = in.tellg();
+        in.seekg(0, std::ios::beg);
+
+        buff.resize(in_size + 1);
+        buff.back() = '\0';
+        in.read(buff.data(), in_size);
+
+        if(!in)
+        {
+            Logger_locator::get()(Logger::ERROR, std::string("Error reading shader file: ") + filename);
+            throw std::ios_base::failure(std::string("Error reading shader file: ") + filename);
+        }
+    }
+    else
+    {
+        Logger_locator::get()(Logger::ERROR, std::string("Error opening shader file: ") + filename);
+        throw std::ios_base::failure(std::string("Error opening shader file: ") + filename);
+    }
+
+    const char * source_str = buff.data();
+
+    _id = glCreateShader(shader_type);
+    Logger_locator::get()(Logger::TRACE, "Generating shader id: " + std::to_string(_id));
+
+    // compile shaders
+    glShaderSource(_id, 1, &source_str, NULL);
+    glCompileShader(_id);
+
+    // check for compilation errors
+    GLint compile_status;
+    glGetShaderiv(_id, GL_COMPILE_STATUS, &compile_status);
+
+    if(compile_status != GL_TRUE)
+    {
+        GLint log_length;
+        glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &log_length);
+        std::vector<char> log(log_length + 1);
+        log.back() = '\0';
+        glGetShaderInfoLog(_id, log_length, NULL, log.data());
+
+        glDeleteShader(_id);
+
+        Logger_locator::get()(Logger::ERROR, std::string("Error compiling shader: ") + filename + std::string("\n") + std::string(log.data()));
+        throw std::system_error(compile_status, std::system_category(), std::string("Error compiling shader: ") +
+            filename + std::string("\n") + std::string(log.data()));
+    }
+}
+
+Shader_prog::Shader_obj::~Shader_obj()
+{
+    Logger_locator::get()(Logger::DBG, "Deleting shader id: " + std::to_string(_id));
+    glDeleteShader(_id);
+}
+
+GLuint Shader_prog::Shader_obj::get_id() const
+{
+    return _id;
+}
+
+std::unordered_map<std::string, std::unique_ptr<Shader_prog::Shader_obj>> Shader_prog::_shader_cache;
