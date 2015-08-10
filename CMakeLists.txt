@@ -108,8 +108,10 @@ add_executable(${PROJECT_NAME}
     src/util/font_libs.cpp
     src/util/message.cpp
     src/util/static_text.cpp
+    src/world/draw.cpp
     src/world/entity.cpp
     src/world/quad.cpp
+    src/world/setup.cpp
     src/world/skybox.cpp
     src/world/world.cpp
     $<TARGET_OBJECTS:mazegen>
