@@ -123,150 +123,43 @@ World::World():
 
     // Uniform setup
     _ent_prepass.use();
-    _ent_prepass.add_uniform("model_view_proj");
-    _ent_prepass.add_uniform("normal_transform");
-    _ent_prepass.add_uniform("material.shininess");
-    _ent_prepass.add_uniform("material.shininess_map");
-    _ent_prepass.add_uniform("material.normal_map");
     glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 0);
     glUniform1i(_ent_prepass.get_uniform("material.normal_map"), 1);
 
     _point_light_prog.use();
-    _point_light_prog.add_uniform("aspect");
-    _point_light_prog.add_uniform("tan_half_fov");
-    _point_light_prog.add_uniform("proj_mat");
-    _point_light_prog.add_uniform("point_light.base.color");
-    _point_light_prog.add_uniform("point_light.pos_eye");
-    _point_light_prog.add_uniform("point_light.const_atten");
-    _point_light_prog.add_uniform("point_light.linear_atten");
-    _point_light_prog.add_uniform("point_light.quad_atten");
-    _point_light_prog.add_uniform("norm_shininess_map");
-    _point_light_prog.add_uniform("depth_map");
-    _point_light_prog.add_uniform("viewport_size");
-    _point_light_prog.add_uniform("cam_light_forward");
     glUniform1i(_point_light_prog.get_uniform("norm_shininess_map"), 0);
     glUniform1i(_point_light_prog.get_uniform("depth_map"), 1);
     glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _point_light_shadow_prog.use();
-    _point_light_shadow_prog.add_uniform("aspect");
-    _point_light_shadow_prog.add_uniform("tan_half_fov");
-    _point_light_shadow_prog.add_uniform("proj_mat");
-    _point_light_shadow_prog.add_uniform("point_light.base.color");
-    _point_light_shadow_prog.add_uniform("point_light.pos_eye");
-    _point_light_shadow_prog.add_uniform("point_light.const_atten");
-    _point_light_shadow_prog.add_uniform("point_light.linear_atten");
-    _point_light_shadow_prog.add_uniform("point_light.quad_atten");
-    _point_light_shadow_prog.add_uniform("norm_shininess_map");
-    _point_light_shadow_prog.add_uniform("depth_map");
-    _point_light_shadow_prog.add_uniform("viewport_size");
-    _point_light_shadow_prog.add_uniform("cam_light_forward");
-    _point_light_shadow_prog.add_uniform("shadow_map");
-    _point_light_shadow_prog.add_uniform("light_world_pos");
-    _point_light_shadow_prog.add_uniform("inv_cam_view");
     glUniform1i(_point_light_shadow_prog.get_uniform("norm_shininess_map"), 0);
     glUniform1i(_point_light_shadow_prog.get_uniform("depth_map"), 1);
     glUniform1i(_point_light_shadow_prog.get_uniform("shadow_map"), 2);
     glUniform3fv(_point_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_prog.use();
-    _spot_light_prog.add_uniform("aspect");
-    _spot_light_prog.add_uniform("tan_half_fov");
-    _spot_light_prog.add_uniform("proj_mat");
-    _spot_light_prog.add_uniform("spot_light.base.color");
-    _spot_light_prog.add_uniform("spot_light.pos_eye");
-    _spot_light_prog.add_uniform("spot_light.dir_eye");
-    _spot_light_prog.add_uniform("spot_light.cos_cutoff");
-    _spot_light_prog.add_uniform("spot_light.exponent");
-    _spot_light_prog.add_uniform("spot_light.const_atten");
-    _spot_light_prog.add_uniform("spot_light.linear_atten");
-    _spot_light_prog.add_uniform("spot_light.quad_atten");
-    _spot_light_prog.add_uniform("norm_shininess_map");
-    _spot_light_prog.add_uniform("depth_map");
-    _spot_light_prog.add_uniform("viewport_size");
-    _spot_light_prog.add_uniform("cam_light_forward");
     glUniform1i(_spot_light_prog.get_uniform("norm_shininess_map"), 0);
     glUniform1i(_spot_light_prog.get_uniform("depth_map"), 1);
     glUniform3fv(_spot_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_shadow_prog.use();
-    _spot_light_shadow_prog.add_uniform("aspect");
-    _spot_light_shadow_prog.add_uniform("tan_half_fov");
-    _spot_light_shadow_prog.add_uniform("proj_mat");
-    _spot_light_shadow_prog.add_uniform("spot_light.base.color");
-    _spot_light_shadow_prog.add_uniform("spot_light.pos_eye");
-    _spot_light_shadow_prog.add_uniform("spot_light.dir_eye");
-    _spot_light_shadow_prog.add_uniform("spot_light.cos_cutoff");
-    _spot_light_shadow_prog.add_uniform("spot_light.exponent");
-    _spot_light_shadow_prog.add_uniform("spot_light.const_atten");
-    _spot_light_shadow_prog.add_uniform("spot_light.linear_atten");
-    _spot_light_shadow_prog.add_uniform("spot_light.quad_atten");
-    _spot_light_shadow_prog.add_uniform("norm_shininess_map");
-    _spot_light_shadow_prog.add_uniform("depth_map");
-    _spot_light_shadow_prog.add_uniform("viewport_size");
-    _spot_light_shadow_prog.add_uniform("cam_light_forward");
-    _spot_light_shadow_prog.add_uniform("shadow_mat");
-    _spot_light_shadow_prog.add_uniform("shadow_map");
     glUniform1i(_spot_light_shadow_prog.get_uniform("norm_shininess_map"), 0);
     glUniform1i(_spot_light_shadow_prog.get_uniform("depth_map"), 1);
     glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 2);
     glUniform3fv(_spot_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _dir_light_prog.use();
-    _dir_light_prog.add_uniform("dir_light.base.color");
-    _dir_light_prog.add_uniform("dir_light.dir");
-    _dir_light_prog.add_uniform("dir_light.half_vec");
-    _dir_light_prog.add_uniform("norm_shininess_map");
-    _dir_light_prog.add_uniform("viewport_size");
     glUniform1i(_dir_light_prog.get_uniform("norm_shininess_map"), 0);
 
     _dir_light_shadow_prog.use();
-    _dir_light_shadow_prog.add_uniform("aspect");
-    _dir_light_shadow_prog.add_uniform("tan_half_fov");
-    _dir_light_shadow_prog.add_uniform("proj_mat");
-    _dir_light_shadow_prog.add_uniform("dir_light.base.color");
-    _dir_light_shadow_prog.add_uniform("dir_light.dir");
-    _dir_light_shadow_prog.add_uniform("dir_light.half_vec");
-    _dir_light_shadow_prog.add_uniform("norm_shininess_map");
-    _dir_light_shadow_prog.add_uniform("depth_map");
-    _dir_light_shadow_prog.add_uniform("viewport_size");
-    _dir_light_shadow_prog.add_uniform("shadow_map");
-    _dir_light_shadow_prog.add_uniform("shadow_mat");
     glUniform1i(_dir_light_shadow_prog.get_uniform("norm_shininess_map"), 0);
     glUniform1i(_dir_light_shadow_prog.get_uniform("depth_map"), 1);
     glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 2);
 
-    _point_shadow_prog.use();
-    _point_shadow_prog.add_uniform("model_view_proj");
-    _point_shadow_prog.add_uniform("model");
-    _point_shadow_prog.add_uniform("light_world_pos");
-
-    _spot_dir_shadow_prog.use();
-    _spot_dir_shadow_prog.add_uniform("model_view_proj");
-
     _set_depth_prog.use();
-    _set_depth_prog.add_uniform("viewport_size");
-    _set_depth_prog.add_uniform("tex");
     glUniform1i(_set_depth_prog.get_uniform("tex"), 0);
 
     _ent_shader.use();
-    _ent_shader.add_uniform("model_view_proj");
-    _ent_shader.add_uniform("material.ambient_color");
-    _ent_shader.add_uniform("material.diffuse_color");
-    _ent_shader.add_uniform("material.specular_color");
-    _ent_shader.add_uniform("material.emissive_color");
-    // _ent_shader.add_uniform("material.reflectivity");
-    _ent_shader.add_uniform("material.ambient_map");
-    _ent_shader.add_uniform("material.diffuse_map");
-    _ent_shader.add_uniform("material.specular_map");
-    _ent_shader.add_uniform("material.emissive_map");
-    // _ent_shader.add_uniform("material.reflectivity_map");
-    _ent_shader.add_uniform("ambient_light_color");
-    _ent_shader.add_uniform("diffuse_fbo_tex");
-    _ent_shader.add_uniform("specular_fbo_tex");
-    _ent_shader.add_uniform("viewport_size");
-
-    // set up static uniform vals
     glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 0);
     glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 1);
     glUniform1i(_ent_shader.get_uniform("material.specular_map"), 2);
@@ -277,8 +170,6 @@ World::World():
 
     // TODO: remove
     _fullscreen_tex.use();
-    _fullscreen_tex.add_uniform("viewport_size");
-    _fullscreen_tex.add_uniform("tex");
     glUniform1i(_fullscreen_tex.get_uniform("tex"), 0);
 
     glUseProgram(0); // TODO get prev val?

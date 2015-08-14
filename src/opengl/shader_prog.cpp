@@ -82,6 +82,31 @@ Shader_prog::Shader_prog(const std::vector<std::pair<std::string, GLenum>> & sou
         throw std::system_error(link_status, std::system_category(), std::string("Error linking shader program:\n") +
             std::string(log.data()));
     }
+
+    // get uniforms
+    GLint num_uniforms;
+    GLint max_buff_size;
+    glGetProgramiv(_prog, GL_ACTIVE_UNIFORMS, &num_uniforms);
+    glGetProgramiv(_prog, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_buff_size);
+
+    std::vector<GLchar> uniform_buff(max_buff_size);
+
+    for(GLint i = 0; i < num_uniforms; ++i)
+    {
+        // ignored, but required
+        GLsizei buff_size;
+
+        glGetActiveUniformName(_prog, i, uniform_buff.size(), &buff_size, uniform_buff.data());
+        std::string uniform = uniform_buff.data();
+
+        GLint loc = glGetUniformLocation(_prog, uniform.c_str());
+        if(loc != -1)
+        {
+            _uniforms[uniform] = loc;
+            Logger_locator::get()(Logger::TRACE, "Found uniform: " + uniform + " at " + std::to_string(loc));
+        }
+    }
+
     glUseProgram(0); // TODO: get prev val
 }
 
@@ -91,18 +116,7 @@ Shader_prog::~Shader_prog()
     glDeleteProgram(_prog);
 }
 
-void Shader_prog::add_uniform(const std::string & uniform)
-{
-    GLint loc = glGetUniformLocation(_prog, uniform.c_str());
-    if(loc == -1)
-    {
-        Logger_locator::get()(Logger::WARN, std::string("uniform ") + uniform + std::string(" not found"));
-        throw std::runtime_error(std::string("uniform ") + uniform + std::string(" not found"));
-    }
-    _uniforms[uniform] = loc;
-}
-
-GLuint Shader_prog::get_uniform(const std::string & uniform) const
+GLint Shader_prog::get_uniform(const std::string & uniform) const
 {
     try
     {
@@ -110,8 +124,8 @@ GLuint Shader_prog::get_uniform(const std::string & uniform) const
     }
     catch(std::out_of_range & e)
     {
-        Logger_locator::get()(Logger::WARN, "unknown uniform: " + uniform);
-        throw std::out_of_range("unknown uniform: " + uniform);
+        Logger_locator::get()(Logger::WARN, "Unknown uniform: " + uniform);
+        throw std::out_of_range("Unknown uniform: " + uniform);
     }
 }
 

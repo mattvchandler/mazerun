@@ -292,10 +292,6 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
 
     // get shader uniform locations
     _static_common->prog.use();
-    _static_common->prog.add_uniform("start_offset");
-    _static_common->prog.add_uniform("win_size");
-    _static_common->prog.add_uniform("font_page");
-    _static_common->prog.add_uniform("color");
     glUniform1i(_static_common->prog.get_uniform("font_page"), 0);
     glUseProgram(0);
 

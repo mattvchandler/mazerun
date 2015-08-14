@@ -42,8 +42,7 @@ public:
         const std::vector<std::pair<std::string, GLuint>> & attribs,
         const std::vector<std::pair<std::string, GLuint>> & frag_data = {});
     ~Shader_prog();
-    void add_uniform(const std::string & uniform);
-    GLuint get_uniform(const std::string & uniform) const;
+    GLint get_uniform(const std::string & uniform) const;
     void use() const;
     GLuint get_id() const;
     // TODO: probably my own exceptions, rather than use system exceptions
@@ -51,7 +50,7 @@ public:
     static void clear_cache();
 
 protected:
-    std::unordered_map<std::string, GLuint> _uniforms; // convenience storage for uniform values
+    std::unordered_map<std::string, GLint> _uniforms; // convenience storage for uniform values
     GLuint _prog;
 
     // TODO: most opengl classes are just wrappers around the ID. Should we have a base class?

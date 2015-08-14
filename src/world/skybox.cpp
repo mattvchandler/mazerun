@@ -92,11 +92,6 @@ Skybox::Skybox():
     glBindVertexArray(0);
     _num_indexes = index.size();
 
-    _prog.use();
-    _prog.add_uniform("model_view_proj");
-
-    glUseProgram(0); // TODO get prev val
-
     check_error("Skybox::Skybox");
 }
 
