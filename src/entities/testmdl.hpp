@@ -58,6 +58,7 @@ class Testlight_physics final: public Physics
 public:
     void update(Entity & ent, const float dt) override;
     void toggle_movement();
+
 private:
     bool _moving = true;
     float _theta = 0.0f;
@@ -78,5 +79,34 @@ private:
 };
 
 Entity create_testmonkey();
+
+class Testdoughnut_input final: public Input
+{
+public:
+    void update(Entity & ent, const sf::Window & win,
+        const float dt) override;
+    void key_down(const Message::Packet & pkt);
+    sigc::signal<void> signal_move_toggled();
+    sigc::signal<void> signal_rot_toggled();
+
+private:
+    sigc::signal<void> _signal_move_toggled;
+    sigc::signal<void> _signal_rot_toggled;
+};
+
+class Testdoughnut_physics final: public Physics
+{
+public:
+    void update(Entity & ent, const float dt) override;
+    void toggle_movement();
+    void toggle_rotation();
+
+private:
+    bool _moving = true;
+    bool _rotating = true;
+    float _theta = 0.0f;
+};
+
+Entity create_testdoughnut();
 
 #endif // TESTMDL_HPP

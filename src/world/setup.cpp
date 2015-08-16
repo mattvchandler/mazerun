@@ -100,6 +100,7 @@ World::World():
     _ents.emplace_back(create_testmdl());
     _ents.emplace_back(create_testlight());
     _ents.emplace_back(create_testmonkey());
+    _ents.emplace_back(create_testdoughnut());
     _ents.emplace_back(create_walls(32, 32));
     _ents.emplace_back(create_floor(32, 32));
 
@@ -120,6 +121,8 @@ World::World():
     resize();
 
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
+
+    // TODO: organize texture attachments to reduce swapping
 
     // Uniform setup
     _ent_prepass.use();

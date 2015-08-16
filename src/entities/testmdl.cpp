@@ -182,3 +182,77 @@ Entity create_testmonkey()
 
     return ent;
 }
+
+void Testdoughnut_input::update(Entity & ent, const sf::Window & win,
+    const float dt)
+{
+}
+
+void Testdoughnut_input::key_down(const Message::Packet & pkt)
+{
+    const sf::Keyboard::Key & key = Message::get_packet<sf::Keyboard::Key>(pkt);
+    if(key == sf::Keyboard::LBracket)
+        _signal_move_toggled();
+    else if(key == sf::Keyboard::RBracket)
+        _signal_rot_toggled();
+}
+
+sigc::signal<void> Testdoughnut_input::signal_move_toggled()
+{
+    return _signal_move_toggled;
+}
+
+sigc::signal<void> Testdoughnut_input::signal_rot_toggled()
+{
+    return _signal_rot_toggled;
+}
+
+void Testdoughnut_physics::update(Entity & ent, const float dt)
+{
+    if(_moving)
+    {
+        ent.set_pos(glm::vec3(4.0f * std::cos(-_theta), std::cos(4.0f * _theta) + 3.0f, 4.0f * std::sin(-_theta)));
+
+        _theta += dt * 0.0625f * M_PI;
+        if(_theta >= 2.0f * M_PI)
+        {
+            _theta -= 2.0f * M_PI;
+        }
+    }
+
+    if(_rotating)
+    {
+        ent.rotate_world(dt * -0.25f * M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}
+
+void Testdoughnut_physics::toggle_movement()
+{
+    _moving = !_moving;
+}
+
+void Testdoughnut_physics::toggle_rotation()
+{
+    _rotating = !_rotating;
+}
+
+Entity create_testdoughnut()
+{
+    Model * model = Model::create(check_in_pwd("mdl/mirrors.dae"), true);
+    Testdoughnut_input * input = new Testdoughnut_input;
+    Testdoughnut_physics * physics = new Testdoughnut_physics;
+
+    Entity ent(
+        model,
+        input,
+        physics,
+        nullptr, // light
+        nullptr); // audio
+
+    input->signal_move_toggled().connect(sigc::mem_fun(*physics, &Testdoughnut_physics::toggle_movement));
+    input->signal_rot_toggled().connect(sigc::mem_fun(*physics, &Testdoughnut_physics::toggle_rotation));
+
+    Message_locator::get().add_callback("key_down", sigc::mem_fun(*input, &Testdoughnut_input::key_down));
+
+    return ent;
+}
