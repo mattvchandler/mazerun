@@ -115,3 +115,8 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 
     check_error("Skybox::draw");
 }
+
+const Texture_cubemap * Skybox::get_tex() const
+{
+    return _tex;
+}
