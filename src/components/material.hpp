@@ -37,14 +37,14 @@ struct Material
     glm::vec3 specular_color{1.0f, 1.0f, 1.0f};
     float shininess = 0.0f;
     glm::vec3 emissive_color{0.0f, 0.0f, 0.0f};
-    // float reflectivity;
+    float reflectivity = 0.0f;
 
     Texture_2D * ambient_map = Texture_2D::white_fallback();
     Texture_2D * diffuse_map = Texture_2D::white_fallback();
     Texture_2D * specular_map = Texture_2D::white_fallback();
-    Texture_2D * shininess_map = Texture_2D::white_fallback(); // greyscale
+    Texture_2D * shininess_map = Texture_2D::white_fallback(); // TODO: make greyscale, possibly as alpha to another map
     Texture_2D * emissive_map = Texture_2D::white_fallback();
-    // Texture_2D * reflectivity_map = Texture_2D::white_fallback(); // greyscale
+    Texture_2D * reflectivity_map = Texture_2D::white_fallback(); // TODO: make greyscale, possibly as alpha to another map
     Texture_2D * normal_map = Texture_2D::normal_map_fallback();
 };
 

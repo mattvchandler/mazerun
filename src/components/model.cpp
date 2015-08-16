@@ -153,7 +153,15 @@ Model::Model(const std::string & filename, const bool casts_shadow):
             mat.emissive_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
         }
 
-        // Assimp doesn't have a material reflectivity parameter
+        // assimp defaults reflectivity to 1, so check reflective color first
+        if(ai_mat->Get(AI_MATKEY_COLOR_REFLECTIVE, mat_color) == AI_SUCCESS)
+        {
+            if(mat_color.r + mat_color.g + mat_color.b > 0.0f &&
+                ai_mat->Get(AI_MATKEY_REFLECTIVITY, mat_val) == AI_SUCCESS)
+            {
+                mat.reflectivity = mat_val;
+            }
+        }
 
         aiString tex_path;
         if(ai_mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
@@ -182,10 +190,11 @@ Model::Model(const std::string & filename, const bool casts_shadow):
             mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
         }
 
-        // if(ai_mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path) == AI_SUCCESS)
-        // {
-        //     mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
-        // }
+        if(ai_mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path) == AI_SUCCESS)
+        {
+            // NOTE: Blender does not set reflection - must be manually added to .dae file (or use another program)
+            mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+        }
 
         if(ai_mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS)
         {
