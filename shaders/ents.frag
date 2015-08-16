@@ -29,24 +29,29 @@ struct Material
     vec3 diffuse_color;
     vec3 specular_color;
     vec3 emissive_color;
-    // float reflectivity;
+    float reflectivity;
 
     sampler2D ambient_map;
     sampler2D diffuse_map;
     sampler2D specular_map;
     sampler2D emissive_map;
-    // sampler2D reflectivity_map; // greyscale
+    sampler2D reflectivity_map; // TODO: make greyscale, possibly as alpha to another map
 };
 
+in vec3 pos;
 in vec2 tex_coord;
 
 // material vars
 uniform Material material;
 
+uniform samplerCube env_map;
+uniform mat3 inv_view;
+
 uniform vec3 ambient_light_color;
 
 uniform sampler2D diffuse_fbo_tex;
 uniform sampler2D specular_fbo_tex;
+uniform sampler2D norm_shininess_map;
 uniform vec2 viewport_size;
 
 out vec4 frag_color;
@@ -54,14 +59,20 @@ out vec4 frag_color;
 void main()
 {
     vec2 map_coords = gl_FragCoord.xy / viewport_size;
+    vec3 normal_vec = texture(norm_shininess_map, map_coords).xyz;
 
     vec3 diffuse = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color +
         texture(diffuse_fbo_tex, map_coords).rgb;
     vec3 specular = texture(specular_fbo_tex, map_coords).rgb;
 
+    vec3 env_map_color = texture(env_map, inv_view * -reflect(-pos, normal_vec)).rgb;
+    vec3 reflection = material.reflectivity * texture(material.reflectivity_map, tex_coord).r *
+        env_map_color;
+
     // add to material color (from textures) to lighting for final color
     vec3 rgb = min(material.emissive_color * texture(material.emissive_map, tex_coord).rgb +
-        material.diffuse_color * texture(material.diffuse_map, tex_coord).rgb * diffuse +
+        (material.diffuse_color * texture(material.diffuse_map, tex_coord).rgb +
+        reflection) * diffuse +
         material.specular_color * texture(material.specular_map, tex_coord).rgb * specular, vec3(1.0));
     frag_color = vec4(rgb, 1.0);
 }

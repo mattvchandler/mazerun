@@ -39,7 +39,7 @@ void main()
 {
     tex_coord = vert_tex_coords;
 
-    // transform the into view space coordinates
+    // transform into view space coordinates
     normal_vec = normalize(normal_transform * vert_normals);
     tangent = normalize(normal_transform * vert_tangents);
 

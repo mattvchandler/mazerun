@@ -26,11 +26,15 @@
 in vec3 vert_pos;
 in vec2 vert_tex_coords;
 
+uniform mat4 model_view;
 uniform mat4 model_view_proj;
+
+out vec3 pos;
 out vec2 tex_coord;
 
 void main()
 {
+    pos = vec3(model_view * vec4(vert_pos, 1.0));
     tex_coord = vert_tex_coords;
     gl_Position = model_view_proj * vec4(vert_pos, 1.0);
 }

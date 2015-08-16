@@ -452,7 +452,7 @@ void World::draw()
         glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
         glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
         glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
-        // glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
+        glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
 
         glActiveTexture(GL_TEXTURE0);
         mat.ambient_map->bind();
@@ -462,16 +462,23 @@ void World::draw()
         mat.specular_map->bind();
         glActiveTexture(GL_TEXTURE3);
         mat.emissive_map->bind();
-        // glActiveTexture(GL_TEXTURE4);
-        // mat.reflectivity_map->bind();
+        glActiveTexture(GL_TEXTURE4);
+        mat.reflectivity_map->bind();
     };
 
     glActiveTexture(GL_TEXTURE5);
-    _diffuse_fbo_tex->bind();
+    _skybox.get_tex()->bind();
     glActiveTexture(GL_TEXTURE6);
+    _diffuse_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE7);
     _specular_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE8);
+    _g_fbo_norm_shininess_tex->bind();
+
+    glm::mat3 inv_view = glm::mat3(_cam->model_mat());
 
     glUniform2fv(_ent_shader.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniformMatrix3fv(_ent_shader.get_uniform("inv_view"), 1, GL_FALSE, &inv_view[0][0]);
 
     for(auto & ent: models)
     {
@@ -480,6 +487,7 @@ void World::draw()
         glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
         glm::mat4 model_view_proj = _proj * model_view;
 
+        glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
         glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
         model->draw(set_material);
