@@ -36,7 +36,10 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
+#ifdef DEBUG
 #include "opengl/gl_helpers.hpp"
+#endif
+
 #include "util/logger.hpp"
 
 // TODO: weird lighting artifacts
@@ -91,7 +94,10 @@ void World::draw()
             glUniformMatrix3fv(_ent_prepass.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
             model->draw(set_prepass_material);
+
+            #ifdef DEBUG
             check_error("World::draw - prepass");
+            #endif
         }
 
         // collect lighting info
@@ -211,7 +217,10 @@ void World::draw()
                     glUniform3fv(_point_shadow_prog.get_uniform("light_world_pos"), 1, &light_world_pos[0]);
 
                     model->draw([](const Material &){});
+
+                    #ifdef DEBUG
                     check_error("World::draw - spot light shadow map");
+                    #endif
                 }
             }
 
@@ -228,7 +237,10 @@ void World::draw()
             glUniform3fv(_point_light_shadow_prog.get_uniform("light_world_pos"), 1, &light_world_pos[0]);
 
             point_common(_point_light_shadow_prog, *ent, *point_light);
+
+            #ifdef DEBUG
             check_error("World::draw - point light shadow quad");
+            #endif
 
             use_shadow = true;
         }
@@ -241,7 +253,10 @@ void World::draw()
             }
 
             point_common(_point_light_prog, *ent, *point_light);
+
+            #ifdef DEBUG
             check_error("World::draw - point light quad");
+            #endif
         }
     }
 
@@ -315,7 +330,10 @@ void World::draw()
                 glUniformMatrix4fv(_spot_dir_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
                 model->draw([](const Material &){});
+
+                #ifdef DEBUG
                 check_error("World::draw - spot light shadow map");
+                #endif
             }
 
             _lighting_fbo.bind();
@@ -328,7 +346,10 @@ void World::draw()
 
             glUniformMatrix4fv(_spot_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &spot_shadow_mat[0][0]);
             spot_common(_spot_light_shadow_prog, *ent, *spot_light);
+
+            #ifdef DEBUG
             check_error("World::draw - spot light shadow quad");
+            #endif
 
             use_shadow = true;
         }
@@ -341,7 +362,10 @@ void World::draw()
             }
 
             spot_common(_spot_light_prog, *ent, *spot_light);
+
+            #ifdef DEBUG
             check_error("World::draw - spot light quad");
+            #endif
         }
     }
 
@@ -391,7 +415,10 @@ void World::draw()
                 glUniformMatrix4fv(_spot_dir_shadow_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
                 model->draw([](const Material &){});
+
+                #ifdef DEBUG
                 check_error("World::draw - dir light shadow map");
+                #endif
             }
 
             _lighting_fbo.bind();
@@ -407,13 +434,19 @@ void World::draw()
             glUniformMatrix4fv(_dir_light_shadow_prog.get_uniform("proj_mat"), 1, GL_FALSE, &_proj[0][0]);
             glUniformMatrix4fv(_dir_light_shadow_prog.get_uniform("shadow_mat"), 1, GL_FALSE, &dir_shadow_mat[0][0]);
             dir_common(_dir_light_shadow_prog);
+
+            #ifdef DEBUG
             check_error("World::draw - dir light shadow quad");
+            #endif
         }
         else
         {
             _dir_light_prog.use();
             dir_common(_dir_light_prog);
+
+            #ifdef DEBUG
             check_error("World::draw - dir light quad");
+            #endif
         }
     }
 
@@ -436,7 +469,10 @@ void World::draw()
     glActiveTexture(GL_TEXTURE0);
     _g_fbo_depth_tex->bind();
     _quad.draw();
+
+    #ifdef DEBUG
     check_error("World::draw - default depthbuffer fill");
+    #endif
 
     // main drawing pass
     glDepthMask(GL_FALSE);
@@ -491,12 +527,18 @@ void World::draw()
         glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
         model->draw(set_material);
+
+        #ifdef DEBUG
         check_error("World::draw - main pass");
+        #endif
     }
     glDisable(GL_POLYGON_OFFSET_FILL);
 
     _skybox.draw(*_cam, _proj);
+
+    #ifdef DEBUG
     check_error("World::draw - skybox");
+    #endif
 
     // TODO: antialiasing
 
@@ -521,5 +563,8 @@ void World::draw()
         glm::vec2(win_size.x - 10.0f, 10.0f), Font_sys::ORIGIN_HORIZ_RIGHT | Font_sys::ORIGIN_VERT_TOP);
 
     _win.display();
+
+    #ifdef DEBUG
     check_error("World::draw - end");
+    #endif
 }

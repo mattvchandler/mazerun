@@ -381,7 +381,10 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     }
 
     glBindVertexArray(0);
+
+    #ifdef DEBUG
     check_error("Font_sys::render_text");
+    #endif
 }
 
 // create a font page texture

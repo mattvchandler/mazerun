@@ -71,7 +71,7 @@ void Static_text::set_text(Font_sys & font, const std::string & utf8_input)
 
     glBindVertexArray(0);
 
-    check_error("Static_text::Static_text");
+    check_error("Static_text::set_text");
 }
 
 // set font color
@@ -142,5 +142,8 @@ void Static_text::render_text(Font_sys & font, const glm::vec2 & win_size,
     }
 
     glBindVertexArray(0);
+
+    #ifdef DEBUG
     check_error("Static_text::render_text");
+    #endif
 }

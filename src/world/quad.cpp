@@ -63,5 +63,7 @@ void Quad::draw() const
 
     glBindVertexArray(0); // TODO: get prev val?
 
+    #ifdef DEBUG
     check_error("Quad::Draw");
+    #endif
 }

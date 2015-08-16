@@ -113,7 +113,9 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
     glBindVertexArray(0); // get prev val?
     glUseProgram(0); // get prev val?
 
+    #ifdef DEBUG
     check_error("Skybox::draw");
+    #endif
 }
 
 const Texture_cubemap * Skybox::get_tex() const

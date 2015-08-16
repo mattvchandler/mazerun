@@ -80,7 +80,9 @@ void Model::draw(const std::function<void(const Material &)> & set_material) con
 
     glBindVertexArray(0); // TODO: get prev val?
 
+    #ifdef DEBUG
     check_error("Model::Draw");
+    #endif
 }
 
 Model::Model(const bool casts_shadow):

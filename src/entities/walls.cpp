@@ -55,8 +55,11 @@ void Walls::draw(const std::function<void(const Material &)> & set_material) con
 
     glBindVertexArray(0); // TODO: get prev val?
 
-    check_error("Walls::Draw");
     glEnable(GL_CULL_FACE);
+
+    #ifdef DEBUG
+    check_error("Walls::Draw");
+    #endif
 }
 
 Walls::Walls(const unsigned int width, const unsigned int height):
@@ -262,7 +265,9 @@ void Floor::draw(const std::function<void(const Material &)> & set_material) con
 
     glBindVertexArray(0); // TODO: get prev val?
 
+    #ifdef DEBUG
     check_error("Floor::Draw");
+    #endif
 }
 
 Floor::Floor(const unsigned int width, const unsigned int height):

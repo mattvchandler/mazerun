@@ -34,7 +34,6 @@
 // check for OpenGL error and print message
 void check_error(const std::string & at)
 {
-    // TODO: disable checks in release mode
     GLenum e = glGetError();
     if(e == GL_NO_ERROR)
         return;
