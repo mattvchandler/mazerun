@@ -168,39 +168,39 @@ Model::Model(const std::string & filename, const bool casts_shadow):
         aiString tex_path;
         if(ai_mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
         }
 
         if(ai_mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
         }
 
         if(ai_mat->GetTexture(aiTextureType_SPECULAR, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
         }
 
         if(ai_mat->GetTexture(aiTextureType_SHININESS, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RED);
         }
 
         if(ai_mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.emissive_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.emissive_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
             mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
         }
 
         if(ai_mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path) == AI_SUCCESS)
         {
             // NOTE: Blender does not set reflection - must be manually added to .dae file (or use another program)
-            mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RED);
         }
 
         if(ai_mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()));
+            mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
         }
     }
 

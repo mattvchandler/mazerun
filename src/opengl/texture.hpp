@@ -47,46 +47,37 @@ public:
 
 protected:
     Texture();
-    virtual void set_properties() const = 0;
 
     GLuint _texid;
-    std::string _key;
 };
 
 class Texture_2D final: public Texture
 {
 public:
     Texture_2D() = default;
-    static Texture_2D * create(const std::string & filename);
+    void bind() const override;
+
+    static Texture_2D * create(const std::string & filename, const GLenum internal_format = GL_RGBA);
+    static Texture_2D * create_rgb_and_alpha(const std::string & rgb_filename,
+        const std::string & alpha_filename);
+
     static Texture_2D * white_fallback();
     static Texture_2D * black_fallback();
     static Texture_2D * missing_fallback();
     static Texture_2D * normal_map_fallback();
-    void bind() const override;
-
-private:
-    explicit Texture_2D(const std::string & filename);
-    Texture_2D(const std::vector<glm::vec4> & data, const GLint width, const GLint height);
-    Texture_2D(const glm::vec4 & color, const GLint width, const GLint height);
-    void set_properties() const override;
 };
 
 class Texture_cubemap final: public Texture
 {
 public:
     Texture_cubemap() = default;
-    static Texture_cubemap * create(const std::string & left_fname, const std::string & right_fname,
-        const std::string & back_fname, const std::string & front_fname,
-        const std::string & down_fname, const std::string & up_fname);
-    static Texture_cubemap * env_fallback();
     void bind() const override;
 
-private:
-    Texture_cubemap(const std::string & left_fname, const std::string & right_fname,
+    static Texture_cubemap * create(const std::string & left_fname, const std::string & right_fname,
         const std::string & back_fname, const std::string & front_fname,
-        const std::string & down_fname, const std::string & up_fname);
-    Texture_cubemap(const glm::vec4 & color, const GLint width, const GLint height);
-    void set_properties() const override;
+        const std::string & down_fname, const std::string & up_fname,
+        const GLenum internal_format = GL_RGBA);
+    static Texture_cubemap * env_fallback();
 };
 
 struct Texture_cache
