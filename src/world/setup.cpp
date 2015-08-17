@@ -113,6 +113,7 @@ World::World():
     glDepthRangef(0.0f, 1.0f);
     glLineWidth(5.0f);
 
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);

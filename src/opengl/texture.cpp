@@ -223,8 +223,6 @@ Texture_cubemap::Texture_cubemap(const std::string & left_fname, const std::stri
     const std::string & back_fname, const std::string & front_fname,
     const std::string & down_fname, const std::string & up_fname)
 {
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
-
     // create array of pairs: filename with type enum
     std::vector<std::pair<std::string, GLenum>> filenames =
     {
