@@ -48,7 +48,7 @@ uniform mat4 proj_mat;
 
 uniform Dir_light dir_light;
 
-uniform sampler2D norm_shininess_map;
+uniform sampler2D normal_shininess_map;
 uniform sampler2D depth_map;
 uniform vec2 viewport_size;
 
@@ -62,7 +62,7 @@ void main()
 {
     vec2 map_coords = gl_FragCoord.xy / viewport_size;
     vec3 pos = calc_view_pos(map_coords, depth_map, proj_mat, view_ray);
-    vec4 norm_shininess = texture(norm_shininess_map, map_coords);
+    vec4 norm_shininess = texture(normal_shininess_map, map_coords);
     float shininess = norm_shininess.w;
     vec3 normal_vec = norm_shininess.xyz;
 
