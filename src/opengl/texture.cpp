@@ -84,7 +84,7 @@ Texture_2D * Texture_2D::create(const std::string & filename, const GLenum inter
 Texture_2D * Texture_2D::create_rgb_and_alpha(const std::string & rgb_filename,
     const std::string & alpha_filename)
 {
-    std::string key = std::string("2D:") + rgb_filename + "+" + alpha_filename;
+    std::string key = std::string("2D RGB+A:") + rgb_filename + "+" + alpha_filename;
 
     if(Texture_cache_locator::get().tex_index.count(key) > 0)
     {
@@ -132,6 +132,54 @@ Texture_2D * Texture_2D::create_rgb_and_alpha(const std::string & rgb_filename,
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgb_img.getSize().x, rgb_img.getSize().y,
             0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        Texture_cache_locator::get().tex_index.emplace(key, std::unique_ptr<Texture>(ret));
+        return ret;
+    }
+}
+
+Texture_2D * Texture_2D::create_to_alpha(const std::string & filename,
+    const glm::vec3 & rgb)
+{
+    std::string key = std::string("2D ALPHA:") + filename;
+
+    if(Texture_cache_locator::get().tex_index.count(key) > 0)
+    {
+        Logger_locator::get()(Logger::DBG, "Reusing texture: " + key);
+        return dynamic_cast<Texture_2D *>(Texture_cache_locator::get().tex_index[key].get());
+    }
+    else
+    {
+        Logger_locator::get()(Logger::DBG, "Loading 2D texture: " + filename);
+
+        sf::Image img;
+        if(!img.loadFromFile(filename))
+        {
+            Logger_locator::get()(Logger::ERROR, std::string("Error reading image file: ") + filename);
+            throw std::ios_base::failure(std::string("Error reading image file: ") + filename);
+        }
+
+        std::vector<sf::Uint8> data(img.getSize().x * img.getSize().y * 4);
+
+        for(std::size_t i = 0; i < img.getSize().x * img.getSize().y; ++i)
+        {
+            data[i * 3] = (sf::Uint8)(glm::clamp(rgb.r, 0.0f, 1.0f) * 255.0f);
+            data[i * 3 + 1] = (sf::Uint8)(glm::clamp(rgb.g, 0.0f, 1.0f) * 255.0f);
+            data[i * 3 + 2] = (sf::Uint8)(glm::clamp(rgb.b, 0.0f, 1.0f) * 255.0f);
+            data[i * 3 + 3] = img.getPixelsPtr()[i * 4];
+        }
+
+        Texture_2D * ret = new Texture_2D;
+        ret->bind();
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getSize().x, img.getSize().y,
+            0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
 
         glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

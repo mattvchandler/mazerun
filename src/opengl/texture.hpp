@@ -60,6 +60,8 @@ public:
     static Texture_2D * create(const std::string & filename, const GLenum internal_format = GL_RGBA);
     static Texture_2D * create_rgb_and_alpha(const std::string & rgb_filename,
         const std::string & alpha_filename);
+    static Texture_2D * create_to_alpha(const std::string & filename,
+        const glm::vec3 & rgb = glm::vec3(0.0f));
 
     static Texture_2D * white_fallback();
     static Texture_2D * black_fallback();
