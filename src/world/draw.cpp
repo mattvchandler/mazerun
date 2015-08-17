@@ -503,13 +503,13 @@ void World::draw()
     };
 
     glActiveTexture(GL_TEXTURE5);
-    _skybox.get_tex()->bind();
+    _g_fbo_norm_shininess_tex->bind();
     glActiveTexture(GL_TEXTURE6);
     _diffuse_fbo_tex->bind();
     glActiveTexture(GL_TEXTURE7);
     _specular_fbo_tex->bind();
     glActiveTexture(GL_TEXTURE8);
-    _g_fbo_norm_shininess_tex->bind();
+    _skybox.get_tex()->bind();
 
     glm::mat3 inv_view = glm::mat3(_cam->model_mat());
 

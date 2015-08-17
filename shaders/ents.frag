@@ -44,15 +44,15 @@ in vec2 tex_coord;
 // material vars
 uniform Material material;
 
+uniform sampler2D norm_shininess_map;
+uniform sampler2D diffuse_fbo_tex;
+uniform sampler2D specular_fbo_tex;
+uniform vec2 viewport_size;
+
 uniform samplerCube env_map;
 uniform mat3 inv_view;
 
 uniform vec3 ambient_light_color;
-
-uniform sampler2D diffuse_fbo_tex;
-uniform sampler2D specular_fbo_tex;
-uniform sampler2D norm_shininess_map;
-uniform vec2 viewport_size;
 
 out vec4 frag_color;
 
