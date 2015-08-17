@@ -127,8 +127,7 @@ World::World():
 
     // Uniform setup
     _ent_prepass.use();
-    glUniform1i(_ent_prepass.get_uniform("material.shininess_map"), 0);
-    glUniform1i(_ent_prepass.get_uniform("material.normal_map"), 1);
+    glUniform1i(_ent_prepass.get_uniform("material.normal_shininess_map"), 0);
 
     _point_light_prog.use();
     glUniform1i(_point_light_prog.get_uniform("normal_shininess_map"), 0);
@@ -167,12 +166,11 @@ World::World():
     glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 0);
     glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 1);
     glUniform1i(_ent_shader.get_uniform("material.specular_map"), 2);
-    glUniform1i(_ent_shader.get_uniform("material.emissive_map"), 3);
-    glUniform1i(_ent_shader.get_uniform("material.reflectivity_map"), 4);
-    glUniform1i(_ent_shader.get_uniform("normal_shininess_map"), 5);
-    glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 6);
-    glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 7);
-    glUniform1i(_ent_shader.get_uniform("env_map"), 8);
+    glUniform1i(_ent_shader.get_uniform("material.emissive_reflectivity_map"), 3);
+    glUniform1i(_ent_shader.get_uniform("normal_shininess_map"), 4);
+    glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 5);
+    glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 6);
+    glUniform1i(_ent_shader.get_uniform("env_map"), 7);
 
     // TODO: remove
     _fullscreen_tex.use();

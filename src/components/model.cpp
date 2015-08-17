@@ -145,11 +145,6 @@ Model::Model(const std::string & filename, const bool casts_shadow):
             mat.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
         }
 
-        if(ai_mat->Get(AI_MATKEY_SHININESS, mat_val) == AI_SUCCESS)
-        {
-            mat.shininess = mat_val;
-        }
-
         if(ai_mat->Get(AI_MATKEY_COLOR_EMISSIVE, mat_color) == AI_SUCCESS)
         {
             mat.emissive_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
@@ -165,7 +160,12 @@ Model::Model(const std::string & filename, const bool casts_shadow):
             }
         }
 
-        aiString tex_path;
+        if(ai_mat->Get(AI_MATKEY_SHININESS, mat_val) == AI_SUCCESS)
+        {
+            mat.shininess = mat_val;
+        }
+
+        aiString tex_path, tex_path2;
         if(ai_mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
         {
             mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
@@ -181,26 +181,39 @@ Model::Model(const std::string & filename, const bool casts_shadow):
             mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
         }
 
-        if(ai_mat->GetTexture(aiTextureType_SHININESS, 0, &tex_path) == AI_SUCCESS)
+        bool has_emissive = ai_mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS;
+        // NOTE: Blender does not set reflection - must be manually added to .dae file (or use another program)
+        bool has_reflection = ai_mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path2) == AI_SUCCESS;
+        if(has_emissive && has_reflection)
         {
-            mat.shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RED);
-        }
-
-        if(ai_mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS)
-        {
-            mat.emissive_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.emissive_reflectivity_map = Texture_2D::create_rgb_and_alpha(check_in_pwd(std::string("mdl/") + tex_path.C_Str()),
+                check_in_pwd(std::string("mdl/") + tex_path2.C_Str()));
             mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
         }
-
-        if(ai_mat->GetTexture(aiTextureType_REFLECTION, 0, &tex_path) == AI_SUCCESS)
+        else if(has_emissive)
         {
-            // NOTE: Blender does not set reflection - must be manually added to .dae file (or use another program)
-            mat.reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RED);
+            mat.emissive_reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
+        }
+        if(has_reflection)
+        {
+            mat.emissive_reflectivity_map = Texture_2D::create_to_alpha(check_in_pwd(std::string("mdl/") + tex_path2.C_Str()), glm::vec3(1.0f));
         }
 
-        if(ai_mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS)
+        bool has_normal = ai_mat->GetTexture(aiTextureType_NORMALS, 0, &tex_path) == AI_SUCCESS;
+        bool has_shininess = ai_mat->GetTexture(aiTextureType_SHININESS, 0, &tex_path2) == AI_SUCCESS;
+        if(has_normal && has_shininess)
         {
-            mat.normal_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.normal_shininess_map = Texture_2D::create_rgb_and_alpha(check_in_pwd(std::string("mdl/") + tex_path.C_Str()),
+                check_in_pwd(std::string("mdl/") + tex_path2.C_Str()));
+        }
+        else if(has_normal)
+        {
+            mat.normal_shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+        }
+        else if(has_shininess)
+        {
+            mat.normal_shininess_map = Texture_2D::create_to_alpha(check_in_pwd(std::string("mdl/") + tex_path2.C_Str()), glm::vec3(0.5f, 0.5f, 1.0f));
         }
     }
 

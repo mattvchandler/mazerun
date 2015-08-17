@@ -222,7 +222,7 @@ Walls::Walls(const unsigned int width, const unsigned int height):
     Material & mat = _mats.back();
     mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
     mat.diffuse_map = Texture_2D::create(check_in_pwd("img/GroundCover.jpg"), GL_RGB);
-    mat.normal_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"), GL_RGB);
+    mat.normal_shininess_map = Texture_2D::create(check_in_pwd("img/normals/GroundCover_N.jpg"), GL_RGB);
     mat.shininess = 500.0f;
 
     mesh.mat = &_mats.back();
@@ -353,7 +353,7 @@ Floor::Floor(const unsigned int width, const unsigned int height):
     Material & mat = _mats.back();
     mat.specular_color = glm::vec3(0.1f, 0.1f, 0.1f);
     mat.diffuse_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring.jpg"), GL_RGB);
-    mat.normal_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"), GL_RGB);
+    mat.normal_shininess_map = Texture_2D::create(check_in_pwd("mdl/AncientFlooring_N.jpg"), GL_RGB);
     mat.shininess = 500.0f;
 
     mesh.mat = &_mats.back();

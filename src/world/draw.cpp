@@ -61,9 +61,7 @@ void World::draw()
     {
         glUniform1f(_ent_prepass.get_uniform("material.shininess"), mat.shininess);
         glActiveTexture(GL_TEXTURE0);
-        mat.shininess_map->bind();
-        glActiveTexture(GL_TEXTURE1);
-        mat.normal_map->bind();
+        mat.normal_shininess_map->bind();
     };
 
     glm::vec2 viewport_size = {(float)800, (float)600}; // TODO: how to get fbo size?
@@ -497,18 +495,16 @@ void World::draw()
         glActiveTexture(GL_TEXTURE2);
         mat.specular_map->bind();
         glActiveTexture(GL_TEXTURE3);
-        mat.emissive_map->bind();
-        glActiveTexture(GL_TEXTURE4);
-        mat.reflectivity_map->bind();
+        mat.emissive_reflectivity_map->bind();
     };
 
-    glActiveTexture(GL_TEXTURE5);
+    glActiveTexture(GL_TEXTURE4);
     _g_fbo_norm_shininess_tex->bind();
-    glActiveTexture(GL_TEXTURE6);
+    glActiveTexture(GL_TEXTURE5);
     _diffuse_fbo_tex->bind();
-    glActiveTexture(GL_TEXTURE7);
+    glActiveTexture(GL_TEXTURE6);
     _specular_fbo_tex->bind();
-    glActiveTexture(GL_TEXTURE8);
+    glActiveTexture(GL_TEXTURE7);
     _skybox.get_tex()->bind();
 
     glm::mat3 inv_view = glm::mat3(_cam->model_mat());

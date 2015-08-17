@@ -31,15 +31,14 @@ in vec3 tangent;
 struct Material
 {
     float shininess;
-    sampler2D shininess_map; // greyscale
-    sampler2D normal_map;
+    sampler2D normal_shininess_map;
 };
 
 uniform Material material;
 
 out vec4 g_norm_shininess;
 
-vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, in vec2 tex_coord)
+vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in vec3 mapped_normal)
 {
     normal = normalize(normal);
     tangent = normalize(tangent);
@@ -49,16 +48,16 @@ vec3 norm_map_normal(in vec3 normal, in vec3 tangent, in sampler2D normal_map, i
 
     mat3 tangent_bitangent_normal = mat3(tangent, bitangent, normal);
 
-    vec3 map_normal = texture(normal_map, tex_coord).xyz;
-    map_normal = 2.0 * map_normal - vec3(1.0, 1.0, 1.0);
+    mapped_normal = 2.0 * mapped_normal - vec3(1.0, 1.0, 1.0);
 
-    vec3 new_normal = tangent_bitangent_normal * map_normal;
+    vec3 new_normal = tangent_bitangent_normal * mapped_normal;
     return normalize(new_normal);
 }
 
 void main()
 {
-    g_norm_shininess = vec4(norm_map_normal(normal_vec, tangent, material.normal_map, tex_coord),
+    vec4 normal_shininess = texture(material.normal_shininess_map, tex_coord);
+    g_norm_shininess = vec4(norm_map_normal(normal_vec, tangent, normal_shininess.rgb),
         // shininess in alpha
-        material.shininess * texture(material.shininess_map, tex_coord).r);
+        material.shininess * normal_shininess.a);
 }

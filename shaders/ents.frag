@@ -34,8 +34,7 @@ struct Material
     sampler2D ambient_map;
     sampler2D diffuse_map;
     sampler2D specular_map;
-    sampler2D emissive_map;
-    sampler2D reflectivity_map; // TODO: make greyscale, possibly as alpha to another map
+    sampler2D emissive_reflectivity_map;
 };
 
 in vec3 pos;
@@ -65,12 +64,14 @@ void main()
         texture(diffuse_fbo_tex, map_coords).rgb;
     vec3 specular = texture(specular_fbo_tex, map_coords).rgb;
 
+    vec4 emissive_reflectivity = texture(material.emissive_reflectivity_map, tex_coord);
+
     vec3 env_map_color = texture(env_map, inv_view * -reflect(-pos, normal_vec)).rgb;
-    vec3 reflection = material.reflectivity * texture(material.reflectivity_map, tex_coord).r *
+    vec3 reflection = material.reflectivity * emissive_reflectivity.a *
         env_map_color;
 
     // add to material color (from textures) to lighting for final color
-    vec3 rgb = min(material.emissive_color * texture(material.emissive_map, tex_coord).rgb +
+    vec3 rgb = min(material.emissive_color * emissive_reflectivity.rgb +
         (material.diffuse_color * texture(material.diffuse_map, tex_coord).rgb +
         reflection) * diffuse +
         material.specular_color * texture(material.specular_map, tex_coord).rgb * specular, vec3(1.0));
