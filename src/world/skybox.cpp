@@ -92,6 +92,14 @@ Skybox::Skybox():
     glBindVertexArray(0);
     _num_indexes = index.size();
 
+    _prog.use();
+    glUniform1i(_prog.get_uniform("cubemap"), 12);
+    glUseProgram(0);
+
+    // bind texture
+    glActiveTexture(GL_TEXTURE12);
+    _tex->bind();
+
     check_error("Skybox::Skybox");
 }
 
@@ -99,12 +107,9 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
 {
     glDepthFunc(GL_LEQUAL);
 
-    _prog.use();
-    glActiveTexture(GL_TEXTURE0);
-    _tex->bind();
-
     glm::mat4 model_view_proj = proj * glm::translate(cam.view_mat(), cam.pos());
 
+    _prog.use();
     glUniformMatrix4fv(_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
     _vao.bind();

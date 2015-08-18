@@ -292,7 +292,7 @@ Font_sys::Font_sys(const std::string & font_name, const unsigned int font_size,
 
     // get shader uniform locations
     _static_common->prog.use();
-    glUniform1i(_static_common->prog.get_uniform("font_page"), 0);
+    glUniform1i(_static_common->prog.get_uniform("font_page"), 13);
     glUseProgram(0);
 
     check_error("Font_sys::Font_sys");
@@ -370,7 +370,7 @@ void Font_sys::render_text(const std::string & utf8_input, const glm::vec4 & col
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE13);
 
     // draw text, per page
     for(const auto & cd: coord_data.second)

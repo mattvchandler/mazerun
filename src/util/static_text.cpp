@@ -131,7 +131,7 @@ void Static_text::render_text(Font_sys & font, const glm::vec2 & win_size,
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE13);
 
     // draw text, per page
     for(const auto & cd: _coord_data)

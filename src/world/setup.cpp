@@ -123,58 +123,95 @@ World::World():
 
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
 
-    // TODO: organize texture attachments to reduce swapping
+    // NOTE: textures have reserved attachment points, as follows:
+        // 0: texture creation (unused for rendering)
+        // per material textures:
+            // 1:  material.ambient_map
+            // 2:  material.diffuse_map
+            // 3:  material.specular_map
+            // 4:  material.emissive_reflectivity_map
+            // 5:  material.normal_shininess_map
+
+        // global textures:
+            // 6:  _g_fbo_norm_shininess_tex
+            // 7:  _g_fbo_depth_tex
+
+            // 8:  diffuse_fbo_tex
+            // 9:  specular_fbo_tex
+
+            //10:  point_shadow_fbo_tex (cubemap)
+            // 11: spot_dir_shadow_fbo_tex
+
+            // 12: Skybox::_tex (cubemap)
+
+        // font page textures
+            // TODO: may want to reserve an attachment for page 0
+            // 13: Font:_sys::_page_map[page].tex
+
+    // bind static textures
+    glActiveTexture(GL_TEXTURE6);
+    _g_fbo_norm_shininess_tex->bind();
+    glActiveTexture(GL_TEXTURE7);
+    _g_fbo_depth_tex->bind();
+    glActiveTexture(GL_TEXTURE8);
+    _diffuse_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE9);
+    _specular_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE10);
+    _point_shadow_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE11);
+    _spot_dir_shadow_fbo_tex->bind();
 
     // Uniform setup
     _ent_prepass.use();
-    glUniform1i(_ent_prepass.get_uniform("material.normal_shininess_map"), 0);
+    glUniform1i(_ent_prepass.get_uniform("material.normal_shininess_map"), 5);
 
     _point_light_prog.use();
-    glUniform1i(_point_light_prog.get_uniform("normal_shininess_map"), 0);
-    glUniform1i(_point_light_prog.get_uniform("depth_map"), 1);
+    glUniform1i(_point_light_prog.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_point_light_prog.get_uniform("depth_map"), 7);
     glUniform3fv(_point_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _point_light_shadow_prog.use();
-    glUniform1i(_point_light_shadow_prog.get_uniform("normal_shininess_map"), 0);
-    glUniform1i(_point_light_shadow_prog.get_uniform("depth_map"), 1);
-    glUniform1i(_point_light_shadow_prog.get_uniform("shadow_map"), 2);
+    glUniform1i(_point_light_shadow_prog.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_point_light_shadow_prog.get_uniform("depth_map"), 7);
+    glUniform1i(_point_light_shadow_prog.get_uniform("shadow_map"), 10);
     glUniform3fv(_point_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_prog.use();
-    glUniform1i(_spot_light_prog.get_uniform("normal_shininess_map"), 0);
-    glUniform1i(_spot_light_prog.get_uniform("depth_map"), 1);
+    glUniform1i(_spot_light_prog.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_spot_light_prog.get_uniform("depth_map"), 7);
     glUniform3fv(_spot_light_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _spot_light_shadow_prog.use();
-    glUniform1i(_spot_light_shadow_prog.get_uniform("normal_shininess_map"), 0);
-    glUniform1i(_spot_light_shadow_prog.get_uniform("depth_map"), 1);
-    glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 2);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("depth_map"), 7);
+    glUniform1i(_spot_light_shadow_prog.get_uniform("shadow_map"), 11);
     glUniform3fv(_spot_light_shadow_prog.get_uniform("cam_light_forward"), 1, &cam_light_forward[0]);
 
     _dir_light_prog.use();
-    glUniform1i(_dir_light_prog.get_uniform("normal_shininess_map"), 0);
+    glUniform1i(_dir_light_prog.get_uniform("normal_shininess_map"), 6);
 
     _dir_light_shadow_prog.use();
-    glUniform1i(_dir_light_shadow_prog.get_uniform("normal_shininess_map"), 0);
-    glUniform1i(_dir_light_shadow_prog.get_uniform("depth_map"), 1);
-    glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 2);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("depth_map"), 7);
+    glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 11);
 
     _set_depth_prog.use();
-    glUniform1i(_set_depth_prog.get_uniform("tex"), 0);
+    glUniform1i(_set_depth_prog.get_uniform("tex"), 7);
 
     _ent_shader.use();
-    glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 0);
-    glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 1);
-    glUniform1i(_ent_shader.get_uniform("material.specular_map"), 2);
-    glUniform1i(_ent_shader.get_uniform("material.emissive_reflectivity_map"), 3);
-    glUniform1i(_ent_shader.get_uniform("normal_shininess_map"), 4);
-    glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 5);
-    glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 6);
-    glUniform1i(_ent_shader.get_uniform("env_map"), 7);
+    glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 1);
+    glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 2);
+    glUniform1i(_ent_shader.get_uniform("material.specular_map"), 3);
+    glUniform1i(_ent_shader.get_uniform("material.emissive_reflectivity_map"), 4);
+    glUniform1i(_ent_shader.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 8);
+    glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 9);
+    glUniform1i(_ent_shader.get_uniform("env_map"), 12);
 
     // TODO: remove
     _fullscreen_tex.use();
-    glUniform1i(_fullscreen_tex.get_uniform("tex"), 0);
+    glUniform1i(_fullscreen_tex.get_uniform("tex"), 15);
 
     glUseProgram(0); // TODO get prev val?
 

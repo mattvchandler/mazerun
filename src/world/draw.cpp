@@ -60,7 +60,7 @@ void World::draw()
     auto set_prepass_material = [this](const Material & mat)
     {
         glUniform1f(_ent_prepass.get_uniform("material.shininess"), mat.shininess);
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE5);
         mat.normal_shininess_map->bind();
     };
 
@@ -131,13 +131,6 @@ void World::draw()
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
-
-    glActiveTexture(GL_TEXTURE0);
-    _g_fbo_norm_shininess_tex->bind();
-    glActiveTexture(GL_TEXTURE1);
-    _g_fbo_depth_tex->bind();
-    glActiveTexture(GL_TEXTURE2);
-    _point_shadow_fbo_tex->bind();
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -257,9 +250,6 @@ void World::draw()
             #endif
         }
     }
-
-    glActiveTexture(GL_TEXTURE2);
-    _spot_dir_shadow_fbo_tex->bind();
 
     glPolygonOffset(2.0f, 4.0f);
 
@@ -464,8 +454,6 @@ void World::draw()
     _set_depth_prog.use();
     glUniform2fv(_set_depth_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
-    glActiveTexture(GL_TEXTURE0);
-    _g_fbo_depth_tex->bind();
     _quad.draw();
 
     #ifdef DEBUG
@@ -488,24 +476,15 @@ void World::draw()
         glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
         glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
 
-        glActiveTexture(GL_TEXTURE0);
-        mat.ambient_map->bind();
         glActiveTexture(GL_TEXTURE1);
-        mat.diffuse_map->bind();
+        mat.ambient_map->bind();
         glActiveTexture(GL_TEXTURE2);
-        mat.specular_map->bind();
+        mat.diffuse_map->bind();
         glActiveTexture(GL_TEXTURE3);
+        mat.specular_map->bind();
+        glActiveTexture(GL_TEXTURE4);
         mat.emissive_reflectivity_map->bind();
     };
-
-    glActiveTexture(GL_TEXTURE4);
-    _g_fbo_norm_shininess_tex->bind();
-    glActiveTexture(GL_TEXTURE5);
-    _diffuse_fbo_tex->bind();
-    glActiveTexture(GL_TEXTURE6);
-    _specular_fbo_tex->bind();
-    glActiveTexture(GL_TEXTURE7);
-    _skybox.get_tex()->bind();
 
     glm::mat3 inv_view = glm::mat3(_cam->model_mat());
 

@@ -42,6 +42,7 @@ GLuint Texture::get_id() const
 Texture::Texture()
 {
     glGenTextures(1, &_texid);
+    glActiveTexture(GL_TEXTURE0);
     Logger_locator::get()(Logger::TRACE, "Generated GL texture: " + std::to_string(_texid));
 }
 
