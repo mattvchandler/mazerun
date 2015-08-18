@@ -28,6 +28,7 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
+// TODO: GL_RGB-> GL_RGB8, RGBA->RGBA8
 World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8)),
     _running(true), _focused(true), _do_resize(false),
@@ -57,7 +58,7 @@ World::World():
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)},
         {std::make_pair("diffuse", 0), std::make_pair("specular", 1)}),
-    _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: should we use lighting.vert here?
+    _dir_light_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/dir_light.frag", GL_FRAGMENT_SHADER),
         std::make_pair("shaders/lighting.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)},
@@ -93,6 +94,7 @@ World::World():
     _font("Symbola", 18),
     _s_text(_font, u8"🐙💩☹☢☣☠\u0301\nASDF‽", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 {
+    // TODO: more fine-grained check_error calls
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
     // TODO: loading screen
@@ -113,7 +115,7 @@ World::World():
     glDepthRangef(0.0f, 1.0f);
     glLineWidth(5.0f);
 
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // TODO: should this be enabled at higher scope?
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
@@ -213,7 +215,7 @@ World::World():
     _fullscreen_tex.use();
     glUniform1i(_fullscreen_tex.get_uniform("tex"), 15);
 
-    glUseProgram(0); // TODO get prev val?
+    glUseProgram(0);
 
     // setup FBOs
     _g_fbo.bind();

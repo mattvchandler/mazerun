@@ -503,17 +503,15 @@ void World::draw()
 
         model->draw(set_material);
 
-        #ifdef DEBUG
-        check_error("World::draw - main pass");
-        #endif
     }
+
+    #ifdef DEBUG
+    check_error("World::draw - main pass");
+    #endif
+
     glDisable(GL_POLYGON_OFFSET_FILL);
 
     _skybox.draw(*_cam, _proj);
-
-    #ifdef DEBUG
-    check_error("World::draw - skybox");
-    #endif
 
     // TODO: antialiasing
 

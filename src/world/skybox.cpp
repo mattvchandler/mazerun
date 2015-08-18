@@ -113,10 +113,11 @@ void Skybox::draw(const Entity & cam, const glm::mat4 & proj)
     glUniformMatrix4fv(_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
     _vao.bind();
+
     glDrawElements(GL_TRIANGLES, _num_indexes, GL_UNSIGNED_INT, (GLvoid *)0);
 
-    glBindVertexArray(0); // get prev val?
-    glUseProgram(0); // get prev val?
+    glBindVertexArray(0); // TODO: get prev val?
+    glUseProgram(0); // TODO: get prev val?
 
     #ifdef DEBUG
     check_error("Skybox::draw");
