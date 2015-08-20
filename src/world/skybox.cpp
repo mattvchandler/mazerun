@@ -37,7 +37,7 @@ Skybox::Skybox():
     _ebo(GL_ELEMENT_ARRAY_BUFFER),
     _tex(Texture_cubemap::create(check_in_pwd("img/bluecloud_lf.jpg"), check_in_pwd("img/bluecloud_rt.jpg"),
         check_in_pwd("img/bluecloud_bk.jpg"), check_in_pwd("img/bluecloud_ft.jpg"),
-        check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg"), GL_RGB)),
+        check_in_pwd("img/bluecloud_dn.jpg"), check_in_pwd("img/bluecloud_up.jpg"), GL_RGB8)),
     _prog({std::make_pair("shaders/skybox.vert", GL_VERTEX_SHADER), std::make_pair("shaders/skybox.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)})
 {

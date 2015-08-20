@@ -168,17 +168,17 @@ Model::Model(const std::string & filename, const bool casts_shadow):
         aiString tex_path, tex_path2;
         if(ai_mat->GetTexture(aiTextureType_AMBIENT, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.ambient_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB8);
         }
 
         if(ai_mat->GetTexture(aiTextureType_DIFFUSE, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.diffuse_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB8);
         }
 
         if(ai_mat->GetTexture(aiTextureType_SPECULAR, 0, &tex_path) == AI_SUCCESS)
         {
-            mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.specular_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB8);
         }
 
         bool has_emissive = ai_mat->GetTexture(aiTextureType_EMISSIVE, 0, &tex_path) == AI_SUCCESS;
@@ -192,7 +192,7 @@ Model::Model(const std::string & filename, const bool casts_shadow):
         }
         else if(has_emissive)
         {
-            mat.emissive_reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.emissive_reflectivity_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB8);
             mat.emissive_color = glm::vec3(1.0f); // Blender doesn't set this correctly
         }
         if(has_reflection)
@@ -209,7 +209,7 @@ Model::Model(const std::string & filename, const bool casts_shadow):
         }
         else if(has_normal)
         {
-            mat.normal_shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB);
+            mat.normal_shininess_map = Texture_2D::create(check_in_pwd(std::string("mdl/") + tex_path.C_Str()), GL_RGB8);
         }
         else if(has_shininess)
         {

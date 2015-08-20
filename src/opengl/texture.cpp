@@ -131,7 +131,7 @@ Texture_2D * Texture_2D::create_rgb_and_alpha(const std::string & rgb_filename,
         Texture_2D * ret = new Texture_2D;
         ret->bind();
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgb_img.getSize().x, rgb_img.getSize().y,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, rgb_img.getSize().x, rgb_img.getSize().y,
             0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
 
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -179,7 +179,7 @@ Texture_2D * Texture_2D::create_to_alpha(const std::string & filename,
         Texture_2D * ret = new Texture_2D;
         ret->bind();
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getSize().x, img.getSize().y,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, img.getSize().x, img.getSize().y,
             0, GL_RGBA, GL_UNSIGNED_BYTE, img.getPixelsPtr());
 
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -201,7 +201,7 @@ Texture_2D * Texture_2D::white_fallback()
         fallback->bind();
 
         glm::vec3 color(1.0f, 1.0f, 1.0f);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -224,7 +224,7 @@ Texture_2D * Texture_2D::black_fallback()
         fallback->bind();
 
         glm::vec3 color(0.0f, 0.0f, 0.0f);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -262,7 +262,7 @@ Texture_2D * Texture_2D::missing_fallback()
         Texture_2D * fallback = new Texture_2D;
         fallback->bind();
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, data.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, size, size, 0, GL_RGB, GL_FLOAT, data.data());
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -285,7 +285,7 @@ Texture_2D * Texture_2D::normal_map_fallback()
         fallback->bind();
 
         glm::vec3 color(0.5f, 0.5f, 1.0f);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -387,7 +387,7 @@ Texture_cubemap * Texture_cubemap::env_fallback()
         glm::vec3 color(1.0f, 1.0f, 1.0f);
         for(const auto & side: sides)
         {
-            glTexImage2D(side, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
+            glTexImage2D(side, 0, GL_RGB8, 1, 1, 0, GL_RGB, GL_FLOAT, &color[0]);
         }
 
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);

@@ -57,7 +57,7 @@ public:
     Texture_2D() = default;
     void bind() const override;
 
-    static Texture_2D * create(const std::string & filename, const GLenum internal_format = GL_RGBA);
+    static Texture_2D * create(const std::string & filename, const GLenum internal_format = GL_RGBA8);
     static Texture_2D * create_rgb_and_alpha(const std::string & rgb_filename,
         const std::string & alpha_filename);
     static Texture_2D * create_to_alpha(const std::string & filename,
@@ -78,7 +78,7 @@ public:
     static Texture_cubemap * create(const std::string & left_fname, const std::string & right_fname,
         const std::string & back_fname, const std::string & front_fname,
         const std::string & down_fname, const std::string & up_fname,
-        const GLenum internal_format = GL_RGBA);
+        const GLenum internal_format = GL_RGBA8);
     static Texture_cubemap * env_fallback();
 };
 
