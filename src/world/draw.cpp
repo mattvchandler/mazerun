@@ -42,10 +42,8 @@
 
 #include "util/logger.hpp"
 
-// TODO: weird lighting artifacts
 void World::draw()
 {
-    // TODO: no lighting until camera moved, and when pointed down
     const glm::vec3 cam_light_forward(0.0f, 0.0f, 1.0f); // in eye space
     glm::vec2 win_size(_win.getSize().x, _win.getSize().y);
 
@@ -222,7 +220,6 @@ void World::draw()
             glDepthMask(GL_FALSE);
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
-            glDisable(GL_POLYGON_OFFSET_FILL);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
             glUniformMatrix4fv(_point_light_shadow_prog.get_uniform("inv_cam_view"), 1, GL_FALSE, &inv_cam_view[0][0]);
@@ -251,8 +248,6 @@ void World::draw()
             #endif
         }
     }
-
-    glPolygonOffset(2.0f, 4.0f);
 
     _spot_light_shadow_prog.use();
     glUniform1f(_spot_light_shadow_prog.get_uniform("aspect"), win_size.x / win_size.y);
@@ -464,8 +459,6 @@ void World::draw()
     // main drawing pass
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(-2.0f, 4.0f);
 
     _ent_prog.use();
 
@@ -509,8 +502,6 @@ void World::draw()
     #ifdef DEBUG
     check_error("World::draw - main pass");
     #endif
-
-    glDisable(GL_POLYGON_OFFSET_FILL);
 
     _skybox.draw(*_cam, _proj);
 

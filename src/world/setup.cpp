@@ -116,13 +116,13 @@ World::World():
     // TODO _win.setIcon
 
     glDepthRangef(0.0f, 1.0f);
-    glLineWidth(5.0f);
+    glPolygonOffset(2.0f, 4.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     resize();
 
