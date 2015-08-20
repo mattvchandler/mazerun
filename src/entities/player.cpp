@@ -109,6 +109,8 @@ void Player_input::key_down(const Message::Packet & pkt)
     // Toggle sunlight
     else if(key == sf::Keyboard::I)
         Message_locator::get().queue_event_empty("sun_toggle");
+    else if(key == sf::Keyboard::X)
+        Message_locator::get().queue_event_empty("fxaa_toggle");
 }
 
 sigc::signal<void> Player_input::signal_spotlight_toggled()

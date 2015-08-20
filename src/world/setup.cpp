@@ -28,10 +28,9 @@
 #include "opengl/gl_helpers.hpp"
 #include "util/logger.hpp"
 
-// TODO: GL_RGB-> GL_RGB8, RGBA->RGBA8
 World::World():
     _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(0, 0, 0)),
-    _running(true), _focused(true), _do_resize(false),
+    _running(true), _focused(true), _do_resize(false), _use_fxaa(true),
     _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), true, glm::normalize(glm::vec3(-1.0f))),
     // TODO: get rid of unused shader files
     _ent_prepass_prog({std::make_pair("shaders/prepass.vert", GL_VERTEX_SHADER),
@@ -77,10 +76,12 @@ World::World():
     _ent_prog({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
+    _fxaa_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
+        std::make_pair("shaders/fxaa.frag", GL_FRAGMENT_SHADER)},
+        {}),
     _copy_fbo_to_screen_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    // _fxaa_prog(),
     // TODO: what should FBO sizes be?
     _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)), // TODO: resize, TODO:, why 32F?
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
@@ -168,6 +169,10 @@ World::World():
     glActiveTexture(GL_TEXTURE12);
     _fullscreen_effects_tex->bind();
 
+    // activate bilinear filtering for the effect tex
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
     // Uniform setup
     _ent_prepass_prog.use();
     glUniform1i(_ent_prepass_prog.get_uniform("material.normal_shininess_map"), 5);
@@ -212,6 +217,9 @@ World::World():
     glUniform1i(_ent_prog.get_uniform("specular_fbo_tex"), 9);
     glUniform1i(_ent_prog.get_uniform("env_map"), 13); // TODO: uncouple. maybe pass the available texture IDs to skybox and font?
 
+    _fxaa_prog.use();
+    glUniform1i(_fxaa_prog.get_uniform("scene_tex"), 12);
+
     _copy_fbo_to_screen_prog.use();
     glUniform1i(_copy_fbo_to_screen_prog.get_uniform("tex"), 12);
 
@@ -251,6 +259,11 @@ World::World():
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     Message_locator::get().add_callback_empty("sun_toggle", [this](){ _sunlight.enabled = !_sunlight.enabled; });
+    Message_locator::get().add_callback_empty("fxaa_toggle", [this]()
+    {
+        _use_fxaa =! _use_fxaa;
+        Logger_locator::get()(Logger::TRACE, std::string("FXAA ") + (_use_fxaa ? "on" : "off"));
+    });
 
     Shader_prog::clear_cache();
 

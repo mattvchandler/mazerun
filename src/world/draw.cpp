@@ -492,23 +492,34 @@ void World::draw()
 
     _skybox.draw(*_cam, _proj);
 
-    // TODO: SSAO?
-    // TODO: antialiasing (FXAA)
 
-    // copy the FBO to the main framebuffer
+    // TODO: SSAO?
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, win_size.x, win_size.y);
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    _copy_fbo_to_screen_prog.use();
-    glUniform2fv(_copy_fbo_to_screen_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
+    if(_use_fxaa)
+    {
+        _fxaa_prog.use();
+        glUniform2fv(_fxaa_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
+
+        #ifdef DEBUG
+        check_error("World::FXAA");
+        #endif
+    }
+    else
+    {
+        // copy the FBO to the main framebuffer
+        _copy_fbo_to_screen_prog.use();
+        glUniform2fv(_copy_fbo_to_screen_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
+
+        #ifdef DEBUG
+        check_error("World::copy fbo to screen");
+        #endif
+    }
 
     _fullscreen_quad.draw();
-
-    #ifdef DEBUG
-    check_error("World::copy fbo to screen");
-    #endif
 
     _s_text.render_text(_font, win_size, glm::vec2(10.0f, 10.0f),
         Font_sys::ORIGIN_HORIZ_LEFT | Font_sys::ORIGIN_VERT_TOP);

@@ -75,6 +75,7 @@ private:
     bool _running;
     bool _focused;
     bool _do_resize;
+    bool _use_fxaa;
 
     std::mutex _lock; // TODO more descriptive name
 
@@ -93,7 +94,7 @@ private:
     Shader_prog _point_shadow_prog;
     Shader_prog _spot_dir_shadow_prog;
     Shader_prog _ent_prog;
-    // Shader_prog _fxaa_prog;
+    Shader_prog _fxaa_prog;
     Shader_prog _copy_fbo_to_screen_prog;
 
     FBO _g_fbo;
