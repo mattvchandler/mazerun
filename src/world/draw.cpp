@@ -438,25 +438,10 @@ void World::draw()
     glViewport(0, 0, 800, 600); // TODO: resized
     viewport_size = win_size;
 
-    // set default framebuffer depth buffer from G buffer
-    glDisable(GL_BLEND);
-
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_ALWAYS);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    _set_depth_prog.use();
-    glUniform2fv(_set_depth_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
-
-    _fullscreen_quad.draw();
-
-    #ifdef DEBUG
-    check_error("World::draw - default depthbuffer fill");
-    #endif
-
     // main drawing pass
+    glDisable(GL_BLEND);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
 

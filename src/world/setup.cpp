@@ -74,9 +74,6 @@ World::World():
     _spot_dir_shadow_prog({std::make_pair("shaders/shadow.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/shadow.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _set_depth_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
-        std::make_pair("shaders/set_depth.frag", GL_FRAGMENT_SHADER)},
-        {std::make_pair("vert_pos", 0)}),
     _ent_prog({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
@@ -93,7 +90,6 @@ World::World():
     _point_shadow_fbo_depth_rbo(Renderbuffer::create_depth(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
     _fullscreen_effects_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)),
-    _fullscreen_effects_depth_rbo(Renderbuffer::create_depth(800, 600)),
     _font("Symbola", 18),
     _s_text(_font, u8"🐙💩☹☢☣☠\u0301\nASDF‽", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 {
@@ -205,9 +201,6 @@ World::World():
     glUniform1i(_dir_light_shadow_prog.get_uniform("depth_map"), 7);
     glUniform1i(_dir_light_shadow_prog.get_uniform("shadow_map"), 11);
 
-    _set_depth_prog.use();
-    glUniform1i(_set_depth_prog.get_uniform("tex"), 7);
-
     _ent_prog.use();
     glUniform1i(_ent_prog.get_uniform("material.ambient_map"), 1);
     glUniform1i(_ent_prog.get_uniform("material.diffuse_map"), 2);
@@ -251,7 +244,7 @@ World::World():
 
     _fullscreen_effects_fbo.bind();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _fullscreen_effects_tex->get_id(), 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _fullscreen_effects_depth_rbo->get_id());
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     _fullscreen_effects_fbo.verify();
 

@@ -92,7 +92,6 @@ private:
     Shader_prog _dir_light_shadow_prog;
     Shader_prog _point_shadow_prog;
     Shader_prog _spot_dir_shadow_prog;
-    Shader_prog _set_depth_prog;
     Shader_prog _ent_prog;
     // Shader_prog _fxaa_prog;
     Shader_prog _fullscreen_tex_prog;
@@ -111,7 +110,6 @@ private:
     std::unique_ptr<Renderbuffer> _point_shadow_fbo_depth_rbo;
     std::unique_ptr<Texture_2D> _spot_dir_shadow_fbo_tex;
     std::unique_ptr<Texture_2D> _fullscreen_effects_tex;
-    std::unique_ptr<Renderbuffer> _fullscreen_effects_depth_rbo;
 
     // simple quad used for fullscreen rendering effects
     Quad _fullscreen_quad;
