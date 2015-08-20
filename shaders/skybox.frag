@@ -31,5 +31,7 @@ uniform samplerCube cubemap;
 
 void main()
 {
-    frag_color = vec4(texture(cubemap, tex_coords).rgb, 1.0);
+    vec3 rgb = texture(cubemap, tex_coords).rgb;
+    float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+    frag_color = vec4(rgb, luma);
 }
