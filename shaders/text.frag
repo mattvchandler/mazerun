@@ -33,5 +33,5 @@ out vec4 frag_color;
 void main()
 {
     // get alpha from font texture
-    frag_color = vec4(color.rgb, color.a * texture(font_page, tex_coord).r);
+    frag_color = vec4(color.rgb, color.a * textureLod(font_page, tex_coord, 0.0).r);
 }

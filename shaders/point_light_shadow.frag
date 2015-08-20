@@ -69,7 +69,7 @@ void main()
 {
     vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
     vec3 pos = calc_view_pos(map_coords, depth_map, proj_mat, view_ray);
-    vec4 norm_shininess = texture(normal_shininess_map, map_coords);
+    vec4 norm_shininess = textureLod(normal_shininess_map, map_coords, 0.0);
     float shininess = norm_shininess.w;
     vec3 normal_vec = norm_shininess.xyz;
 
@@ -83,7 +83,7 @@ void main()
     float shadow_dist = length(shadow_dir);
     shadow_dir /= shadow_dist;
 
-    float shadow_ref_dist = texture(shadow_map, shadow_dir).r;
+    float shadow_ref_dist = textureLod(shadow_map, shadow_dir, 0.0).r;
 
     float shadow = 0.0;
     if(shadow_ref_dist > shadow_dist - 0.001)

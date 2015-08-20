@@ -50,7 +50,7 @@ out vec4 specular;
 void main()
 {
     vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
-    vec4 norm_shininess = texture(normal_shininess_map, map_coords);
+    vec4 norm_shininess = textureLod(normal_shininess_map, map_coords, 0.0);
     float shininess = norm_shininess.w;
     vec3 normal_vec = norm_shininess.xyz;
 

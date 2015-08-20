@@ -62,11 +62,11 @@ void main()
 {
     vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
     vec3 pos = calc_view_pos(map_coords, depth_map, proj_mat, view_ray);
-    vec4 norm_shininess = texture(normal_shininess_map, map_coords);
+    vec4 norm_shininess = textureLod(normal_shininess_map, map_coords, 0.0);
     float shininess = norm_shininess.w;
     vec3 normal_vec = norm_shininess.xyz;
 
-    float shadow = textureProj(shadow_map, shadow_mat * vec4(pos, 1.0)); // not too happy about per-pixel mat mult
+    float shadow = textureProjLod(shadow_map, shadow_mat * vec4(pos, 1.0), 0.0); // not too happy about per-pixel mat mult
 
     vec3 diffuse_tmp, specular_tmp;
 

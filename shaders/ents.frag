@@ -58,11 +58,11 @@ out vec4 frag_color;
 void main()
 {
     vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
-    vec3 normal_vec = texture(normal_shininess_map, map_coords).xyz;
+    vec3 normal_vec = textureLod(normal_shininess_map, map_coords, 0.0).xyz;
 
     vec3 diffuse = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color +
-        texture(diffuse_fbo_tex, map_coords).rgb;
-    vec3 specular = texture(specular_fbo_tex, map_coords).rgb;
+        textureLod(diffuse_fbo_tex, map_coords, 0.0).rgb;
+    vec3 specular = textureLod(specular_fbo_tex, map_coords, 0.0).rgb;
 
     vec4 emissive_reflectivity = texture(material.emissive_reflectivity_map, tex_coord);
 

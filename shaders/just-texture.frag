@@ -30,5 +30,5 @@ out vec4 frag_color;
 
 void main()
 {
-    frag_color = texture(tex, gl_FragCoord.xy * rcp_viewport_size);
+    frag_color = textureLod(tex, gl_FragCoord.xy * rcp_viewport_size, 0.0);
 }

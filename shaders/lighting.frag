@@ -81,7 +81,7 @@ struct Dir_light
 vec3 calc_view_pos(in vec2 map_coords, in sampler2D depth_map, in mat4 proj_mat,
     in vec2 view_ray)
 {
-    float depth = texture(depth_map, map_coords).r;
+    float depth = textureLod(depth_map, map_coords, 0.0).r;
     float z = -proj_mat[3][2] / (2.0 * depth - 1.0 + proj_mat[2][2]);
     return vec3(view_ray * -z, z);
 }

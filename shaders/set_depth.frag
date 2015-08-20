@@ -30,6 +30,6 @@ out vec4 frag_color;
 
 void main()
 {
-    gl_FragDepth = texture(tex, gl_FragCoord.xy * rcp_viewport_size).r;
+    gl_FragDepth = textureLod(tex, gl_FragCoord.xy * rcp_viewport_size, 0.0).r;
     frag_color = vec4(0.0); // ignored when no color buffer bound
 }
