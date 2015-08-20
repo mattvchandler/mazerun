@@ -86,20 +86,12 @@ std::string FBO::error_string(GLenum error)
     }
 }
 
-Texture_2D * FBO::create_color_tex(const GLuint width, const GLuint height, const bool rgba)
+Texture_2D * FBO::create_color_tex(const GLuint width, const GLuint height, const GLenum format)
 {
     Texture_2D * tex = new Texture_2D;
     tex->bind();
-    if(rgba)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0,
-                GL_RGBA, GL_FLOAT, NULL);
-    }
-    else
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0,
-                GL_RGB, GL_FLOAT, NULL);
-    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);

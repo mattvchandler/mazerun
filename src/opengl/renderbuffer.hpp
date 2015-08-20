@@ -37,7 +37,7 @@ public:
     void bind() const;
     GLuint get_id() const;
 
-    static Renderbuffer * create_color(const GLuint width, const GLuint height, const bool rgba = true);
+    static Renderbuffer * create_color(const GLuint width, const GLuint height, const GLenum format = GL_RGBA);
     static Renderbuffer * create_depth(const GLuint width, const GLuint height);
 
 private:

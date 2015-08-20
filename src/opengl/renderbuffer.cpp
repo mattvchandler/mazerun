@@ -44,15 +44,12 @@ GLuint Renderbuffer::get_id() const
     return _id;
 }
 
-Renderbuffer * Renderbuffer::create_color(const GLuint width, const GLuint height, const bool rgba)
+Renderbuffer * Renderbuffer::create_color(const GLuint width, const GLuint height, const GLenum format)
 {
     Renderbuffer * rbo = new Renderbuffer;
     rbo->bind();
 
-    if(rgba)
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
-    else
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, format, width, height);
 
     check_error("Renderbuffer::create_color");
     return rbo;

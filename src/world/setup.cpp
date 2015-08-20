@@ -80,14 +80,14 @@ World::World():
     _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
-    // TODO: what should FBO sizes be?
     _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, true)), // TODO: resize
+    // TODO: what should FBO sizes be?
+    _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)), // TODO: resize
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
-    _diffuse_fbo_tex(FBO::create_color_tex(800, 600, false)),
-    _specular_fbo_tex(FBO::create_color_tex(800, 600, false)),
+    _diffuse_fbo_tex(FBO::create_color_tex(800, 600, GL_RGB32F)),
+    _specular_fbo_tex(FBO::create_color_tex(800, 600, GL_RGB32F)),
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_rbo(Renderbuffer::create_depth(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),

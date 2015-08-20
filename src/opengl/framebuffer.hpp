@@ -42,7 +42,7 @@ public:
 
     static std::string error_string(GLenum error);
 
-    static Texture_2D * create_color_tex(const GLuint width, const GLuint height, const bool rgba = true);
+    static Texture_2D * create_color_tex(const GLuint width, const GLuint height, const GLenum format = GL_RGBA32F);
     static Texture_2D * create_depth_tex(const GLuint width, const GLuint height);
     static Texture_2D * create_shadow_tex(const GLuint width, const GLuint height);
     static Texture_cubemap * create_shadow_cube_tex(const GLuint width, const GLuint height);
