@@ -439,8 +439,8 @@ void World::draw()
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, win_size.x, win_size.y);
+    _fullscreen_effects_fbo.bind();
+    glViewport(0, 0, 800, 600); // TODO: resized
     viewport_size = win_size;
 
     // set default framebuffer depth buffer from G buffer
@@ -516,6 +516,22 @@ void World::draw()
 
     // TODO: SSAO?
     // TODO: antialiasing (FXAA)
+
+    // blit the FBO to the main framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, win_size.x, win_size.y);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, _fullscreen_effects_fbo.get_id());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBlitFramebuffer(0, 0, win_size.x, win_size.y,
+        0, 0, win_size.x, win_size.y,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    #ifdef DEBUG
+    check_error("World::blit framebuffer");
+    #endif
 
     _s_text.render_text(_font, win_size, glm::vec2(10.0f, 10.0f),
         Font_sys::ORIGIN_HORIZ_LEFT | Font_sys::ORIGIN_VERT_TOP);

@@ -30,7 +30,7 @@
 
 // TODO: GL_RGB-> GL_RGB8, RGBA->RGBA8
 World::World():
-    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(24, 8, 8)),
+    _win(sf::VideoMode(800, 600), "mazerun", sf::Style::Default, sf::ContextSettings(0, 0, 0)),
     _running(true), _focused(true), _do_resize(false),
     _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), true, glm::normalize(glm::vec3(-1.0f))),
     // TODO: get rid of unused shader files
@@ -80,6 +80,7 @@ World::World():
     _ent_prog({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
+    // _fxaa_prog(),
     _fullscreen_tex_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
@@ -91,6 +92,8 @@ World::World():
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_rbo(Renderbuffer::create_depth(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
+    _fullscreen_effects_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)),
+    _fullscreen_effects_depth_rbo(Renderbuffer::create_depth(800, 600)),
     _font("Symbola", 18),
     _s_text(_font, u8"🐙💩☹☢☣☠\u0301\nASDF‽", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 {
@@ -144,11 +147,13 @@ World::World():
             // 10: _point_shadow_fbo_tex (cubemap)
             // 11: _spot_dir_shadow_fbo_tex
 
-            // 12: Skybox::_tex (cubemap)
+            // 12: _fullscreen_effects_tex
+
+            // 13: Skybox::_tex (cubemap)
 
         // font page textures
             // TODO: may want to reserve an attachment for page 0
-            // 13: Font:_sys::_page_map[page].tex
+            // 14: Font:_sys::_page_map[page].tex
 
     // bind static textures
     glActiveTexture(GL_TEXTURE6);
@@ -163,6 +168,8 @@ World::World():
     _point_shadow_fbo_tex->bind();
     glActiveTexture(GL_TEXTURE11);
     _spot_dir_shadow_fbo_tex->bind();
+    glActiveTexture(GL_TEXTURE12);
+    _fullscreen_effects_tex->bind();
 
     // Uniform setup
     _ent_prepass_prog.use();
@@ -209,7 +216,7 @@ World::World():
     glUniform1i(_ent_prog.get_uniform("normal_shininess_map"), 6);
     glUniform1i(_ent_prog.get_uniform("diffuse_fbo_tex"), 8);
     glUniform1i(_ent_prog.get_uniform("specular_fbo_tex"), 9);
-    glUniform1i(_ent_prog.get_uniform("env_map"), 12); // TODO: uncouple. maybe pass the available texture IDs to skybox and font?
+    glUniform1i(_ent_prog.get_uniform("env_map"), 13); // TODO: uncouple. maybe pass the available texture IDs to skybox and font?
 
     // TODO: remove
     _fullscreen_tex_prog.use();
@@ -241,6 +248,12 @@ World::World():
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _spot_dir_shadow_fbo_tex->get_id(), 0);
     glDrawBuffer(GL_NONE);
     _spot_dir_shadow_fbo.verify();
+
+    _fullscreen_effects_fbo.bind();
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _fullscreen_effects_tex->get_id(), 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _fullscreen_effects_depth_rbo->get_id());
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    _fullscreen_effects_fbo.verify();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

@@ -93,11 +93,11 @@ Skybox::Skybox():
     _num_indexes = index.size();
 
     _prog.use();
-    glUniform1i(_prog.get_uniform("cubemap"), 12);
+    glUniform1i(_prog.get_uniform("cubemap"), 13);
     glUseProgram(0);
 
     // bind texture
-    glActiveTexture(GL_TEXTURE12);
+    glActiveTexture(GL_TEXTURE13);
     _tex->bind();
 
     check_error("Skybox::Skybox");
