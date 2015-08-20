@@ -34,7 +34,7 @@ World::World():
     _running(true), _focused(true), _do_resize(false),
     _sunlight(true, glm::vec3(1.0f, 1.0f, 1.0f), true, glm::normalize(glm::vec3(-1.0f))),
     // TODO: get rid of unused shader files
-    _ent_prepass({std::make_pair("shaders/prepass.vert", GL_VERTEX_SHADER),
+    _ent_prepass_prog({std::make_pair("shaders/prepass.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/prepass.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1),
         std::make_pair("vert_normals", 2), std::make_pair("vert_tangents", 3)}),
@@ -77,10 +77,10 @@ World::World():
     _set_depth_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/set_depth.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
-    _ent_shader({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
+    _ent_prog({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
-    _fullscreen_tex({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed
+    _fullscreen_tex_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
     // TODO: what should FBO sizes be?
@@ -138,11 +138,11 @@ World::World():
             // 6:  _g_fbo_norm_shininess_tex
             // 7:  _g_fbo_depth_tex
 
-            // 8:  diffuse_fbo_tex
-            // 9:  specular_fbo_tex
+            // 8:  _diffuse_fbo_tex
+            // 9:  _specular_fbo_tex
 
-            //10:  point_shadow_fbo_tex (cubemap)
-            // 11: spot_dir_shadow_fbo_tex
+            // 10: _point_shadow_fbo_tex (cubemap)
+            // 11: _spot_dir_shadow_fbo_tex
 
             // 12: Skybox::_tex (cubemap)
 
@@ -165,8 +165,8 @@ World::World():
     _spot_dir_shadow_fbo_tex->bind();
 
     // Uniform setup
-    _ent_prepass.use();
-    glUniform1i(_ent_prepass.get_uniform("material.normal_shininess_map"), 5);
+    _ent_prepass_prog.use();
+    glUniform1i(_ent_prepass_prog.get_uniform("material.normal_shininess_map"), 5);
 
     _point_light_prog.use();
     glUniform1i(_point_light_prog.get_uniform("normal_shininess_map"), 6);
@@ -201,51 +201,46 @@ World::World():
     _set_depth_prog.use();
     glUniform1i(_set_depth_prog.get_uniform("tex"), 7);
 
-    _ent_shader.use();
-    glUniform1i(_ent_shader.get_uniform("material.ambient_map"), 1);
-    glUniform1i(_ent_shader.get_uniform("material.diffuse_map"), 2);
-    glUniform1i(_ent_shader.get_uniform("material.specular_map"), 3);
-    glUniform1i(_ent_shader.get_uniform("material.emissive_reflectivity_map"), 4);
-    glUniform1i(_ent_shader.get_uniform("normal_shininess_map"), 6);
-    glUniform1i(_ent_shader.get_uniform("diffuse_fbo_tex"), 8);
-    glUniform1i(_ent_shader.get_uniform("specular_fbo_tex"), 9);
-    glUniform1i(_ent_shader.get_uniform("env_map"), 12);
+    _ent_prog.use();
+    glUniform1i(_ent_prog.get_uniform("material.ambient_map"), 1);
+    glUniform1i(_ent_prog.get_uniform("material.diffuse_map"), 2);
+    glUniform1i(_ent_prog.get_uniform("material.specular_map"), 3);
+    glUniform1i(_ent_prog.get_uniform("material.emissive_reflectivity_map"), 4);
+    glUniform1i(_ent_prog.get_uniform("normal_shininess_map"), 6);
+    glUniform1i(_ent_prog.get_uniform("diffuse_fbo_tex"), 8);
+    glUniform1i(_ent_prog.get_uniform("specular_fbo_tex"), 9);
+    glUniform1i(_ent_prog.get_uniform("env_map"), 12); // TODO: uncouple. maybe pass the available texture IDs to skybox and font?
 
     // TODO: remove
-    _fullscreen_tex.use();
-    glUniform1i(_fullscreen_tex.get_uniform("tex"), 15);
+    _fullscreen_tex_prog.use();
+    glUniform1i(_fullscreen_tex_prog.get_uniform("tex"), 15);
 
     glUseProgram(0);
 
     // setup FBOs
     _g_fbo.bind();
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _g_fbo_norm_shininess_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _g_fbo_depth_tex->get_id(), 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
     _g_fbo.verify();
 
     _lighting_fbo.bind();
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _diffuse_fbo_tex->get_id(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _specular_fbo_tex->get_id(), 0);
     const GLenum buffs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, buffs);
-
     _lighting_fbo.verify();
 
     _point_shadow_fbo.bind();
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, _point_shadow_fbo_tex->get_id(), 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _point_shadow_fbo_depth_rbo->get_id());
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
     _point_shadow_fbo.verify();
 
     _spot_dir_shadow_fbo.bind();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _spot_dir_shadow_fbo_tex->get_id(), 0);
     glDrawBuffer(GL_NONE);
+    _spot_dir_shadow_fbo.verify();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

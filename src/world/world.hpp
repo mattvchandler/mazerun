@@ -83,7 +83,7 @@ private:
     Skybox _skybox;
     Dir_light _sunlight;
 
-    Shader_prog _ent_prepass;
+    Shader_prog _ent_prepass_prog;
     Shader_prog _point_light_prog;
     Shader_prog _point_light_shadow_prog;
     Shader_prog _spot_light_prog;
@@ -93,8 +93,8 @@ private:
     Shader_prog _point_shadow_prog;
     Shader_prog _spot_dir_shadow_prog;
     Shader_prog _set_depth_prog;
-    Shader_prog _ent_shader;
-    Shader_prog _fullscreen_tex;
+    Shader_prog _ent_prog;
+    Shader_prog _fullscreen_tex_prog;
 
     FBO _g_fbo;
     FBO _lighting_fbo;
@@ -109,8 +109,8 @@ private:
     std::unique_ptr<Renderbuffer> _point_shadow_fbo_depth_rbo;
     std::unique_ptr<Texture_2D> _spot_dir_shadow_fbo_tex;
 
-    // simple quad used for rendering effects
-    Quad _quad;
+    // simple quad used for fullscreen rendering effects
+    Quad _fullscreen_quad;
 
     Font_sys _font;
     Static_text _s_text;

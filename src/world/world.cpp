@@ -77,6 +77,8 @@ Glew_init::Glew_init()
         Logger_locator::get()(Logger::ERROR, std::string("Error OpenGL version (") + (const char *)glGetString(GL_VERSION) + ") is too low.\nVersion 3.0+ required");
         throw std::runtime_error(std::string("Error OpenGL version (") + (const char *)glGetString(GL_VERSION) + ") is too low.\nVersion 3.0+ required");
     }
+
+    // TODO: display context settings
 }
 
 bool Glew_init::_initialized = false;

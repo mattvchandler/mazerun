@@ -50,6 +50,7 @@ void World::draw()
     glm::vec2 win_size(_win.getSize().x, _win.getSize().y);
 
     // TODO: max on lighting, shadows?
+    // TODO: split light vectors into shadowed/non shadowed to prevent shader switching?
     std::vector<Entity *> point_lights;
     std::vector<Entity *> spot_lights;
     std::vector<Entity *> models;
@@ -59,7 +60,7 @@ void World::draw()
 
     auto set_prepass_material = [this](const Material & mat)
     {
-        glUniform1f(_ent_prepass.get_uniform("material.shininess"), mat.shininess);
+        glUniform1f(_ent_prepass_prog.get_uniform("material.shininess"), mat.shininess);
         glActiveTexture(GL_TEXTURE5);
         mat.normal_shininess_map->bind();
     };
@@ -74,7 +75,7 @@ void World::draw()
     glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
 
-    _ent_prepass.use();
+    _ent_prepass_prog.use();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -88,8 +89,8 @@ void World::draw()
             glm::mat4 model_view_proj = _proj * model_view;
             glm::mat3 normal_transform = glm::transpose(glm::inverse(glm::mat3(model_view)));
 
-            glUniformMatrix4fv(_ent_prepass.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
-            glUniformMatrix3fv(_ent_prepass.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
+            glUniformMatrix4fv(_ent_prepass_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+            glUniformMatrix3fv(_ent_prepass_prog.get_uniform("normal_transform"), 1, GL_FALSE, &normal_transform[0][0]);
 
             model->draw(set_prepass_material);
 
@@ -158,7 +159,7 @@ void World::draw()
         glUniform1f(point_prog.get_uniform("point_light.linear_atten"), point_light.linear_atten);
         glUniform1f(point_prog.get_uniform("point_light.quad_atten"), point_light.quad_atten);
 
-        _quad.draw(); // TODO: sphere or smaller quad instead?
+        _fullscreen_quad.draw(); // TODO: sphere or smaller quad instead?
     };
 
     bool use_shadow = false;
@@ -283,7 +284,7 @@ void World::draw()
         glUniform1f(spot_prog.get_uniform("spot_light.linear_atten"), spot_light.linear_atten);
         glUniform1f(spot_prog.get_uniform("spot_light.quad_atten"), spot_light.quad_atten);
 
-        _quad.draw(); // TODO: sphere or smaller quad instead?
+        _fullscreen_quad.draw(); // TODO: sphere or smaller quad instead?
     };
 
     use_shadow = false;
@@ -369,7 +370,7 @@ void World::draw()
 
         glUniform2fv(dir_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
-        _quad.draw();
+        _fullscreen_quad.draw();
     };
 
     if(_sunlight.enabled)
@@ -454,7 +455,7 @@ void World::draw()
     _set_depth_prog.use();
     glUniform2fv(_set_depth_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
 
-    _quad.draw();
+    _fullscreen_quad.draw();
 
     #ifdef DEBUG
     check_error("World::draw - default depthbuffer fill");
@@ -466,15 +467,15 @@ void World::draw()
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-2.0f, 4.0f);
 
-    _ent_shader.use();
+    _ent_prog.use();
 
     auto set_material = [this](const Material & mat)
     {
-        glUniform3fv(_ent_shader.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
-        glUniform3fv(_ent_shader.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
-        glUniform3fv(_ent_shader.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
-        glUniform3fv(_ent_shader.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
-        glUniform1f(_ent_shader.get_uniform("material.reflectivity"), mat.reflectivity);
+        glUniform3fv(_ent_prog.get_uniform("material.ambient_color"), 1, &mat.ambient_color[0]);
+        glUniform3fv(_ent_prog.get_uniform("material.diffuse_color"), 1, &mat.diffuse_color[0]);
+        glUniform3fv(_ent_prog.get_uniform("material.specular_color"), 1, &mat.specular_color[0]);
+        glUniform3fv(_ent_prog.get_uniform("material.emissive_color"), 1, &mat.emissive_color[0]);
+        glUniform1f(_ent_prog.get_uniform("material.reflectivity"), mat.reflectivity);
 
         glActiveTexture(GL_TEXTURE1);
         mat.ambient_map->bind();
@@ -488,8 +489,8 @@ void World::draw()
 
     glm::mat3 inv_view = glm::mat3(_cam->model_mat());
 
-    glUniform2fv(_ent_shader.get_uniform("viewport_size"), 1, &viewport_size[0]);
-    glUniformMatrix3fv(_ent_shader.get_uniform("inv_view"), 1, GL_FALSE, &inv_view[0][0]);
+    glUniform2fv(_ent_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniformMatrix3fv(_ent_prog.get_uniform("inv_view"), 1, GL_FALSE, &inv_view[0][0]);
 
     for(auto & ent: models)
     {
@@ -498,8 +499,8 @@ void World::draw()
         glm::mat4 model_view = _cam->view_mat() * ent->model_mat();
         glm::mat4 model_view_proj = _proj * model_view;
 
-        glUniformMatrix4fv(_ent_shader.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
-        glUniformMatrix4fv(_ent_shader.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
+        glUniformMatrix4fv(_ent_prog.get_uniform("model_view"), 1, GL_FALSE, &model_view[0][0]);
+        glUniformMatrix4fv(_ent_prog.get_uniform("model_view_proj"), 1, GL_FALSE, &model_view_proj[0][0]);
 
         model->draw(set_material);
 
@@ -513,7 +514,8 @@ void World::draw()
 
     _skybox.draw(*_cam, _proj);
 
-    // TODO: antialiasing
+    // TODO: SSAO?
+    // TODO: antialiasing (FXAA)
 
     _s_text.render_text(_font, win_size, glm::vec2(10.0f, 10.0f),
         Font_sys::ORIGIN_HORIZ_LEFT | Font_sys::ORIGIN_VERT_TOP);
