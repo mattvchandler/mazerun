@@ -94,7 +94,7 @@ private:
     Shader_prog _spot_dir_shadow_prog;
     Shader_prog _ent_prog;
     // Shader_prog _fxaa_prog;
-    Shader_prog _fullscreen_tex_prog;
+    Shader_prog _copy_fbo_to_screen_prog;
 
     FBO _g_fbo;
     FBO _lighting_fbo;

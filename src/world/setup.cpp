@@ -77,10 +77,10 @@ World::World():
     _ent_prog({std::make_pair("shaders/ents.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/ents.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0), std::make_pair("vert_tex_coords", 1)}),
-    // _fxaa_prog(),
-    _fullscreen_tex_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER), // TODO: not needed
+    _copy_fbo_to_screen_prog({std::make_pair("shaders/pass-through.vert", GL_VERTEX_SHADER),
         std::make_pair("shaders/just-texture.frag", GL_FRAGMENT_SHADER)},
         {std::make_pair("vert_pos", 0)}),
+    // _fxaa_prog(),
     // TODO: what should FBO sizes be?
     _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)), // TODO: resize
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
@@ -211,9 +211,8 @@ World::World():
     glUniform1i(_ent_prog.get_uniform("specular_fbo_tex"), 9);
     glUniform1i(_ent_prog.get_uniform("env_map"), 13); // TODO: uncouple. maybe pass the available texture IDs to skybox and font?
 
-    // TODO: remove
-    _fullscreen_tex_prog.use();
-    glUniform1i(_fullscreen_tex_prog.get_uniform("tex"), 15);
+    _copy_fbo_to_screen_prog.use();
+    glUniform1i(_copy_fbo_to_screen_prog.get_uniform("tex"), 12);
 
     glUseProgram(0);
 
