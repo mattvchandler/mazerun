@@ -42,14 +42,14 @@ void calc_dir_lighting(in vec3 normal_vec, in float shininess,
 uniform Dir_light dir_light;
 
 uniform sampler2D normal_shininess_map;
-uniform vec2 viewport_size;
+uniform vec2 rcp_viewport_size;
 
 out vec4 diffuse;
 out vec4 specular;
 
 void main()
 {
-    vec2 map_coords = gl_FragCoord.xy / viewport_size;
+    vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
     vec4 norm_shininess = texture(normal_shininess_map, map_coords);
     float shininess = norm_shininess.w;
     vec3 normal_vec = norm_shininess.xyz;

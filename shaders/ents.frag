@@ -46,7 +46,7 @@ uniform Material material;
 uniform sampler2D normal_shininess_map;
 uniform sampler2D diffuse_fbo_tex;
 uniform sampler2D specular_fbo_tex;
-uniform vec2 viewport_size;
+uniform vec2 rcp_viewport_size;
 
 uniform samplerCube env_map;
 uniform mat3 inv_view;
@@ -57,7 +57,7 @@ out vec4 frag_color;
 
 void main()
 {
-    vec2 map_coords = gl_FragCoord.xy / viewport_size;
+    vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
     vec3 normal_vec = texture(normal_shininess_map, map_coords).xyz;
 
     vec3 diffuse = material.ambient_color * texture(material.ambient_map, tex_coord).rgb * ambient_light_color +

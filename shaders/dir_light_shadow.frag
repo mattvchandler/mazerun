@@ -50,7 +50,7 @@ uniform Dir_light dir_light;
 
 uniform sampler2D normal_shininess_map;
 uniform sampler2D depth_map;
-uniform vec2 viewport_size;
+uniform vec2 rcp_viewport_size;
 
 uniform mat4 shadow_mat;
 uniform sampler2DShadow shadow_map;
@@ -60,7 +60,7 @@ out vec4 specular;
 
 void main()
 {
-    vec2 map_coords = gl_FragCoord.xy / viewport_size;
+    vec2 map_coords = gl_FragCoord.xy * rcp_viewport_size;
     vec3 pos = calc_view_pos(map_coords, depth_map, proj_mat, view_ray);
     vec4 norm_shininess = texture(normal_shininess_map, map_coords);
     float shininess = norm_shininess.w;

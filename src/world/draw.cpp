@@ -64,6 +64,7 @@ void World::draw()
     };
 
     glm::vec2 viewport_size = {(float)800, (float)600}; // TODO: how to get fbo size?
+    glm::vec2 rcp_viewport_size = 1.0f / viewport_size;
 
     _g_fbo.bind();
     glViewport(0, 0, 800, 600); // TODO: how to get fbo size?
@@ -137,13 +138,13 @@ void World::draw()
     glUniform1f(_point_light_shadow_prog.get_uniform("aspect"), win_size.x / win_size.y);
     glUniform1f(_point_light_shadow_prog.get_uniform("tan_half_fov"), std::tan(M_PI / 12.0f));
     glUniformMatrix4fv(_point_light_shadow_prog.get_uniform("proj_mat"), 1, GL_FALSE, &_proj[0][0]);
-    glUniform2fv(_point_light_shadow_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform2fv(_point_light_shadow_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
 
     _point_light_prog.use();
     glUniform1f(_point_light_prog.get_uniform("aspect"), win_size.x / win_size.y);
     glUniform1f(_point_light_prog.get_uniform("tan_half_fov"), std::tan(M_PI / 12.0f));
     glUniformMatrix4fv(_point_light_prog.get_uniform("proj_mat"), 1, GL_FALSE, &_proj[0][0]);
-    glUniform2fv(_point_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform2fv(_point_light_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
 
     // common point lighting
     auto point_common = [this](const Shader_prog & point_prog, const Entity & ent, const Point_light & point_light)
@@ -253,13 +254,13 @@ void World::draw()
     glUniform1f(_spot_light_shadow_prog.get_uniform("aspect"), win_size.x / win_size.y);
     glUniform1f(_spot_light_shadow_prog.get_uniform("tan_half_fov"), std::tan(M_PI / 12.0f));
     glUniformMatrix4fv(_spot_light_shadow_prog.get_uniform("proj_mat"), 1, GL_FALSE, &_proj[0][0]);
-    glUniform2fv(_spot_light_shadow_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform2fv(_spot_light_shadow_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
 
     _spot_light_prog.use();
     glUniform1f(_spot_light_prog.get_uniform("aspect"), win_size.x / win_size.y);
     glUniform1f(_spot_light_prog.get_uniform("tan_half_fov"), std::tan(M_PI / 12.0f));
     glUniformMatrix4fv(_spot_light_prog.get_uniform("proj_mat"), 1, GL_FALSE, &_proj[0][0]);
-    glUniform2fv(_spot_light_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform2fv(_spot_light_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
 
     // common spot lighting
     auto spot_common = [this](const Shader_prog & spot_prog, const Entity & ent, const Spot_light & spot_light)
@@ -353,7 +354,7 @@ void World::draw()
         }
     }
 
-    auto dir_common = [this, &cam_light_forward, &viewport_size](const Shader_prog & dir_prog)
+    auto dir_common = [this, &cam_light_forward, &rcp_viewport_size](const Shader_prog & dir_prog)
     {
         glm::vec3 sunlight_dir = glm::normalize(glm::transpose(glm::inverse(glm::mat3(_cam->view_mat()))) *
             glm::normalize(-_sunlight.dir));
@@ -363,7 +364,7 @@ void World::draw()
         glUniform3fv(dir_prog.get_uniform("dir_light.dir"), 1, &sunlight_dir[0]);
         glUniform3fv(dir_prog.get_uniform("dir_light.half_vec"), 1, &sunlight_half_vec[0]);
 
-        glUniform2fv(dir_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+        glUniform2fv(dir_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
 
         _fullscreen_quad.draw();
     };
@@ -437,6 +438,7 @@ void World::draw()
     _fullscreen_effects_fbo.bind();
     glViewport(0, 0, 800, 600); // TODO: resized
     viewport_size = win_size;
+    rcp_viewport_size = 1.0f / viewport_size;
 
     // main drawing pass
     glDisable(GL_BLEND);
@@ -467,7 +469,7 @@ void World::draw()
 
     glm::mat3 inv_view = glm::mat3(_cam->model_mat());
 
-    glUniform2fv(_ent_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform2fv(_ent_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
     glUniformMatrix3fv(_ent_prog.get_uniform("inv_view"), 1, GL_FALSE, &inv_view[0][0]);
 
     for(auto & ent: models)
@@ -500,7 +502,7 @@ void World::draw()
     glClear(GL_COLOR_BUFFER_BIT);
 
     _copy_fbo_to_screen_prog.use();
-    glUniform2fv(_copy_fbo_to_screen_prog.get_uniform("viewport_size"), 1, &viewport_size[0]);
+    glUniform2fv(_copy_fbo_to_screen_prog.get_uniform("rcp_viewport_size"), 1, &rcp_viewport_size[0]);
 
     _fullscreen_quad.draw();
 
