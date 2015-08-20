@@ -82,17 +82,18 @@ World::World():
         {std::make_pair("vert_pos", 0)}),
     // _fxaa_prog(),
     // TODO: what should FBO sizes be?
-    _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)), // TODO: resize
+    _g_fbo_norm_shininess_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)), // TODO: resize, TODO:, why 32F?
     _g_fbo_depth_tex(FBO::create_depth_tex(800, 600)),
-    _diffuse_fbo_tex(FBO::create_color_tex(800, 600, GL_RGB32F)),
-    _specular_fbo_tex(FBO::create_color_tex(800, 600, GL_RGB32F)),
+    _diffuse_fbo_tex(FBO::create_color_tex(800, 600, GL_RGB8)),
+    _specular_fbo_tex(FBO::create_color_tex(800, 600, GL_RGB8)),
     _point_shadow_fbo_tex(FBO::create_shadow_cube_tex(512, 512)),
     _point_shadow_fbo_depth_rbo(Renderbuffer::create_depth(512, 512)),
     _spot_dir_shadow_fbo_tex(FBO::create_shadow_tex(512, 512)),
-    _fullscreen_effects_tex(FBO::create_color_tex(800, 600, GL_RGBA32F)),
+    _fullscreen_effects_tex(FBO::create_color_tex(800, 600, GL_RGBA8)),
     _font("Symbola", 18),
     _s_text(_font, u8"🐙💩☹☢☣☠\u0301\nASDF‽", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 {
+    // TODO: gamma correction?
     // TODO: more fine-grained check_error calls
     // TODO: standardize naming
     Logger_locator::get()(Logger::TRACE, "World init starting...");
