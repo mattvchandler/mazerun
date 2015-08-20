@@ -33,5 +33,5 @@ void main()
 {
     vec3 rgb = textureLod(cubemap, tex_coords, 0.0).rgb;
     float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
-    frag_color = vec4(rgb, luma);
+    frag_color = vec4(rgb, sqrt(luma));
 }

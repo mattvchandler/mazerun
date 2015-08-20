@@ -77,5 +77,5 @@ void main()
         material.specular_color * texture(material.specular_map, tex_coord).rgb * specular, vec3(1.0));
 
     float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
-    frag_color = vec4(rgb, luma);
+    frag_color = vec4(rgb, sqrt(luma));
 }
