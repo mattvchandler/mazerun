@@ -498,6 +498,7 @@ void World::draw()
     glViewport(0, 0, win_size.x, win_size.y);
 
     glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
 
     if(_use_fxaa)
     {
